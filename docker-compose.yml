@@ -1,0 +1,15 @@
+services:
+  metropolin:
+    build: .
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      # IB Gateway running on the host machine (Docker Desktop name; on Linux use the host IP)
+      IBKR_HOST: ${IBKR_HOST_DOCKER:-host.docker.internal}
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

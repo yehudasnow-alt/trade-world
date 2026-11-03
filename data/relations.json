@@ -1,0 +1,30 @@
+{
+  "note": "Seed list of supply-chain links between S&P 500 companies, from public reporting. Edit freely: add, remove, fix. 'from' supplies 'to'.",
+  "links": [
+    {"from": "AVGO", "to": "AAPL", "kind": "supply", "note": "רכיבי RF ותקשורת אלחוטית לאייפון"},
+    {"from": "QCOM", "to": "AAPL", "kind": "supply", "note": "מודמים סלולריים"},
+    {"from": "GLW", "to": "AAPL", "kind": "supply", "note": "זכוכית כיסוי למכשירים"},
+    {"from": "SWKS", "to": "AAPL", "kind": "supply", "note": "רכיבי RF; אפל לקוחה מרכזית"},
+    {"from": "JBL", "to": "AAPL", "kind": "supply", "note": "שירותי ייצור"},
+    {"from": "MU", "to": "NVDA", "kind": "supply", "note": "זיכרון HBM למאיצים"},
+    {"from": "NVDA", "to": "MSFT", "kind": "supply", "note": "מאיצי AI לענן"},
+    {"from": "NVDA", "to": "AMZN", "kind": "supply", "note": "מאיצי AI לענן"},
+    {"from": "NVDA", "to": "GOOGL", "kind": "supply", "note": "מאיצי AI לענן"},
+    {"from": "NVDA", "to": "META", "kind": "supply", "note": "מאיצי AI למרכזי נתונים"},
+    {"from": "NVDA", "to": "ORCL", "kind": "supply", "note": "מאיצי AI לענן"},
+    {"from": "NVDA", "to": "DELL", "kind": "supply", "note": "שרתי AI"},
+    {"from": "AMD", "to": "MSFT", "kind": "supply", "note": "מאיצי MI300"},
+    {"from": "AMD", "to": "META", "kind": "supply", "note": "מאיצים ומעבדי שרת"},
+    {"from": "AVGO", "to": "GOOGL", "kind": "supply", "note": "שבבי TPU מותאמים"},
+    {"from": "AVGO", "to": "META", "kind": "supply", "note": "מאיצים מותאמים"},
+    {"from": "AMAT", "to": "INTC", "kind": "supply", "note": "ציוד ייצור שבבים"},
+    {"from": "LRCX", "to": "MU", "kind": "supply", "note": "ציוד ייצור זיכרון"},
+    {"from": "KLAC", "to": "INTC", "kind": "supply", "note": "ציוד בקרת תהליך"},
+    {"from": "PG", "to": "WMT", "kind": "supply", "note": "וולמארט היא הלקוחה הגדולה של P&G"},
+    {"from": "MCK", "to": "CVS", "kind": "supply", "note": "הפצת תרופות; CVS לקוחה מרכזית"},
+    {"from": "GE", "to": "BA", "kind": "supply", "note": "מנועי מטוסים (CFM)"},
+    {"from": "RTX", "to": "BA", "kind": "supply", "note": "מערכות אוויוניקה ומנועים"},
+    {"from": "HWM", "to": "BA", "kind": "supply", "note": "רכיבי מנוע ומחברים"},
+    {"from": "UPS", "to": "AMZN", "kind": "service", "note": "משלוחים; אמזון הייתה הלקוחה הגדולה"}
+  ]
+}

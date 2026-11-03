@@ -1,0 +1,1722 @@
+<title>מטרופולין שוק ההון</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a white clay diorama city on lavender asphalt, full bleed, under floating white glass chrome.
+   Right rail = districts or holdings, left column = camera, bottom = view modes + legend.
+   The company card docks left on desktop and rises as a sheet on phones; the camera view offset
+   keeps the chosen building centred in the part of the city that stays visible. */
+:root{
+  --sky:#EDEFF8; --asphalt:#C6CDE4; --lane:#FFFFFF; --walk:#FAFBFE; --lot:#F1F3FA; --clay:#FFFFFF;
+  --tree:#F4F5FB; --trunk:#CDD2E2; --car:#FFFFFF;
+  --ink:#18203A; --ink-2:#4E5875; --ink-3:#8790A9;
+  --glass:rgba(252,252,255,.84); --glass-strong:rgba(255,255,255,.97);
+  --line:rgba(24,32,58,.09); --line-2:rgba(24,32,58,.17);
+  --accent:#3554F0; --accent-ink:#FFFFFF; --accent-soft:rgba(53,84,240,.11);
+  --up:#0C9E78; --down:#E4474E; --cheap:#0E9AA3; --beacon:#EFA215; --warn:#B66C08;
+  --up-soft:rgba(12,158,120,.12); --down-soft:rgba(228,71,78,.11); --warn-soft:rgba(182,108,8,.12);
+  --shadow:0 18px 40px -14px rgba(40,48,92,.30), 0 2px 6px rgba(40,48,92,.06);
+  --font-ui:"IBM Plex Sans Hebrew","Noto Sans Hebrew","Arial Hebrew",system-ui,sans-serif;
+  --font-data:"IBM Plex Sans Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --gx-l:max(16px, env(safe-area-inset-left, 0px)); --gx-r:max(16px, env(safe-area-inset-right, 0px));
+  --gt:calc(14px + env(safe-area-inset-top, 0px)); --gb:calc(14px + env(safe-area-inset-bottom, 0px));
+  --pw:452px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --sky:#13122B; --asphalt:#1E1C43; --lane:#57539C; --walk:#26244F; --lot:#211F49; --clay:#7471B4;
+  --tree:#2E2B63; --trunk:#3B3878; --car:#CFCBFF;
+  --ink:#EEEDFF; --ink-2:#AFACD8; --ink-3:#7B78AE;
+  --glass:rgba(30,28,64,.82); --glass-strong:rgba(34,32,72,.97);
+  --line:rgba(238,237,255,.10); --line-2:rgba(238,237,255,.19);
+  --accent:#95A6FF; --accent-ink:#121131; --accent-soft:rgba(149,166,255,.16);
+  --up:#41DB9C; --down:#FF6072; --cheap:#46D0D7; --beacon:#FFCF5C; --warn:#F0A43A;
+  --up-soft:rgba(65,219,156,.14); --down-soft:rgba(255,96,114,.15); --warn-soft:rgba(240,164,58,.15);
+  --shadow:0 18px 44px -14px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.25); color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --sky:#13122B; --asphalt:#1E1C43; --lane:#57539C; --walk:#26244F; --lot:#211F49; --clay:#7471B4;
+  --tree:#2E2B63; --trunk:#3B3878; --car:#CFCBFF;
+  --ink:#EEEDFF; --ink-2:#AFACD8; --ink-3:#7B78AE;
+  --glass:rgba(30,28,64,.82); --glass-strong:rgba(34,32,72,.97);
+  --line:rgba(238,237,255,.10); --line-2:rgba(238,237,255,.19);
+  --accent:#95A6FF; --accent-ink:#121131; --accent-soft:rgba(149,166,255,.16);
+  --up:#41DB9C; --down:#FF6072; --cheap:#46D0D7; --beacon:#FFCF5C; --warn:#F0A43A;
+  --up-soft:rgba(65,219,156,.14); --down-soft:rgba(255,96,114,.15); --warn-soft:rgba(240,164,58,.15);
+  --shadow:0 18px 44px -14px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.25); color-scheme:dark; }
+:root.cb{ --up:#2B78D6; --down:#E9861C; --up-soft:rgba(43,120,214,.13); --down-soft:rgba(233,134,28,.14); }
+
+html,body{height:100%; margin:0}
+[hidden]{display:none !important}
+body{background:var(--sky); color:var(--ink); font-family:var(--font-ui); font-size:14px; line-height:1.45; overflow:hidden; -webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit; color:inherit}
+button{cursor:pointer; background:none; border:0; padding:0}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+.num{direction:ltr; unicode-bidi:isolate; font-family:var(--font-data); font-variant-numeric:tabular-nums; letter-spacing:.01em}
+.up{color:var(--up)} .down{color:var(--down)} .muted{color:var(--ink-3)} .warn{color:var(--warn)}
+.glass{background:var(--glass); -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); border:1px solid var(--line); box-shadow:var(--shadow)}
+
+#app{position:fixed; inset:0; overflow:hidden}
+#scene{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; outline:none}
+#leaders{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; z-index:1}
+#leaders line{stroke:var(--ink-2); stroke-width:1.2; opacity:.55}
+#leaders circle{fill:var(--glass-strong); stroke:var(--ink-2); stroke-width:1.5}
+#leaders line.ac{stroke:var(--accent); opacity:.9} #leaders circle.ac{stroke:var(--accent); fill:var(--accent)}
+#labels{position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:2; isolation:isolate}
+.lab{position:absolute; left:0; top:0; will-change:transform; white-space:nowrap}
+
+/* ---------- scene labels ---------- */
+.dlab{z-index:3; pointer-events:auto; cursor:pointer; display:flex; align-items:center; gap:8px; padding:5px 10px 5px 8px; border-radius:11px; font-size:13px; font-weight:600; background:var(--glass-strong); border:1px solid var(--line); box-shadow:0 8px 20px -10px rgba(40,48,92,.45); transition:opacity .25s}
+.dlab i{width:10px; height:10px; border-radius:3px; flex:none}
+.dlab .num{font-size:12px; font-weight:600}
+.dlab.on{outline:2px solid var(--accent)}
+.tk{z-index:1; direction:ltr; font-family:var(--font-data); font-size:11.5px; font-weight:600; color:var(--ink); padding:1px 6px; border-radius:6px; background:var(--glass-strong); border:1px solid var(--line); line-height:16px}
+.tk i{font-style:normal; font-weight:500; margin-left:5px; color:var(--ink-2)}
+.tk i.up{color:var(--up)} .tk i.down{color:var(--down)}
+.st{font-size:11px; font-weight:500; color:var(--ink-3); letter-spacing:.02em; direction:ltr}
+.pin{z-index:2; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-data); font-weight:700; font-size:11.5px; color:var(--accent-ink); background:var(--accent); border:2px solid var(--glass-strong); box-shadow:0 4px 10px -3px rgba(0,0,0,.35)}
+.pin.hold{background:var(--beacon); color:#2A1C00}
+/* anchored callout cards, in the style of the references */
+.co{z-index:4; pointer-events:auto; cursor:pointer; display:flex; flex-direction:column; align-items:center; transition:opacity .2s}
+.co .card{transform:translateX(var(--dx, 0px)); display:flex; align-items:center; gap:10px; padding:8px 12px 8px 10px; border-radius:16px; background:var(--glass-strong); border:1px solid var(--line); box-shadow:var(--shadow); min-width:180px; max-width:290px}
+.co .tile{flex:none; width:36px; height:36px; border-radius:11px; display:grid; place-items:center; color:#fff; background:var(--accent)}
+.co .tile.dn{background:var(--down)} .co .tile.bc{background:var(--beacon); color:#2A1C00} .co .tile.wr{background:var(--warn)} .co .tile.up{background:var(--up)}
+.co b{display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:13.5px; font-weight:600; line-height:1.3; white-space:normal}
+.co .chips{display:flex; gap:4px; margin-top:3px; flex-wrap:wrap}
+.co .chips span{font-size:10.5px; font-weight:600; padding:1px 7px; border-radius:99px; background:var(--accent-soft); color:var(--accent)}
+.co .chips span.dn{background:var(--down-soft); color:var(--down)} .co .chips span.up{background:var(--up-soft); color:var(--up)} .co .chips span.wr{background:var(--warn-soft); color:var(--warn)}
+.co .stem{width:1.5px; height:34px; background:var(--ink-3); opacity:.6}
+.co .dot{width:9px; height:9px; border-radius:50%; background:var(--glass-strong); border:2px solid var(--ink-2); margin-top:-1px}
+.co.small .card{min-width:0; padding:5px 9px 5px 7px; gap:7px; border-radius:12px}
+.co.small .tile{width:22px; height:22px; border-radius:7px}
+.co.small b{font-size:12px}
+.co.small .stem{height:20px}
+
+/* hover card */
+.hcard{position:absolute; z-index:5; left:0; top:0; width:256px; padding:12px 14px; border-radius:16px; pointer-events:auto; transition:opacity .15s}
+.hcard .h1{display:flex; align-items:baseline; justify-content:space-between; gap:8px}
+.hcard .tkr{font-family:var(--font-data); font-weight:700; font-size:18px}
+.hcard .nm{font-size:12.5px; color:var(--ink-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px}
+.kv3{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px}
+.kv3 div{display:flex; flex-direction:column; min-width:0}
+.kv3 span{font-size:11px; color:var(--ink-3)}
+.kv3 b{font-size:13.5px; font-weight:600}
+.cta{display:flex; width:100%; height:34px; align-items:center; justify-content:center; border-radius:11px; background:var(--accent); color:var(--accent-ink); font-size:13px; font-weight:600}
+.cta:hover{filter:brightness(1.08)}
+
+/* ---------- chrome ---------- */
+#ui{position:fixed; inset:0; z-index:6; pointer-events:none; padding-left:var(--gx-l); padding-right:var(--gx-r); padding-block:var(--gt) var(--gb);
+  display:grid; grid-template-columns:300px minmax(0,1fr) auto; grid-template-rows:auto minmax(0,1fr) auto; gap:14px; grid-template-areas:"top top top" "rail . side" "foot foot foot"}
+#ui > *{pointer-events:auto}
+.top{grid-area:top; display:flex; align-items:center; gap:10px; min-width:0; pointer-events:none}
+.top > *{pointer-events:auto}
+.brand{display:flex; align-items:center; gap:11px; padding:8px 16px 8px 12px; border-radius:16px}
+.brand b{display:block; font-size:18px; font-weight:700; letter-spacing:-.01em; line-height:1.1}
+.brand small{display:block; font-size:11.5px; color:var(--ink-3); line-height:1.2}
+.strip{display:flex; align-items:center; gap:2px; padding:5px; border-radius:16px; min-width:0; overflow:hidden}
+.stat{display:flex; flex-direction:column; padding:3px 12px; white-space:nowrap; border-inline-start:1px solid var(--line)}
+.stat:first-child{border-inline-start:0}
+.stat span{font-size:11px; color:var(--ink-3); line-height:1.15}
+.stat b{font-size:13.5px; font-weight:600; line-height:1.3}
+.dot{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--ink-3); margin-inline-end:6px; vertical-align:1px}
+.dot.ok,.dot.open{background:var(--up); box-shadow:0 0 0 3px var(--up-soft)} .dot.pre,.dot.post,.dot.stale,.dot.never{background:var(--warn)} .dot.error{background:var(--down)}
+.top .spacer{flex:1}
+.actions{display:flex; gap:8px; align-items:center}
+.btn{display:inline-flex; align-items:center; gap:8px; height:40px; padding:0 13px; border-radius:13px; font-size:13.5px; font-weight:500; transition:background .15s; position:relative}
+.btn:hover{background:var(--accent-soft)}
+.btn.icon{width:40px; padding:0; justify-content:center}
+.btn kbd{font-family:var(--font-data); font-size:11px; color:var(--ink-3); border:1px solid var(--line-2); border-radius:5px; padding:0 5px; line-height:17px}
+.badge{position:absolute; top:4px; left:4px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:var(--down); color:#fff; font-family:var(--font-data); font-size:11px; font-weight:700; display:grid; place-items:center}
+.modechip{display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 11px; border-radius:99px; font-size:12px; font-weight:600; white-space:nowrap}
+.modechip.demo{color:var(--warn); background:var(--warn-soft); border:1px solid color-mix(in srgb, var(--warn) 30%, transparent)}
+.modechip.live{color:var(--up); background:var(--up-soft); border:1px solid color-mix(in srgb, var(--up) 30%, transparent)}
+
+.rail{grid-area:rail; align-self:start; border-radius:20px; display:flex; flex-direction:column; max-height:100%; min-height:0; overflow:hidden}
+.rail header{padding:14px 16px 8px; display:flex; align-items:baseline; justify-content:space-between; gap:8px}
+.rail h2{margin:0; font-size:15px; font-weight:600}
+.rail header small{font-size:11.5px; color:var(--ink-3)}
+.rail ol{list-style:none; margin:0; padding:0 6px 6px; overflow:auto; min-height:0}
+.rail footer{padding:8px 16px 12px; font-size:11px; color:var(--ink-3); border-top:1px solid var(--line)}
+.drow{display:grid; grid-template-columns:10px minmax(0,1fr) auto; grid-template-rows:auto auto; column-gap:10px; row-gap:5px; align-items:center; width:100%; padding:8px 10px; border-radius:11px; text-align:start}
+.drow:hover,.drow.on{background:var(--accent-soft)}
+.drow .sw{width:10px; height:10px; border-radius:3px}
+.drow .nm{font-weight:500; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.drow .nm em{font-style:normal; font-family:var(--font-data); font-size:11px; color:var(--ink-3); margin-inline-start:6px}
+.drow .v{font-size:13px; font-weight:600}
+.drow .br{grid-column:2 / 4; height:4px; border-radius:2px; background:var(--down-soft); overflow:hidden; position:relative}
+.drow .br i{position:absolute; inset-block:0; inset-inline-start:0; background:var(--up); border-radius:2px}
+.hrow{display:grid; grid-template-columns:52px minmax(0,1fr) auto; gap:4px 10px; align-items:center; width:100%; padding:8px 10px; border-radius:11px; text-align:start}
+.hrow:hover{background:var(--accent-soft)}
+.hrow .t{font-family:var(--font-data); font-weight:700; font-size:14px}
+.hrow .w{height:5px; border-radius:3px; background:var(--line); position:relative; overflow:hidden}
+.hrow .w i{position:absolute; inset-block:0; inset-inline-start:0; background:var(--accent); border-radius:3px}
+.hrow .meta{grid-column:2 / 4; display:flex; gap:6px; align-items:center; font-size:11.5px; color:var(--ink-3)}
+.expo{padding:4px 16px 12px}
+.expo .bar{display:flex; height:10px; border-radius:5px; overflow:hidden; margin:6px 0}
+.expo .bar i{display:block; height:100%}
+.expo .keys{display:flex; flex-wrap:wrap; gap:4px 10px; font-size:11.5px; color:var(--ink-2)}
+.expo .keys span{display:inline-flex; gap:5px; align-items:center}
+.expo .keys span::before{content:""; width:8px; height:8px; border-radius:2px; background:var(--c)}
+
+.side{grid-area:side; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end; min-height:0; gap:12px; pointer-events:none}
+.side > *{pointer-events:auto}
+.cam{display:flex; flex-direction:column; border-radius:15px; padding:4px; gap:2px}
+.cam button{width:40px; height:40px; border-radius:11px; display:grid; place-items:center; color:var(--ink-2); font-family:var(--font-data); font-weight:600; font-size:12.5px}
+.cam button:hover{background:var(--accent-soft); color:var(--ink)}
+.cam button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
+.cam hr{border:0; height:1px; background:var(--line); margin:2px 6px}
+
+.foot{grid-area:foot; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:end; gap:14px; pointer-events:none; min-width:0; transition:margin-left .45s cubic-bezier(.2,.8,.2,1)}
+.foot > *{pointer-events:auto}
+#ui.panel-open .foot{margin-left:calc(var(--pw) + 14px); display:flex}
+#ui.panel-open .side{visibility:hidden}
+.modes{grid-column:2; display:flex; gap:2px; padding:5px; border-radius:18px; margin-inline:auto; min-width:0}
+.mode{display:flex; flex-direction:column; align-items:flex-start; padding:7px 16px 8px; border-radius:13px; min-width:118px; transition:background .18s, color .18s; text-align:start}
+.mode b{font-size:14px; font-weight:600}
+.mode small{font-size:11.5px; color:var(--ink-3)}
+.mode:hover{background:var(--accent-soft)}
+.mode[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
+.mode[aria-pressed="true"] small{color:color-mix(in srgb, var(--accent-ink) 72%, transparent)}
+.legend{grid-column:3; justify-self:end; border-radius:16px; padding:12px 14px; width:288px; font-size:12.5px; color:var(--ink-2)}
+#ui.panel-open .legend{width:230px} #ui.panel-open .legend .lrow,#ui.panel-open .legend label{display:none}
+.legend h3{margin:0 0 6px; font-size:13px; font-weight:600; color:var(--ink)}
+.legend .lrow{display:flex; gap:8px; align-items:center; margin:3px 0}
+.legend .ico{flex:none; width:16px; text-align:center; color:var(--ink-3)}
+.ramp{height:8px; border-radius:4px; margin:8px 0 4px}
+.rampl{display:flex; justify-content:space-between; font-size:11px; color:var(--ink-3); direction:ltr}
+.legend label{display:flex; align-items:center; gap:7px; margin-top:8px; padding-top:8px; border-top:1px solid var(--line); font-size:12px; cursor:pointer}
+.legend input{accent-color:var(--accent); margin:0}
+
+/* ---------- company panel ---------- */
+#panel{position:fixed; z-index:20; top:calc(var(--gt) + 70px); bottom:var(--gb); left:var(--gx-l); width:var(--pw); border-radius:22px; display:flex; flex-direction:column; overflow:hidden; background:var(--glass-strong); transform:translateX(calc(-100% - 40px)); transition:transform .45s cubic-bezier(.2,.8,.2,1); visibility:hidden}
+#panel.open{transform:none; visibility:visible}
+.p-head{padding:16px 18px 0; flex:none}
+.crumbs{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-3); margin-bottom:8px; min-width:0}
+.crumbs button{color:var(--ink-2); font-weight:500; white-space:nowrap}
+.crumbs button:hover{color:var(--accent)}
+.crumbs .street{direction:ltr; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.p-x{margin-inline-start:auto; display:flex; gap:4px}
+.p-x button{width:32px; height:32px; border-radius:10px; display:grid; place-items:center; color:var(--ink-2)}
+.p-x button:hover{background:var(--line)}
+.p-x button[aria-pressed="true"]{color:var(--beacon)}
+.p-id{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+.p-id .tkr{font-family:var(--font-data); font-size:30px; font-weight:700; line-height:1}
+.p-id .nm{font-size:14px; color:var(--ink-2)}
+.p-id .alts{font-family:var(--font-data); font-size:11.5px; color:var(--ink-3)}
+.p-px{display:flex; align-items:baseline; gap:10px; margin-top:9px; flex-wrap:wrap}
+.p-px .px{font-size:24px; font-weight:600}
+.p-px .ch{font-size:15px; font-weight:600}
+.chip{display:inline-flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:99px; font-size:11.5px; font-weight:600; background:var(--line); color:var(--ink-2); white-space:nowrap}
+.chip.up{background:var(--up-soft); color:var(--up)} .chip.down{background:var(--down-soft); color:var(--down)}
+.chip.ac{background:var(--accent-soft); color:var(--accent)} .chip.wr{background:var(--warn-soft); color:var(--warn)}
+.p-meta{display:flex; gap:6px; flex-wrap:wrap; margin-top:9px}
+.tabs{display:flex; gap:2px; margin:12px -18px 0; padding:0 14px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none}
+.tab{padding:9px 10px 10px; font-size:13.5px; font-weight:500; color:var(--ink-2); border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink); border-color:var(--accent); font-weight:600}
+.tab .n{font-family:var(--font-data); font-size:11px; color:var(--ink-3); margin-inline-start:4px}
+.p-body{overflow:auto; padding:4px 18px 28px; flex:1; min-height:0; overscroll-behavior:contain}
+.sec{padding:14px 0; border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0}
+.sec h4{margin:0 0 10px; font-size:13.5px; font-weight:600; display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.sec h4 small{font-size:11.5px; font-weight:400; color:var(--ink-3)}
+.chart{position:relative}
+.chart svg{display:block; width:100%; height:auto}
+.chart .yl{position:absolute; left:0; font-size:11px; color:var(--ink-3); transform:translateY(-50%)}
+.range{margin-top:10px; font-size:11.5px; color:var(--ink-3)}
+.track{position:relative; height:6px; border-radius:3px; background:var(--line); margin:6px 0 4px; direction:ltr}
+.track i{position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:var(--accent); border:2px solid var(--glass-strong); transform:translate(-50%,-50%)}
+.track s{position:absolute; top:-3px; width:2px; height:12px; background:var(--ink-3); transform:translateX(-50%)}
+.track .zone{position:absolute; inset-block:0; border-radius:3px; background:var(--accent-soft)}
+.trl{display:flex; justify-content:space-between; direction:ltr}
+.decomp{display:grid; grid-template-columns:96px minmax(0,1fr) 60px; gap:7px 10px; align-items:center; font-size:12.5px}
+.decomp .bar{position:relative; height:10px; background:var(--line); border-radius:2px; direction:ltr}
+.decomp .bar::before{content:""; position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; background:var(--line-2)}
+.decomp .bar i{position:absolute; top:0; bottom:0; border-radius:2px}
+.decomp .val{text-align:left; font-weight:600}
+.note{font-size:12.5px; color:var(--ink-2); margin:10px 0 0}
+.rings{display:grid; grid-template-columns:auto repeat(4,1fr); gap:10px; align-items:center}
+.total{display:flex; flex-direction:column; align-items:center; padding-inline-end:8px; border-inline-end:1px solid var(--line)}
+.total b{font-size:28px; font-weight:700; line-height:1}
+.total span{font-size:11px; color:var(--ink-3)}
+.ring{display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11.5px; color:var(--ink-2)}
+.ring svg{width:46px; height:46px}
+.kvg{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.kvg div{display:flex; flex-direction:column; gap:1px; padding:9px 10px; border-radius:11px; background:color-mix(in srgb, var(--ink) 4%, transparent); min-width:0}
+.kvg span{font-size:11px; color:var(--ink-3)}
+.kvg b{font-size:14px; font-weight:600}
+.kvg small{font-size:11px; color:var(--ink-3)}
+.fair{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px}
+.fair div{padding:8px 10px; border-radius:11px; border:1px solid var(--line); display:flex; flex-direction:column}
+.fair span{font-size:11px; color:var(--ink-3)} .fair b{font-size:15px}
+.link{display:inline-flex; gap:6px; align-items:center; margin-top:10px; font-size:13px; font-weight:600; color:var(--accent); text-decoration:none}
+.link:hover{text-decoration:underline}
+.calc{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.fld{display:flex; flex-direction:column; gap:3px; min-width:0}
+.fld label{font-size:11px; color:var(--ink-3)}
+.fld input,.fld select,.fld textarea{width:100%; height:34px; border-radius:10px; border:1px solid var(--line-2); background:var(--glass); padding:0 9px; font-size:13.5px}
+.fld input{font-family:var(--font-data); font-variant-numeric:tabular-nums; direction:ltr; text-align:right}
+.fld textarea{height:auto; min-height:76px; padding:8px 10px; resize:vertical; line-height:1.5}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--accent); outline:none; box-shadow:0 0 0 3px var(--accent-soft)}
+.res{margin-top:10px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px}
+.res div{display:flex; flex-direction:column; padding:8px 10px; border-radius:11px; background:var(--accent-soft)}
+.res span{font-size:11px; color:var(--ink-2)} .res b{font-size:15px; font-weight:700}
+.warnline{margin-top:8px; font-size:12px; color:var(--warn)}
+.peer{display:grid; grid-template-columns:58px minmax(0,1fr) 54px 54px; gap:10px; align-items:center; padding:7px 8px; border-radius:10px; text-align:start; font-size:13px; width:100%}
+.peer:hover{background:var(--accent-soft)}
+.peer .t{font-family:var(--font-data); font-weight:700}
+.peer .n{color:var(--ink-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.peer.me{background:var(--line)}
+.peer.hd{font-size:11px; color:var(--ink-3); cursor:default}
+.peer.hd:hover{background:none}
+.btn2{display:inline-flex; align-items:center; justify-content:center; gap:6px; height:34px; padding:0 14px; border-radius:11px; font-size:13px; font-weight:600; background:var(--accent); color:var(--accent-ink)}
+.btn2.ghost{background:var(--accent-soft); color:var(--accent)}
+.btn2.quiet{background:var(--line); color:var(--ink-2)}
+.row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.empty{padding:16px; border:1px dashed var(--line-2); border-radius:14px; color:var(--ink-2); font-size:13px}
+.empty b{display:block; color:var(--ink); margin-bottom:4px}
+/* report card */
+.verif{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
+.headline{font-size:15.5px; font-weight:600; line-height:1.5; margin:4px 0 0; text-wrap:balance}
+.para{font-size:13.5px; color:var(--ink-2); margin:6px 0 0; line-height:1.6}
+.wwl{display:grid; gap:8px}
+.wwl > div{padding:11px 12px; border-radius:13px; background:color-mix(in srgb, var(--ink) 3.5%, transparent)}
+.wwl b{display:block; font-size:12px; color:var(--ink-3); font-weight:600; margin-bottom:3px}
+.mt{width:100%; border-collapse:collapse; font-size:12.5px}
+.mt th{font-weight:500; color:var(--ink-3); text-align:start; padding:5px 6px; border-bottom:1px solid var(--line); font-size:11.5px}
+.mt td{padding:6px; border-bottom:1px solid var(--line); vertical-align:top}
+.mt.q td,.mt.q th{padding:6px 4px}
+.mt td.n{font-family:var(--font-data); font-variant-numeric:tabular-nums; direction:ltr; text-align:left; white-space:nowrap}
+.mt tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.vi{display:inline-grid; place-items:center; width:16px; height:16px; border-radius:50%; font-size:10px; font-weight:700; margin-inline-start:4px; vertical-align:1px}
+.vi.ok{background:var(--up-soft); color:var(--up)} .vi.mid{background:var(--accent-soft); color:var(--accent)} .vi.no{background:var(--down-soft); color:var(--down)}
+.cov{display:flex; flex-direction:column}
+.covi{border-bottom:1px solid var(--line)}
+.covi:last-child{border-bottom:0}
+.covi summary{display:grid; grid-template-columns:10px minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 2px; cursor:pointer; list-style:none; font-size:13px}
+.covi summary::-webkit-details-marker{display:none}
+.covi .sv{width:10px; height:10px; border-radius:50%; background:var(--line-2)}
+.covi .sv.positive{background:var(--up)} .covi .sv.watch{background:var(--warn)} .covi .sv.red_flag{background:var(--down)} .covi .sv.neutral{background:var(--ink-3)}
+.covi .body{padding:0 22px 10px; font-size:12.5px; color:var(--ink-2)}
+.quote{margin:6px 0 0; padding:6px 10px; border-inline-start:3px solid var(--line-2); font-size:12px; color:var(--ink-2); direction:ltr; text-align:left; font-style:italic}
+.qa{padding:10px 0; border-bottom:1px solid var(--line)}
+.qa:last-child{border-bottom:0}
+.qa .q{font-weight:600; font-size:13px}
+.qa .a{font-size:12.5px; color:var(--ink-2); margin-top:3px}
+ul.clean{margin:4px 0 0; padding-inline-start:18px; font-size:13px; color:var(--ink-2)}
+ul.clean li{margin:2px 0}
+.tl{display:flex; flex-direction:column}
+.tli{display:grid; grid-template-columns:62px 10px minmax(0,1fr); gap:10px; align-items:start; padding:7px 0; font-size:12.5px}
+.tli time{color:var(--ink-3); font-family:var(--font-data); font-size:11.5px; direction:ltr; text-align:left}
+.tli i{width:10px; height:10px; border-radius:50%; margin-top:4px; background:var(--ink-3)}
+.tli i.veto,.tli i.high{background:var(--down)} .tli i.watch{background:var(--warn)} .tli i.good{background:var(--up)} .tli i.info{background:var(--line-2)}
+.tli a{color:inherit}
+.krow{display:grid; grid-template-columns:minmax(0,1.6fr) 72px minmax(0,1fr) 30px; gap:6px; align-items:end; margin-bottom:6px}
+.krow .x{height:34px; border-radius:10px; color:var(--ink-3)}
+.krow .x:hover{background:var(--line)}
+.checks{display:flex; flex-direction:column; gap:6px; font-size:13px}
+.checks label{display:flex; gap:8px; align-items:center}
+.checks input[type=checkbox]{accent-color:var(--accent); width:16px; height:16px; margin:0}
+.checks input[type=number]{width:96px; height:30px; border-radius:9px; border:1px solid var(--line-2); background:var(--glass); padding:0 8px; direction:ltr; font-family:var(--font-data)}
+.jr{padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
+.jr:last-child{border-bottom:0}
+.jr .h{display:flex; gap:8px; align-items:center}
+
+/* ---------- overlays ---------- */
+.overlay{position:fixed; inset:0; z-index:40; display:grid; place-items:start center; padding-top:calc(10vh + env(safe-area-inset-top, 0px)); padding-left:var(--gx-l); padding-right:var(--gx-r); background:color-mix(in srgb, var(--sky) 45%, transparent)}
+.sbox{width:min(600px, 100%); border-radius:20px; overflow:hidden; background:var(--glass-strong)}
+.sbox .in{display:flex; align-items:center; gap:10px; padding:0 16px; border-bottom:1px solid var(--line)}
+.sbox input{flex:1; min-width:0; height:56px; border:0; background:transparent; font-size:17px; outline:none}
+.sbox ul{list-style:none; margin:0; padding:6px; max-height:52vh; overflow:auto}
+.sres{display:grid; grid-template-columns:70px minmax(0,1fr) auto; gap:12px; align-items:center; width:100%; padding:10px 12px; border-radius:12px; text-align:start}
+.sres[aria-selected="true"]{background:var(--accent-soft)}
+.sres .t{font-family:var(--font-data); font-weight:700; font-size:15px}
+.sres .n{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sres .n small{display:block; font-size:11.5px; color:var(--ink-3)}
+.sbox footer{display:flex; gap:14px; padding:9px 16px; font-size:11.5px; color:var(--ink-3); border-top:1px solid var(--line)}
+.sbox .none{padding:22px 16px; color:var(--ink-3); font-size:13px}
+.drawer{position:fixed; z-index:30; top:calc(var(--gt) + 62px); right:var(--gx-r); width:min(380px, calc(100vw - 32px)); max-height:calc(100vh - var(--gt) - var(--gb) - 80px); border-radius:20px; display:flex; flex-direction:column; overflow:hidden; background:var(--glass-strong)}
+.drawer header{display:flex; align-items:center; justify-content:space-between; padding:14px 16px 10px; border-bottom:1px solid var(--line)}
+.drawer h2{margin:0; font-size:15px}
+.drawer .list{overflow:auto; padding:6px}
+.al{display:grid; grid-template-columns:30px minmax(0,1fr); gap:10px; width:100%; padding:10px; border-radius:13px; text-align:start}
+.al:hover{background:var(--accent-soft)}
+.al .tile{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; color:#fff; background:var(--accent)}
+.al .tile.urgent{background:var(--down)} .al .tile.important{background:var(--warn)} .al .tile.digest{background:var(--ink-3)}
+.al b{font-size:13px; font-weight:600; display:block}
+.al p{margin:2px 0 0; font-size:12px; color:var(--ink-2)}
+.al time{font-size:11px; color:var(--ink-3); font-family:var(--font-data)}
+.al.read{opacity:.6}
+.sheet{width:min(720px, 100%); max-height:80vh; border-radius:22px; overflow:hidden; display:flex; flex-direction:column; background:var(--glass-strong)}
+.sheet header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px 20px 12px; border-bottom:1px solid var(--line)}
+.sheet h2{margin:0; font-size:18px}
+.sheet .body{overflow:auto; padding:6px 20px 20px}
+.bgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px}
+.bcard{padding:10px 12px; border-radius:13px; border:1px solid var(--line); text-align:start; display:flex; flex-direction:column; gap:2px}
+.bcard:hover{background:var(--accent-soft)}
+.bcard .t{font-family:var(--font-data); font-weight:700; font-size:15px}
+.tickers{display:flex; flex-wrap:wrap; gap:6px}
+.tickers button{font-family:var(--font-data); font-weight:600; font-size:12.5px; padding:3px 9px; border-radius:8px; background:var(--line)}
+.tickers button.f{background:var(--accent-soft); color:var(--accent)}
+.status{position:fixed; z-index:30; top:calc(var(--gt) + 62px); right:var(--gx-r); width:min(400px, calc(100vw - 32px)); border-radius:20px; padding:14px 16px; background:var(--glass-strong)}
+.status h2{margin:0 0 8px; font-size:15px}
+.srow{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px}
+.srow:last-of-type{border-bottom:0}
+.srow small{color:var(--ink-3); font-size:11.5px}
+.toast{position:fixed; z-index:60; bottom:calc(var(--gb) + 86px); left:50%; transform:translateX(-50%); padding:10px 16px; border-radius:13px; background:var(--ink); color:var(--sky); font-size:13px; font-weight:500; box-shadow:var(--shadow)}
+#boot{position:fixed; inset:0; z-index:1; display:grid; place-items:center; pointer-events:none; color:var(--ink-3); font-size:13.5px; transition:opacity .6s}
+#boot span{display:flex; align-items:center; gap:10px}
+#boot i{width:14px; height:14px; border-radius:50%; border:2px solid var(--line-2); border-top-color:var(--accent); animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#fail{position:fixed; inset:0; z-index:70; display:grid; place-items:center; padding:24px; text-align:center; color:var(--ink-2); background:var(--sky)}
+
+@media (max-width: 860px){
+  #ui{grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"top top" ". side" "foot foot"; gap:10px}
+  #ui.panel-open .foot{opacity:0; pointer-events:none; margin-left:0}
+  .rail{display:none; position:fixed; inset:auto var(--gx-r) calc(var(--gb) + 74px) var(--gx-l); max-height:55vh; z-index:15}
+  .rail.show{display:flex}
+  .strip{display:none}
+  .brand{padding:7px 11px}
+  .brand small,.brand div,.btn .lbl,.btn kbd,.modechip .full,#statusBtn{display:none}
+  .cam #zIn,.cam #zOut,.cam #rotate,.cam hr{display:none}
+  .actions{gap:6px}
+  .btn.icon,.btn{width:38px; height:38px; padding:0; justify-content:center}
+  .foot,#ui.panel-open .foot{display:flex; flex-direction:column; align-items:stretch; gap:8px}
+  .modes{order:2; margin-inline:0; overflow-x:auto; scrollbar-width:none}
+  .modes{overflow:visible} .mode{min-width:0; padding:8px 4px; flex:1 1 0; align-items:center; font-size:13px} .mode b{font-size:13px; white-space:nowrap}
+  .mode small{display:none}
+  .legend{order:1; align-self:flex-start; width:auto; max-width:100%; padding:8px 12px}
+  .legend .lrow,.legend label,.legend h3{display:none}
+  .legend .ramp{width:200px; margin:2px 0}
+  #panel{top:auto; left:0; right:0; bottom:0; width:auto; height:80%; border-radius:24px 24px 0 0; transform:translateY(105%); padding-bottom:env(safe-area-inset-bottom, 0px)}
+  #panel.open{transform:none}
+  .p-head,.p-body{padding-left:var(--gx-l); padding-right:var(--gx-r)}
+  .tabs{margin-left:calc(-1 * var(--gx-l)); margin-right:calc(-1 * var(--gx-r))}
+  .hcard{display:none}
+  .rings{grid-template-columns:repeat(5,1fr)}
+  .res{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .co .card{min-width:0; max-width:200px; padding:6px 10px 6px 8px}
+  .co .tile{width:28px; height:28px}
+  .co .chips span:nth-child(n+3){display:none}
+}
+@media (min-width: 861px){ .only-phone{display:none !important} }
+@media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
+</style>
+
+<div id="app" dir="rtl" lang="he">
+  <div id="boot"><span><i></i>בונה את העיר</span></div>
+  <canvas id="scene" tabindex="0" aria-label="מפת העיר התלת-ממדית של מניות S&amp;P 500"></canvas>
+  <svg id="leaders" aria-hidden="true"></svg>
+  <div id="labels" aria-hidden="true"></div>
+  <div id="hcard" class="hcard glass" hidden></div>
+
+  <div id="ui">
+    <div class="top">
+      <div class="brand glass">
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M3 24V13l6-2.4V24z" fill="var(--accent)" opacity=".42"/><path d="M10 24V6.5l7-3.5v21z" fill="var(--accent)"/><path d="M18 24V10.5l7 2.2V24z" fill="var(--accent)" opacity=".68"/></svg>
+        <div><b>מטרופולין</b><small>S&amp;P 500 · 11 רובעים</small></div>
+      </div>
+      <div class="strip glass" id="strip"></div>
+      <div class="spacer"></div>
+      <div class="actions">
+        <button class="modechip" type="button" id="modeChip"></button>
+        <button class="btn glass only-phone" type="button" id="railBtn" aria-label="רובעים" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 2h6v6H2zM10 2h6v4h-6zM10 8h6v8h-6zM2 10h6v6H2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+        <button class="btn glass" type="button" id="briefBtn" aria-label="תדריך בוקר"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5h7l3 3V15.5H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.5 8h5M6.5 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="lbl">תדריך</span></button>
+        <button class="btn glass" type="button" id="searchBtn" aria-label="חיפוש מניה"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 12l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="lbl">חיפוש מניה</span><kbd>Ctrl K</kbd></button>
+        <button class="btn glass icon" type="button" id="bellBtn" aria-label="התראות"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4.5 12.5V8a4.5 4.5 0 0 1 9 0v4.5l1.5 1.5H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7.3 15.5a1.8 1.8 0 0 0 3.4 0" stroke="currentColor" stroke-width="1.5" fill="none"/></svg><span class="badge" id="bellBadge" hidden></span></button>
+        <button class="btn glass icon" type="button" id="statusBtn" aria-label="מצב החיבורים"><span class="dot" id="statusDot" style="margin:0"></span></button>
+        <button class="btn glass icon" type="button" id="themeBtn" aria-label="מצב לילה"></button>
+      </div>
+    </div>
+
+    <section class="rail glass" id="rail" aria-label="רובעים"></section>
+
+    <div class="side">
+      <div class="cam glass" role="group" aria-label="מצלמה">
+        <button type="button" id="zIn" aria-label="התקרבות">+</button>
+        <button type="button" id="zOut" aria-label="התרחקות">−</button>
+        <hr>
+        <button type="button" id="home" aria-label="כל העיר"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="9" r="1.8" fill="currentColor"/></svg></button>
+        <button type="button" id="rotate" aria-label="סיבוב ברבע"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M14.5 9A5.5 5.5 0 1 1 9 3.5h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 1.5 12.5 3.5 10.5 5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" id="flat" aria-pressed="false" aria-label="מבט על דו-ממדי">2D</button>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="modes glass" role="group" aria-label="מצב תצוגה" id="modes"></div>
+      <div class="legend glass" id="legend"></div>
+    </div>
+  </div>
+
+  <aside id="panel" class="glass" aria-label="כרטיס חברה" aria-hidden="true"></aside>
+
+  <div id="search" class="overlay" hidden>
+    <div class="sbox glass" role="dialog" aria-modal="true" aria-label="חיפוש מניה">
+      <div class="in"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 12l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <input id="q" type="text" autocomplete="off" spellcheck="false" placeholder="סימול, שם חברה, רובע או תת-ענף" aria-label="חיפוש" aria-controls="qres"></div>
+      <ul id="qres" role="listbox"></ul>
+      <footer><span>↑↓ ניווט</span><span>Enter פתיחה</span><span>Esc סגירה</span></footer>
+    </div>
+  </div>
+  <div id="drawer" class="drawer glass" hidden role="dialog" aria-label="התראות"></div>
+  <div id="statusPop" class="status glass" hidden role="dialog" aria-label="מצב החיבורים"></div>
+  <div id="brief" class="overlay" hidden><div class="sheet glass" role="dialog" aria-modal="true" aria-label="תדריך בוקר" id="briefBody"></div></div>
+  <div id="toast" class="toast" hidden role="status"></div>
+</div>
+
+<script type="importmap">
+/*__IMPORTMAP__*/{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { MapControls } from 'three/addons/controls/MapControls.js';
+
+const DEMO = /*__DEMO__*/null;
+
+/* ================= utilities ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const hash = s => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const MINUS = '−';
+const isNum = v => typeof v === 'number' && isFinite(v);
+const fmtPct = (v, d = 2) => !isNum(v) ? '–' : (v > 0.0049 ? '+' : v < -0.0049 ? MINUS : '') + Math.abs(v).toFixed(d) + '%';
+const fmtNum = (v, d = 2) => !isNum(v) ? '–' : (v < 0 ? MINUS : '') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtUsd = (v, d = 2) => !isNum(v) ? '–' : (v < 0 ? MINUS : '') + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtBig = v => { if (!isNum(v)) return '–'; const a = Math.abs(v), s = v < 0 ? MINUS : ''; return a >= 1e12 ? `${s}$${(a / 1e12).toFixed(2)}T` : a >= 1e9 ? `${s}$${(a / 1e9).toFixed(a >= 1e11 ? 0 : 1)}B` : a >= 1e6 ? `${s}$${(a / 1e6).toFixed(0)}M` : `${s}$${a.toFixed(0)}`; };
+const fmtCapB = b => !isNum(b) ? '–' : b >= 1000 ? '$' + (b / 1000).toFixed(2) + 'T' : '$' + Math.round(b) + 'B';
+const N = s => `<span class="num">${s}</span>`;
+const sg = v => !isNum(v) ? '' : v > 0.0049 ? 'up' : v < -0.0049 ? 'down' : '';
+const store = { get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+const HE_DAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+const dLabel = iso => { if (!iso) return '–'; const d = new Date(iso + 'T12:00:00Z'); return `${HE_DAYS[d.getUTCDay()]} ${d.getUTCDate()}.${d.getUTCMonth() + 1}`; };
+const ago = iso => { if (!iso) return ''; const s = (Date.now() - new Date(iso.endsWith('Z') ? iso : iso + 'Z').getTime()) / 1000; if (s < 90) return 'עכשיו'; if (s < 3600) return `לפני ${Math.round(s / 60)} דק׳`; if (s < 86400) return `לפני ${Math.round(s / 3600)} שע׳`; return `לפני ${Math.round(s / 86400)} ימים`; };
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 2600); }
+const GLYPH = {
+  alert: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2.5 16 15H2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 7v3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="9" cy="12.7" r="1" fill="currentColor"/></svg>',
+  star: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 1.8 10.8 7.2 16.2 9 10.8 10.8 9 16.2 7.2 10.8 1.8 9 7.2 7.2z" fill="currentColor"/></svg>',
+  cal: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="3.5" width="13" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 7.5h13M6 2v3M12 2v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  case: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.5" width="14" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 5.5V4a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 11.5 4v1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+  link: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M7.5 10.5 10.5 7.5M8 4.5l1-1a3.2 3.2 0 0 1 4.5 4.5l-1 1M10 13.5l-1 1A3.2 3.2 0 0 1 4.5 10l1-1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  up: '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 12.5 7.5 8l3 3L15 6.5M11 6.5h4v4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+
+/* ================= data access: live API or embedded demo ================= */
+const LS_PREFIX = 'metro2.';
+async function api(path, opts = {}){
+  if (DEMO) return demoApi(path, opts);
+  const r = await fetch(path, { ...opts, headers: { 'content-type': 'application/json', ...(opts.headers || {}) } });
+  if (!r.ok) { let msg = r.statusText; try { const j = await r.json(); msg = j.detail || msg; } catch {} throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg)); }
+  return r.json();
+}
+function demoLocal(){ return store.get(LS_PREFIX + 'demo', { theses: {}, journal: [], watch: {}, unwatch: [] }); }
+function demoSave(v){ store.set(LS_PREFIX + 'demo', v); }
+async function demoApi(path, opts){
+  const u = new URL(path, 'http://x'); const p = u.pathname; const method = (opts.method || 'GET').toUpperCase();
+  const body = opts.body ? JSON.parse(opts.body) : null; const L = demoLocal();
+  if (p === '/api/city') { const c = structuredClone(DEMO.city); for (const r of c.companies) { if (L.watch[r.t]) r.watch = true; if (L.unwatch.includes(r.t)) r.watch = false; } return c; }
+  if (p === '/api/status') return DEMO.status;
+  if (p === '/api/brief') return DEMO.brief;
+  if (p === '/api/portfolio') return DEMO.portfolio;
+  if (p === '/api/alerts') return DEMO.city.alerts;
+  if (p === '/api/thesis-options') return DEMO.thesis_options;
+  if (p === '/api/quotes') return { quotes: {} };
+  if (p === '/api/journal' && method === 'GET') return [...L.journal, ...DEMO.journal];
+  if (p === '/api/journal' && method === 'POST') { L.journal.unshift({ id: Date.now(), ts: new Date().toISOString().slice(0, 19), t: body.ticker, ticker: body.ticker, action: body.action, price: body.price, note: body.note, snapshot: {} }); demoSave(L); return { id: L.journal[0].id }; }
+  let m = p.match(/^\/api\/thesis\/(.+)$/);
+  if (m) { if (method === 'PUT') L.theses[m[1]] = { ...body, status: 'ok', reasons: [], updated: new Date().toISOString(), local: true }; else delete L.theses[m[1]]; demoSave(L); return { ok: true }; }
+  m = p.match(/^\/api\/watchlist\/(.+)$/);
+  if (m) { if (method === 'PUT') { L.watch[m[1]] = body; L.unwatch = L.unwatch.filter(x => x !== m[1]); } else { delete L.watch[m[1]]; L.unwatch.push(m[1]); } demoSave(L); return { ok: true }; }
+  m = p.match(/^\/api\/company\/(.+)$/);
+  if (m) return demoCompany(decodeURIComponent(m[1]).toUpperCase(), L);
+  if (p.startsWith('/api/alerts/')) return { ok: true };
+  throw new Error('לא זמין במצב הדגמה');
+}
+function demoCompany(t, L){
+  const row = DEMO.city.companies.find(r => r.t === t || (r.alts || []).includes(t));
+  if (!row) throw new Error(`${t} לא נמצאה ביקום`);
+  const c = DEMO.co[row.t] || {};
+  const days = DEMO.days.slice(-c.c?.length || 0);
+  const closes = c.c || [];
+  const ma50 = closes.map((_, i) => i < 49 ? null : closes.slice(i - 49, i + 1).reduce((a, b) => a + b, 0) / 50);
+  const street = DEMO.city.companies.filter(r => r.u === row.u);
+  const peers = street.map(r => ({ t: r.t, n: r.n, cap: r.cap, chg: r.chg, pe: r.pe, score: r.sc?.tot, rev_yoy: DEMO.co[r.t]?.m?.rev_yoy ?? null })).sort((a, b) => (b.cap || 0) - (a.cap || 0)).slice(0, 14);
+  const pes = street.map(r => r.pe).filter(isNum).sort((a, b) => a - b);
+  const th = L.theses[row.t] || c.th || null;
+  const watchLocal = L.watch[row.t]; const unw = L.unwatch.includes(row.t);
+  return {
+    company: { t: row.t, n: row.n, sector: row.s, sub: row.u, cik: row.k, alts: row.alts, themes: row.th, template: c.tpl || 'standard', fye: null },
+    quote: { px: row.px, prev: row.px / (1 + (row.chg || 0) / 100), ts: DEMO.city.generated, source: 'demo' },
+    score: row.sc ? { ...row.sc, veto: row.veto, beacon: row.beacon } : null,
+    metrics: c.m || {}, volume_profile: c.vp || [],
+    series: { days: days.slice(-126), c: closes.slice(-126), ma50: ma50.slice(-126) },
+    earnings: c.e || [], next_earnings: row.rep?.st !== 'done' ? row.rep?.day : null, quarters: c.q || [],
+    card: c.card || null, card_history: [], card_pending: false, promises: c.pr || [], events: c.ev || [],
+    peers, street: { pe_median: pes.length ? pes[Math.floor(pes.length / 2)] : null, n: street.length },
+    thesis: th, watch: unw ? null : (watchLocal || c.w || (row.watch ? {} : null)), holding: c.h || null,
+    journal: [...L.journal.filter(j => j.t === row.t), ...(c.j || [])],
+    relations: DEMO.city.relations.filter(r => r.from === row.t || r.to === row.t),
+    links: { edgar: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${row.k}&type=&dateb=&owner=include&count=40` },
+    defaults: { portfolio: 100000, risk_pct: 1 },
+  };
+}
+
+/* ================= sectors ================= */
+const SECTORS = [
+  { en: 'Information Technology', he: 'טכנולוגיה', etf: 'XLK', hue: '#4F6BF5' },
+  { en: 'Communication Services', he: 'תקשורת', etf: 'XLC', hue: '#8A63E8' },
+  { en: 'Consumer Discretionary', he: 'צריכה מחזורית', etf: 'XLY', hue: '#DD6CA2' },
+  { en: 'Financials', he: 'פיננסים', etf: 'XLF', hue: '#2C9C93' },
+  { en: 'Health Care', he: 'בריאות', etf: 'XLV', hue: '#D98A4A' },
+  { en: 'Industrials', he: 'תעשייה', etf: 'XLI', hue: '#6E8199' },
+  { en: 'Consumer Staples', he: 'צריכה בסיסית', etf: 'XLP', hue: '#8FA34B' },
+  { en: 'Energy', he: 'אנרגיה', etf: 'XLE', hue: '#C9A227' },
+  { en: 'Utilities', he: 'תשתיות', etf: 'XLU', hue: '#3D9BD6' },
+  { en: 'Real Estate', he: 'נדל״ן', etf: 'XLRE', hue: '#B07A5C' },
+  { en: 'Materials', he: 'חומרי גלם', etf: 'XLB', hue: '#7C8C6E' },
+];
+const SEC_BY_EN = Object.fromEntries(SECTORS.map((s, i) => [s.en, i]));
+const INDUSTRIAL = new Set(['Energy', 'Utilities', 'Materials']);
+const THESIS = { ok: ['התזה תקפה', 'up'], watch: ['במעקב', 'wr'], broken: ['התזה נשברה', 'down'] };
+const GUIDE = { raised: ['הועלתה', 'up'], maintained: ['נשמרה', ''], lowered: ['הורדה', 'down'], initiated: ['ניתנה לראשונה', 'ac'], withdrawn: ['נמשכה', 'down'], none: ['לא ניתנה', ''], unknown: ['לא ברור', ''] };
+
+/* ================= layout ================= */
+function squarify(items, rect){
+  const out = []; const total = items.reduce((a, b) => a + b.v, 0) || 1;
+  const k = rect.w * rect.h / total;
+  const nodes = items.map(it => ({ it, a: Math.max(1e-6, it.v * k) })).sort((a, b) => b.a - a.a);
+  let { x, y, w, h } = rect; let row = [];
+  const worst = (r, side) => { let s = 0, mx = 0, mn = Infinity; for (const n of r) { s += n.a; mx = Math.max(mx, n.a); mn = Math.min(mn, n.a); } const s2 = s * s, q = side * side; return Math.max(q * mx / s2, s2 / (q * mn)); };
+  const flush = () => { const s = row.reduce((a, b) => a + b.a, 0); if (w >= h) { const rw = s / h; let cy = y; for (const n of row) { const rh = n.a / rw; out.push({ it: n.it, x, y: cy, w: rw, h: rh }); cy += rh; } x += rw; w -= rw; } else { const rh = s / w; let cx = x; for (const n of row) { const rw = n.a / rh; out.push({ it: n.it, x: cx, y, w: rw, h: rh }); cx += rw; } y += rh; h -= rh; } row = []; };
+  let i = 0;
+  while (i < nodes.length) { const side = Math.min(w, h); const n = nodes[i]; if (!row.length || worst([...row, n], side) <= worst(row, side)) { row.push(n); i++; } else flush(); }
+  if (row.length) flush();
+  return out;
+}
+const inset = (r, p) => ({ x: r.x + p, y: r.y + p, w: Math.max(0.2, r.w - 2 * p), h: Math.max(0.2, r.h - 2 * p) });
+const WORLD = { w: 268, d: 178 };
+const ROAD = 2.6, WALK = 1.3, ALLEY = 0.55, PLATE_H = 0.42, LOT_H = 0.12, BASE_Y = PLATE_H + LOT_H;
+
+let C = [], DIST = [], byT = {}, CITY = null, ROADS = null;
+function buildData(city){
+  CITY = city;
+  C = city.companies.map((r, i) => ({ ...r, i, si: SEC_BY_EN[r.s] ?? 5 }));
+  const caps = C.map(c => c.cap).filter(isNum).sort((a, b) => a - b);
+  const med = caps.length ? caps[Math.floor(caps.length / 2)] : 40;
+  for (const c of C) c.w = Math.sqrt(isNum(c.cap) && c.cap > 0 ? c.cap : med);
+  byT = {}; for (const c of C) { byT[c.t] = c; for (const a of c.alts || []) byT[a] = c; }
+  DIST = SECTORS.map((s, si) => ({ si, s, streets: [], comps: C.filter(c => c.si === si) }));
+  const srs = squarify(DIST.filter(d => d.comps.length).map(d => ({ v: d.comps.reduce((a, c) => a + c.w, 0), d })), { x: -WORLD.w / 2, y: -WORLD.d / 2, w: WORLD.w, h: WORLD.d });
+  for (const sr of srs) {
+    const d = sr.it.d; d.outer = { x: sr.x, y: sr.y, w: sr.w, h: sr.h }; d.rect = inset(sr, ROAD);
+    const subs = {}; for (const c of d.comps) (subs[c.u] ||= []).push(c);
+    for (const st of squarify(Object.entries(subs).map(([name, comps]) => ({ v: comps.reduce((a, c) => a + c.w, 0), name, comps })), inset(d.rect, WALK))) {
+      const street = { name: st.it.name, comps: st.it.comps.sort((a, b) => (b.cap || 0) - (a.cap || 0)), rect: inset(st, ALLEY), d };
+      d.streets.push(street);
+      for (const cell of squarify(street.comps.map(c => ({ v: c.w, c })), inset(street.rect, 0.3))) {
+        const m = clamp(Math.min(cell.w, cell.h) * 0.12, 0.16, 0.8); const r = inset(cell, m); const c = cell.it.c;
+        c.x = r.x + r.w / 2; c.z = r.y + r.h / 2; c.fw = r.w; c.fd = r.h; c.street = street; c.dist = d; c.hv = hash(c.t);
+      }
+    }
+    d.cx = d.rect.x + d.rect.w / 2; d.cz = d.rect.y + d.rect.h / 2;
+    d.capSum = d.comps.reduce((a, c) => a + (c.cap || 0), 0);
+  }
+  ROADS = buildRoads(srs.map(s => ({ x: s.x, y: s.y, w: s.w, h: s.h })));
+}
+function buildRoads(rects){
+  const key = (x, z) => x.toFixed(1) + ',' + z.toFixed(1);
+  const V = new Map(); const segs = [];
+  for (const r of rects) {
+    const pts = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
+    for (const p of pts) V.set(key(...p), p);
+    for (let i = 0; i < 4; i++) segs.push([pts[i], pts[(i + 1) % 4]]);
+  }
+  const verts = [...V.values()]; const edges = new Map(); const tol = 0.05;
+  for (const [a, b] of segs) {
+    const horiz = Math.abs(a[1] - b[1]) < tol;
+    const lo = horiz ? Math.min(a[0], b[0]) : Math.min(a[1], b[1]), hi = horiz ? Math.max(a[0], b[0]) : Math.max(a[1], b[1]);
+    const on = verts.filter(p => horiz ? Math.abs(p[1] - a[1]) < tol && p[0] > lo - tol && p[0] < hi + tol : Math.abs(p[0] - a[0]) < tol && p[1] > lo - tol && p[1] < hi + tol)
+      .sort((p, q) => horiz ? p[0] - q[0] : p[1] - q[1]);
+    for (let i = 0; i < on.length - 1; i++) {
+      const p = on[i], q = on[i + 1]; const len = Math.hypot(q[0] - p[0], q[1] - p[1]); if (len < 0.6) continue;
+      const ka = key(...p), kb = key(...q); const k = [ka, kb].sort().join('|');
+      if (!edges.has(k)) edges.set(k, { a: p, b: q, ka, kb, len });
+    }
+  }
+  const nodes = new Map(); const E = [...edges.values()];
+  E.forEach((e, i) => { e.i = i; for (const [k, p] of [[e.ka, e.a], [e.kb, e.b]]) { if (!nodes.has(k)) nodes.set(k, { k, p, edges: [] }); nodes.get(k).edges.push(i); } });
+  return { edges: E, nodes };
+}
+function nearestNode(x, z){ let best = null, bd = Infinity; for (const n of ROADS.nodes.values()) { const d = (n.p[0] - x) ** 2 + (n.p[1] - z) ** 2; if (d < bd) { bd = d; best = n; } } return best; }
+function roadPath(ka, kb){
+  const dist = new Map([[ka, 0]]), prev = new Map(), done = new Set();
+  while (true) {
+    let u = null, ud = Infinity; for (const [k, d] of dist) if (!done.has(k) && d < ud) { u = k; ud = d; }
+    if (u === null || u === kb) break; done.add(u);
+    for (const ei of ROADS.nodes.get(u).edges) { const e = ROADS.edges[ei]; const v = e.ka === u ? e.kb : e.ka; const nd = ud + e.len; if (nd < (dist.get(v) ?? Infinity)) { dist.set(v, nd); prev.set(v, u); } }
+  }
+  if (!dist.has(kb)) return null;
+  const out = [kb]; while (out[0] !== ka) out.unshift(prev.get(out[0]));
+  return out.map(k => ROADS.nodes.get(k).p);
+}
+
+/* ================= modes ================= */
+const MODES = [
+  { k: 'market', he: 'שוק היום', sub: 'נפח וחריגות' },
+  { k: 'hunt', he: 'ציד הזדמנויות', sub: 'איכות במחיר מוזל' },
+  { k: 'earnings', he: 'עונת דוחות', sub: 'מי דיווח ומי בדרך' },
+  { k: 'portfolio', he: 'התיק שלי', sub: 'פוזיציות ותזות' },
+];
+let mode = store.get(LS_PREFIX + 'mode', 'market'); if (!MODES.some(m => m.k === mode)) mode = 'market';
+function heightFor(c, m){
+  switch (m) {
+    case 'market': return 0.9 + Math.pow(clamp((c.rvol ?? 1) / 4, 0, 1), 0.85) * 15.5;
+    case 'hunt': return 0.9 + Math.pow(clamp((c.sc?.q ?? 12) / 25, 0, 1), 1.7) * 15.5;
+    case 'earnings': return c.rep?.st === 'done' ? 1.4 + Math.pow(Math.abs(c.rep.react ?? 0) / 18, 0.75) * 13.5 : c.rep?.st === 'soon' ? 1.1 : 0.45;
+    case 'portfolio': return c.hold ? 2.4 + (c.hold.w || 0) * 0.88 : 0.32;
+  }
+  return 1;
+}
+function signalFor(c, m){
+  switch (m) {
+    case 'market': { const s = c.sig ?? 0; const a = Math.max(0, Math.abs(s) - 0.8) / 1.6; return { div: Math.sign(s) * clamp(a, 0, 1) }; }
+    case 'hunt': return isNum(c.val) && c.val < 45 ? { seq: Math.pow(1 - c.val / 45, 1.1) } : { seq: 0 };
+    case 'earnings': {
+      if (c.rep?.st === 'done') { const g = c.rep.guide; return { div: clamp((c.rep.surp ?? 0) / 8 + (g === 'raised' ? .5 : g === 'lowered' ? -.9 : 0), -1, 1) }; }
+      return c.rep?.st === 'soon' && c.rep.days <= 7 ? { soon: 1 } : { ghost: .4 };
+    }
+    case 'portfolio': return c.hold ? { div: clamp((c.hold.pnl || 0) / 25, -1, 1) } : { ghost: .75 };
+  }
+}
+
+/* ================= renderer & scene ================= */
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas: $('#scene'), antialias: true, powerPreference: 'high-performance' }); }
+catch (e) { $('#app').insertAdjacentHTML('beforeend', '<div id="fail">התלת-ממד לא נטען: הדפדפן לא תומך ב-WebGL. נסה דפדפן אחר או הפעל האצת חומרה.</div>'); throw e; }
+const isPhone = () => innerWidth <= 860;
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isPhone() ? 1.75 : 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(22, 1, 2, 6000);
+const controls = new MapControls(camera, renderer.domElement);
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.085, screenSpacePanning: false, maxPolarAngle: 1.2, minDistance: 40, maxDistance: 1500, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.6 });
+const hemi = new THREE.HemisphereLight(0xffffff, 0xd0d4dc, 1.3); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 2.0);
+sun.position.set(-150, 230, 90); sun.castShadow = true; sun.shadow.mapSize.set(isPhone() ? 1024 : 2048, isPhone() ? 1024 : 2048);
+Object.assign(sun.shadow.camera, { left: -180, right: 180, top: 180, bottom: -180, near: 30, far: 700 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.4; sun.shadow.radius = 5;
+scene.add(sun, sun.target);
+const fill = new THREE.DirectionalLight(0xffffff, 0.4); fill.position.set(160, 110, -140); scene.add(fill);
+
+function rrShape(w, d, r, ox = 0, oy = 0){ r = Math.max(0.01, Math.min(r, w / 2 - 0.01, d / 2 - 0.01)); const s = new THREE.Shape(); const x = ox - w / 2, y = oy - d / 2;
+  s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + d - r); s.quadraticCurveTo(x + w, y + d, x + w - r, y + d);
+  s.lineTo(x + r, y + d); s.quadraticCurveTo(x, y + d, x, y + d - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); return s; }
+function slab(w, d, h, r){ const g = new THREE.ExtrudeGeometry(rrShape(w, d, r), { depth: h, bevelEnabled: false, curveSegments: 6 }); g.rotateX(-Math.PI / 2); return g; }
+
+const MAT = {
+  ground: new THREE.MeshStandardMaterial({ roughness: 1 }),
+  asphalt: new THREE.MeshStandardMaterial({ roughness: 0.96 }),
+  walk: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+  lot: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+  lane: new THREE.MeshBasicMaterial({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
+  tree: new THREE.MeshStandardMaterial({ roughness: 0.85, flatShading: true }),
+  trunk: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
+  car: new THREE.MeshStandardMaterial({ roughness: 0.55 }),
+  glass: new THREE.MeshStandardMaterial({ roughness: 0.3 }),
+  detail: new THREE.MeshStandardMaterial({ roughness: 0.8 }),
+};
+const unitBox = new THREE.BoxGeometry(1, 1, 1); unitBox.translate(0, 0.5, 0);
+const unitPlane = new THREE.PlaneGeometry(1, 1); unitPlane.rotateX(-Math.PI / 2);
+const unitCyl = new THREE.CylinderGeometry(1, 1, 1, 20); unitCyl.translate(0, 0.5, 0);
+const dummy = new THREE.Object3D();
+// shared by every building material, so a theme change reaches shaders compiled before or after it
+const SU = { uFloor: { value: 0.62 }, uBand: { value: 0.93 }, uBase: { value: BASE_Y }, uAO: { value: 0.8 }, uWin: { value: 0 }, uGlass: { value: 0.06 }, uWinCol: { value: new THREE.Color(1, 0.86, 0.6) } };
+function buildingMaterial(){
+  const m = new THREE.MeshStandardMaterial({ roughness: 0.86, metalness: 0 });
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, SU);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; varying vec3 vWN; varying float vInst;')
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+        #ifdef USE_INSTANCING
+          vec4 mwp = modelMatrix * instanceMatrix * vec4(transformed, 1.0);
+          vWN = normalize(mat3(modelMatrix * instanceMatrix) * objectNormal); vInst = float(gl_InstanceID);
+        #else
+          vec4 mwp = modelMatrix * vec4(transformed, 1.0); vWN = normalize(mat3(modelMatrix) * objectNormal); vInst = 0.0;
+        #endif
+        vWP = mwp.xyz;`);
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+        varying vec3 vWP; varying vec3 vWN; varying float vInst;
+        uniform float uFloor; uniform float uBand; uniform float uBase; uniform float uAO; uniform float uWin; uniform float uGlass; uniform vec3 uWinCol;
+        float h1(float n){ return fract(sin(n) * 43758.5453); }`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float fy = (vWP.y - uBase) / uFloor; float fl = fract(fy);
+        float vert = 1.0 - step(0.5, abs(vWN.y));
+        float tc = abs(vWN.x) > abs(vWN.z) ? vWP.z : vWP.x;
+        float cl = fract(tc * 0.62);
+        float win = smoothstep(0.30, 0.36, fl) * (1.0 - smoothstep(0.70, 0.76, fl)) * smoothstep(0.14, 0.2, cl) * (1.0 - smoothstep(0.80, 0.86, cl)) * vert * step(0.9, fy);
+        float dd = min(fl, 1.0 - fl); float aa = fwidth(fy);
+        float line = (1.0 - smoothstep(0.035, 0.035 + aa * 1.5, dd)) * vert * step(0.6, fy);
+        diffuseColor.rgb *= mix(1.0, uBand, line);
+        diffuseColor.rgb *= mix(1.0, 1.0 - uGlass, win);
+        diffuseColor.rgb *= mix(uAO, 1.0, smoothstep(0.0, 1.6, vWP.y - uBase));
+        float lit = step(0.6, h1(vInst * 12.9898 + floor(fy) * 78.233 + floor(tc * 0.62) * 3.71));`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+        totalEmissiveRadiance += uWinCol * win * lit * uWin + diffuseColor.rgb * uWin * 0.12;`);
+  };
+  return m;
+}
+
+let tier = [], roofMesh, tankMesh, chimMesh, treeMesh, trunkMesh, laneMesh, zebraMesh, carBody, carCab, beams, halo, beamMat, haloMat;
+let hoverEdges, selEdges, frameMesh = null, routeGroup = new THREE.Group();
+const frameMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false });
+const routeMat = new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uTime: { value: 0 } }, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+  vertexShader: 'attribute float aU; varying float vU; varying float vV; void main(){ vU = aU; vV = uv.y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform vec3 uColor; uniform float uTime; varying float vU; varying float vV; void main(){ float ch = fract(vU / 2.6 - uTime * 0.55 - abs(vV - 0.5) * 0.9); float a = 0.42 + 0.48 * step(0.5, ch); gl_FragColor = vec4(uColor, a); }' });
+scene.add(routeGroup);
+const plateMeshes = [];
+let NB = 0;
+
+function buildScene(){
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), MAT.ground); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.06; ground.receiveShadow = true; scene.add(ground);
+  const base = new THREE.Mesh(slab(WORLD.w + ROAD * 2 + 0.2, WORLD.d + ROAD * 2 + 0.2, 0.06, 7), MAT.asphalt); base.position.y = -0.06; base.receiveShadow = true; scene.add(base);
+  for (const d of DIST) {
+    if (!d.rect) continue;
+    d.mat = new THREE.MeshStandardMaterial({ roughness: 0.92 });
+    d.mesh = new THREE.Mesh(slab(d.rect.w, d.rect.h, PLATE_H, 1.8), d.mat); d.mesh.position.set(d.cx, 0, d.cz);
+    d.mesh.receiveShadow = true; d.mesh.castShadow = true; d.mesh.userData.d = d; scene.add(d.mesh); plateMeshes.push(d.mesh);
+    for (const st of d.streets) {
+      st.mesh = new THREE.Mesh(slab(st.rect.w, st.rect.h, LOT_H, 0.6), MAT.lot);
+      st.mesh.position.set(st.rect.x + st.rect.w / 2, PLATE_H, st.rect.y + st.rect.h / 2); st.mesh.receiveShadow = true; st.mesh.userData.d = d; scene.add(st.mesh); plateMeshes.push(st.mesh);
+    }
+  }
+  // lane dashes + zebra crossings along the road graph
+  const dashes = [], zebras = [];
+  for (const e of ROADS.edges) {
+    const dx = (e.b[0] - e.a[0]) / e.len, dz = (e.b[1] - e.a[1]) / e.len;
+    for (let s = 5; s < e.len - 5; s += 3.6) dashes.push([e.a[0] + dx * s, e.a[1] + dz * s, dx, dz, 1.8, 0.2]);
+  }
+  for (const n of ROADS.nodes.values()) {
+    if (n.edges.length < 3) continue;
+    for (const ei of n.edges) {
+      const e = ROADS.edges[ei]; if (e.len < 14) continue;
+      const far = e.ka === n.k ? e.b : e.a; const dx = (far[0] - n.p[0]) / e.len, dz = (far[1] - n.p[1]) / e.len;
+      const cx = n.p[0] + dx * 4.4, cz = n.p[1] + dz * 4.4; const px = -dz, pz = dx;
+      for (let o = -1.95; o <= 1.96; o += 0.65) zebras.push([cx + px * o, cz + pz * o, dx, dz, 1.5, 0.34]);
+    }
+  }
+  const mkFlat = (list, y) => { const m = new THREE.InstancedMesh(unitPlane, MAT.lane, list.length); list.forEach(([x, z, dx, dz, len, wid], i) => { dummy.position.set(x, y, z); dummy.rotation.set(0, Math.atan2(dx, dz), 0); dummy.scale.set(wid, 1, len); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); }); m.receiveShadow = true; scene.add(m); return m; };
+  laneMesh = mkFlat(dashes, 0.012); zebraMesh = mkFlat(zebras, 0.014); dummy.rotation.set(0, 0, 0);
+  // trees on the sidewalk ring of every district
+  const trees = [];
+  for (const d of DIST) {
+    if (!d.rect) continue; const r = d.rect; const rng = mulberry32(hash(d.s.en));
+    const sides = [[r.x, r.y, 1, 0, r.w], [r.x + r.w, r.y, 0, 1, r.h], [r.x + r.w, r.y + r.h, -1, 0, r.w], [r.x, r.y + r.h, 0, -1, r.h]];
+    for (const [x0, z0, dx, dz, len] of sides) {
+      const nx = -dz, nz = dx;
+      for (let s = 2.6; s < len - 2.6; s += 3.3) { if (rng() < 0.28) continue; trees.push([x0 + dx * s + nx * 0.64, z0 + dz * s + nz * 0.64, 0.42 + rng() * 0.16]); }
+    }
+  }
+  const crown = new THREE.IcosahedronGeometry(1, 0);
+  treeMesh = new THREE.InstancedMesh(crown, MAT.tree, trees.length); trunkMesh = new THREE.InstancedMesh(unitCyl, MAT.trunk, trees.length);
+  trees.forEach(([x, z, s], i) => { dummy.position.set(x, PLATE_H + 0.62 + s, z); dummy.scale.set(s, s * 1.12, s); dummy.updateMatrix(); treeMesh.setMatrixAt(i, dummy.matrix); dummy.position.set(x, PLATE_H, z); dummy.scale.set(0.07, 0.75, 0.07); dummy.updateMatrix(); trunkMesh.setMatrixAt(i, dummy.matrix); });
+  treeMesh.castShadow = true; treeMesh.receiveShadow = true; scene.add(treeMesh, trunkMesh);
+  // buildings: up to three stacked tiers, rooftop units, tanks and flues for industrial districts
+  NB = C.length;
+  for (let k = 0; k < 3; k++) { const m = new THREE.InstancedMesh(unitBox, buildingMaterial(), NB); m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); tier.push(m); scene.add(m); }
+  roofMesh = new THREE.InstancedMesh(unitBox, MAT.detail, NB * 2); tankMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, NB * 2); chimMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, NB);
+  for (const m of [roofMesh, tankMesh, chimMesh]) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); }
+  const white = new THREE.Color(1, 1, 1);
+  for (let i = 0; i < NB; i++) { for (const m of tier) m.setColorAt(i, white); roofMesh.setColorAt(i * 2, white); roofMesh.setColorAt(i * 2 + 1, white); tankMesh.setColorAt(i * 2, white); tankMesh.setColorAt(i * 2 + 1, white); chimMesh.setColorAt(i, white); }
+  // cars and buses moving along the road graph
+  const carGeo = new THREE.BoxGeometry(0.82, 0.4, 1.75); carGeo.translate(0, 0.32, 0);
+  const cabGeo = new THREE.BoxGeometry(0.68, 0.3, 0.92); cabGeo.translate(0, 0.66, -0.12);
+  const nCars = isPhone() ? 90 : 170;
+  carBody = new THREE.InstancedMesh(carGeo, MAT.car, nCars); carCab = new THREE.InstancedMesh(cabGeo, MAT.glass, nCars);
+  carBody.castShadow = true; carBody.frustumCulled = carCab.frustumCulled = false; scene.add(carBody, carCab);
+  const rng = mulberry32(20261103);
+  CARS.length = 0;
+  for (let i = 0; i < nCars; i++) {
+    const e = ROADS.edges[Math.floor(rng() * ROADS.edges.length)];
+    CARS.push({ e, fwd: rng() < 0.5, s: rng() * e.len, v: 3.2 + rng() * 3.2, bus: i % 19 === 0 });
+  }
+  // beacons, hover and selection helpers
+  const beamGeo = new THREE.CylinderGeometry(1, 1, 1, 40, 1, true); beamGeo.translate(0, 0.5, 0);
+  beamMat = new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uTime: { value: 0 }, uAlpha: { value: 0 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position,1.0); }',
+    fragmentShader: 'uniform vec3 uColor; uniform float uTime; uniform float uAlpha; varying vec2 vUv; void main(){ float a = pow(1.0 - vUv.y, 1.5) * uAlpha * (0.8 + 0.2 * sin(uTime * 2.4 - vUv.y * 10.0)); gl_FragColor = vec4(uColor * 1.2, clamp(a, 0.0, 1.0)); }',
+    transparent: true, depthWrite: false, side: THREE.DoubleSide });
+  haloMat = beamMat.clone();
+  beams = new THREE.InstancedMesh(beamGeo, beamMat, 10); halo = new THREE.InstancedMesh(beamGeo, haloMat, 10);
+  for (const m of [beams, halo]) { m.frustumCulled = false; m.count = 0; scene.add(m); }
+  const edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0));
+  hoverEdges = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial({ transparent: true, opacity: 0.95 }));
+  selEdges = new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial());
+  hoverEdges.visible = selEdges.visible = false; scene.add(hoverEdges, selEdges);
+}
+const CARS = [];
+
+/* ================= theme ================= */
+const COL = {}; let dark = false;
+function readTheme(){
+  for (const k of ['sky', 'asphalt', 'lane', 'walk', 'lot', 'clay', 'tree', 'trunk', 'car', 'up', 'down', 'cheap', 'beacon', 'accent', 'ink', 'warn']) COL[k] = new THREE.Color(tok('--' + k) || '#888');
+  dark = (COL.sky.r * 0.2126 + COL.sky.g * 0.7152 + COL.sky.b * 0.0722) < 0.2;
+  scene.background = COL.sky.clone();
+  scene.fog = new THREE.Fog(COL.sky.clone(), dark ? 900 : 1100, dark ? 2200 : 2600);
+  MAT.ground.color.copy(COL.sky).lerp(COL.asphalt, dark ? 0.25 : 0.18);
+  MAT.asphalt.color.copy(COL.asphalt); MAT.walk.color.copy(COL.walk); MAT.lot.color.copy(COL.lot); MAT.lane.color.copy(COL.lane);
+  MAT.tree.color.copy(COL.tree); MAT.trunk.color.copy(COL.trunk); MAT.car.color.copy(COL.car);
+  MAT.glass.color.copy(dark ? new THREE.Color('#FFE6A8') : COL.asphalt.clone().lerp(COL.ink, 0.2)); MAT.glass.emissive.set(dark ? '#7A6A40' : '#000000');
+  MAT.detail.color.copy(COL.clay).lerp(COL.asphalt, 0.18);
+  hemi.color.set(dark ? 0xC9C6FF : 0xffffff); hemi.groundColor.set(dark ? 0x1A1838 : 0xC9CEE2); hemi.intensity = dark ? 0.95 : 1.3;
+  sun.color.set(dark ? 0xDCD8FF : 0xFFFBF4); sun.intensity = dark ? 1.15 : 2.0; fill.intensity = dark ? 0.5 : 0.4;
+  SU.uBand.value = dark ? 1.12 : 0.93; SU.uWin.value = dark ? 1 : 0; SU.uGlass.value = dark ? 0.0 : 0.06; SU.uAO.value = dark ? 0.7 : 0.8;
+  hoverEdges.material.color.copy(COL.accent); selEdges.material.color.copy(COL.accent); frameMat.color.copy(COL.accent); routeMat.uniforms.uColor.value.copy(COL.accent);
+  for (const m of [beamMat, haloMat]) { m.uniforms.uColor.value.copy(COL.beacon); m.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending; m.needsUpdate = true; }
+  for (const d of DIST) if (d.mat) d.baseCol = COL.walk.clone().lerp(new THREE.Color(d.s.hue), dark ? 0.14 : 0.07);
+  paintPlates(); retarget(true); paintThemeBtn(); dirty = true;
+}
+function paintPlates(){ for (const d of DIST) if (d.mat) d.mat.color.copy(d.baseCol).lerp(COL.accent, d === focusD ? (dark ? 0.3 : 0.16) : 0); }
+const MOON = '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M15 10.6A6.5 6.5 0 0 1 7.4 3a6.5 6.5 0 1 0 7.6 7.6z" fill="currentColor"/></svg>';
+const SUN = '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="3.6" fill="currentColor"/><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.7 3.7l1.4 1.4M12.9 12.9l1.4 1.4M3.7 14.3l1.4-1.4M12.9 5.1l1.4-1.4"/></g></svg>';
+function paintThemeBtn(){ const b = $('#themeBtn'); b.innerHTML = dark ? SUN : MOON; b.setAttribute('aria-label', dark ? 'מעבר למצב יום' : 'מעבר למצב לילה'); }
+
+/* ================= per-instance animation ================= */
+let cur = [], from = [], tgt = [];
+const HS = { v: 1, from: 1, to: 1 };
+let anim = null, intro = !reduceMotion, introT0 = 0;
+function colorFor(c, m, out){
+  const s = signalFor(c, m); out.copy(COL.clay);
+  if (s.div !== undefined) { const t = s.div; out.lerp(t >= 0 ? COL.up : COL.down, Math.pow(Math.abs(t), 0.9) * 0.93); }
+  else if (s.seq !== undefined) out.lerp(COL.cheap, s.seq * 0.92);
+  else if (s.soon) out.lerp(COL.accent, 0.3);
+  else if (s.ghost) out.lerp(COL.walk, s.ghost);
+  if (m === 'hunt' && c.beacon) out.copy(COL.clay).lerp(COL.beacon, 0.55);
+  return out;
+}
+function retarget(instant = false){
+  pinCache = null;
+  for (const c of C) { tgt[c.i].h = heightFor(c, mode); colorFor(c, mode, tgt[c.i].col); }
+  for (const d of DIST) d.topH = d.comps.length ? Math.max(...d.comps.map(c => tgt[c.i].h)) : 4;
+  if (instant || reduceMotion) { for (const c of C) { if (!intro) cur[c.i].h = tgt[c.i].h; cur[c.i].col.copy(tgt[c.i].col); } writeAll(); anim = null; return; }
+  for (const c of C) { from[c.i].h = cur[c.i].h; from[c.i].col.copy(cur[c.i].col); }
+  anim = { t0: performance.now(), dur: 750 };
+}
+const tmpC = new THREE.Color();
+function setInst(mesh, idx, x, y, z, sx, sy, sz, ry = 0){ dummy.position.set(x, y, z); dummy.rotation.set(0, ry, 0); dummy.scale.set(sx, sy, sz); dummy.updateMatrix(); mesh.setMatrixAt(idx, dummy.matrix); }
+const HIDE = (mesh, idx) => setInst(mesh, idx, 0, -50, 0, 1e-4, 1e-4, 1e-4);
+function writeOne(i){
+  const c = C[i]; const h = Math.max(0.18, cur[i].h * HS.v); const col = cur[i].col; const v = c.hv;
+  const fw = c.fw, fd = c.fd; const small = Math.min(fw, fd);
+  const shiftX = ((v & 3) - 1.5) / 1.5 * fw * 0.07, shiftZ = (((v >> 2) & 3) - 1.5) / 1.5 * fd * 0.07;
+  let topY, topW, topD, topX = c.x, topZ = c.z;
+  if (h > 9 && small > 1.6) {
+    const a = h * 0.58, b = h * 0.84;
+    setInst(tier[0], i, c.x, BASE_Y, c.z, fw, a, fd);
+    setInst(tier[1], i, c.x + shiftX, BASE_Y + a, c.z + shiftZ, fw * 0.8, b - a, fd * 0.8);
+    setInst(tier[2], i, c.x + shiftX * 1.4, BASE_Y + b, c.z + shiftZ * 1.4, fw * 0.58, h - b, fd * 0.58);
+    topY = BASE_Y + h; topW = fw * 0.58; topD = fd * 0.58; topX += shiftX * 1.4; topZ += shiftZ * 1.4;
+  } else if (h > 4.5 && small > 1.2) {
+    const a = h * 0.86;
+    setInst(tier[0], i, c.x, BASE_Y, c.z, fw, a, fd);
+    setInst(tier[1], i, c.x + shiftX, BASE_Y + a, c.z + shiftZ, fw * 0.7, h - a, fd * 0.7); HIDE(tier[2], i);
+    topY = BASE_Y + h; topW = fw * 0.7; topD = fd * 0.7; topX += shiftX; topZ += shiftZ;
+  } else {
+    setInst(tier[0], i, c.x, BASE_Y, c.z, fw, h, fd); HIDE(tier[1], i); HIDE(tier[2], i);
+    topY = BASE_Y + h; topW = fw; topD = fd;
+  }
+  const tm = Math.min(topW, topD);
+  const ind = INDUSTRIAL.has(c.s);
+  // rooftop: industrial tanks, otherwise mechanical units
+  if (ind && tm > 1.3 && HS.v > 0.5) {
+    const r = tm * 0.17; HIDE(roofMesh, i * 2); HIDE(roofMesh, i * 2 + 1);
+    setInst(tankMesh, i * 2, topX - topW * 0.2, topY, topZ - topD * 0.16, r, r * 1.6, r);
+    if (tm > 2) setInst(tankMesh, i * 2 + 1, topX + topW * 0.18, topY, topZ + topD * 0.2, r * 0.8, r * 1.3, r * 0.8); else HIDE(tankMesh, i * 2 + 1);
+  } else if (tm > 1.6 && HS.v > 0.5) {
+    HIDE(tankMesh, i * 2); HIDE(tankMesh, i * 2 + 1);
+    setInst(roofMesh, i * 2, topX + topW * (((v >> 4) & 1) ? 0.2 : -0.2), topY, topZ - topD * 0.15, topW * 0.24, 0.32 + tm * 0.03, topD * 0.22);
+    if (tm > 2.6) setInst(roofMesh, i * 2 + 1, topX - topW * 0.12, topY, topZ + topD * 0.22, topW * 0.16, 0.24, topD * 0.16); else HIDE(roofMesh, i * 2 + 1);
+  } else { HIDE(roofMesh, i * 2); HIDE(roofMesh, i * 2 + 1); HIDE(tankMesh, i * 2); HIDE(tankMesh, i * 2 + 1); }
+  if (ind && (c.s === 'Energy' || c.s === 'Utilities') && small > 2.2 && HS.v > 0.5) {
+    const r = Math.max(0.12, small * 0.05); setInst(chimMesh, i, c.x + fw * 0.34, BASE_Y, c.z - fd * 0.34, r, Math.min(h + 2.2, h * 1.25 + 0.6), r);
+  } else HIDE(chimMesh, i);
+  for (const m of tier) m.setColorAt(i, col);
+  tmpC.copy(col).lerp(COL.asphalt, 0.12);
+  roofMesh.setColorAt(i * 2, tmpC); roofMesh.setColorAt(i * 2 + 1, tmpC); tankMesh.setColorAt(i * 2, tmpC); tankMesh.setColorAt(i * 2 + 1, tmpC); chimMesh.setColorAt(i, tmpC);
+  c.topY = BASE_Y + h; c.h = h;
+}
+function writeAll(){
+  for (let i = 0; i < NB; i++) writeOne(i);
+  for (const m of [...tier, roofMesh, tankMesh, chimMesh]) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
+  placeBeams(); placeSelection(); dirty = true;
+}
+function stepAnim(now){
+  if (intro) {
+    const t = (now - introT0) / 1900; const maxR = Math.hypot(WORLD.w, WORLD.d) / 2;
+    for (const c of C) { const delay = Math.hypot(c.x, c.z) / maxR * 0.55; const k = easeOut(clamp((t - delay) / 0.45, 0, 1)); cur[c.i].h = tgt[c.i].h * k; cur[c.i].col.copy(tgt[c.i].col); }
+    writeAll(); if (t >= 1) { intro = false; for (const c of C) cur[c.i].h = tgt[c.i].h; writeAll(); }
+    return;
+  }
+  if (!anim) return;
+  const k = ease(clamp((now - anim.t0) / anim.dur, 0, 1));
+  for (let i = 0; i < NB; i++) { cur[i].h = lerp(from[i].h, tgt[i].h, k); cur[i].col.copy(from[i].col).lerp(tgt[i].col, k); }
+  writeAll(); if (k >= 1) anim = null;
+}
+const BEAM = { a: 0, target: 0 };
+function placeBeams(){
+  const list = mode === 'hunt' ? C.filter(c => c.beacon).slice(0, 10) : [];
+  beams.count = halo.count = list.length;
+  list.forEach((c, j) => { const r = clamp(Math.min(c.fw, c.fd) * 0.15, 0.35, 1.5); setInst(beams, j, c.x, c.topY, c.z, r, 140, r); setInst(halo, j, c.x, c.topY, c.z, r * 2.6, 90, r * 2.6); });
+  beams.instanceMatrix.needsUpdate = halo.instanceMatrix.needsUpdate = true; BEAM.target = list.length ? 1 : 0;
+}
+function stepCars(dt){
+  if (!carBody) return;
+  const flat = HS.v < 0.5;
+  CARS.forEach((car, i) => {
+    if (!reduceMotion && dt > 0) {
+      car.s += car.v * dt;
+      let guard = 0;
+      while (car.s > car.e.len && guard++ < 4) {
+        car.s -= car.e.len; const nodeKey = car.fwd ? car.e.kb : car.e.ka; const node = ROADS.nodes.get(nodeKey);
+        const opts = node.edges.filter(ei => ei !== car.e.i); const ei = opts.length ? opts[Math.floor(Math.random() * opts.length)] : car.e.i;
+        car.e = ROADS.edges[ei]; car.fwd = car.e.ka === nodeKey;
+      }
+    }
+    const e = car.e; const a = car.fwd ? e.a : e.b, b = car.fwd ? e.b : e.a;
+    const dx = (b[0] - a[0]) / e.len, dz = (b[1] - a[1]) / e.len; const lane = 1.2;
+    const x = a[0] + dx * car.s - dz * lane, z = a[1] + dz * car.s + dx * lane; const ry = Math.atan2(dx, dz);
+    const sc = car.bus ? 1.9 : 1; const y = flat ? -2 : 0;
+    setInst(carBody, i, x, y, z, 1, 1, sc, ry); setInst(carCab, i, x, y, z, 1, 1, car.bus ? 2.6 : 1, ry);
+  });
+  carBody.instanceMatrix.needsUpdate = carCab.instanceMatrix.needsUpdate = true;
+}
+
+/* ================= camera ================= */
+const VIEW = { w: 1, h: 1 };
+// screen space the chrome covers; the projection centre moves into what is left, so the city is never hidden under it
+function reserves(k = VO.v){
+  const ph = isPhone(); const railEl = $('#rail');
+  return { right: !ph && railEl.offsetWidth ? railEl.offsetWidth + 14 : 0, left: !ph ? lerp(64, panel.offsetWidth + 14, k) : 0,
+    top: ph ? 58 : 68, bottom: ph ? lerp(124, panel.offsetHeight, k) : 100 };
+}
+const HOME = () => {
+  const ph = isPhone(); const r = reserves(0); const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+  const availW = Math.max(200, VIEW.w - r.left - r.right - 32), availH = Math.max(200, VIEW.h - r.top - r.bottom - 24);
+  const ppu1 = (VIEW.h + r.top + r.bottom) / (2 * tanV); // pixels per world unit at distance 1
+  // phones look along the long side of the city so it fills the portrait screen
+  const polar = ph ? 0.64 : 0.9, az = ph ? Math.PI / 2 : -Math.PI / 4;
+  const spanW = ph ? WORLD.d + 12 : (WORLD.w + WORLD.d) / Math.SQRT2 + 8;
+  const spanH = (ph ? WORLD.w + 12 : (WORLD.w + WORLD.d) / Math.SQRT2) * Math.cos(polar) + 16 * Math.sin(polar);
+  const dist = Math.max(spanW * ppu1 / availW, spanH * ppu1 / availH) * (ph ? 1.04 : 0.98);
+  return { t: new THREE.Vector3(0, 0, 0), dist: clamp(dist, 300, 1450), polar, az };
+};
+let fly = null;
+function setCam(t, dist, polar, az){ controls.target.copy(t); camera.position.setFromSphericalCoords(dist, polar, az).add(t); camera.lookAt(t); }
+function flyTo(t, dist, opt = {}){
+  const off = camera.position.clone().sub(controls.target); const s = new THREE.Spherical().setFromVector3(off);
+  let az1 = opt.az ?? s.theta; let dAz = Math.atan2(Math.sin(az1 - s.theta), Math.cos(az1 - s.theta));
+  fly = { t0: performance.now(), dur: reduceMotion ? 1 : (opt.dur || 1050), ft: controls.target.clone(), tt: t.clone(), fd: s.radius, td: dist, fp: s.phi, tp: opt.polar ?? clamp(s.phi, 0.55, 1.05), fa: s.theta, ta: s.theta + dAz };
+}
+function stepFly(now){
+  if (!fly) return; const k = ease(clamp((now - fly.t0) / fly.dur, 0, 1));
+  const arc = Math.sin(Math.PI * k) * Math.min(0.3, Math.abs(fly.td - fly.fd) / 1600 + fly.ft.distanceTo(fly.tt) / 900);
+  setCam(fly.ft.clone().lerp(fly.tt, k), lerp(fly.fd, fly.td, k) * (1 + arc), lerp(fly.fp, fly.tp, k), lerp(fly.fa, fly.ta, k));
+  dirty = true; if (k >= 1) fly = null;
+}
+const VO = { v: 0, to: 0 };
+function applyView(){
+  const w = VIEW.w, h = VIEW.h; const r = reserves();
+  const F = w + r.left + r.right, Fh = h + r.top + r.bottom;
+  camera.aspect = F / Fh; camera.setViewOffset(F, Fh, r.right, r.bottom, w, h); camera.updateProjectionMatrix();
+}
+function resize(){ const r = renderer.domElement.getBoundingClientRect(); VIEW.w = Math.max(1, r.width); VIEW.h = Math.max(1, r.height); renderer.setSize(VIEW.w, VIEW.h, false); applyView(); dirty = true; }
+addEventListener('resize', resize);
+
+/* ================= labels & callouts ================= */
+const labelsEl = $('#labels'), leadersEl = $('#leaders');
+const v3 = new THREE.Vector3();
+function proj(x, y, z){ v3.set(x, y, z).project(camera); return { x: (v3.x * .5 + .5) * VIEW.w, y: (-v3.y * .5 + .5) * VIEW.h, ok: v3.z > -1 && v3.z < 1 && Math.abs(v3.x) < 1.12 && Math.abs(v3.y) < 1.12 }; }
+function pxPerUnit(x, y, z){ v3.set(x, y, z); const d = camera.position.distanceTo(v3); const fullH = camera.view && camera.view.enabled ? camera.view.fullHeight : VIEW.h; return fullH / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * d); }
+function mk(cls){ const e = document.createElement('div'); e.className = 'lab ' + cls; labelsEl.appendChild(e); return e; }
+const svgEl = (tag, cls = '') => { const e = document.createElementNS('http://www.w3.org/2000/svg', tag); if (cls) e.setAttribute('class', cls); leadersEl.appendChild(e); return e; };
+const setT = (e, x, y) => { e.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`; };
+let TK_POOL = [], ST_POOL = [], PIN_POOL = [], CO_POOL = [];
+function buildLabels(){
+  for (const d of DIST) if (d.rect) {
+    d.lab = mk('dlab'); d.lab.addEventListener('click', () => focusDistrict(d));
+    d.lead = svgEl('line'); d.dot = svgEl('circle'); d.dot.setAttribute('r', '3.5');
+  }
+  TK_POOL = Array.from({ length: 90 }, () => mk('tk'));
+  ST_POOL = Array.from({ length: 22 }, () => mk('st'));
+  PIN_POOL = Array.from({ length: 48 }, () => mk('pin'));
+  CO_POOL = Array.from({ length: 12 }, () => { const e = mk('co'); e.innerHTML = '<div class="card"><div class="tile"></div><div style="min-width:0"><b></b><div class="chips"></div></div></div><div class="stem"></div><div class="dot"></div>'; e.addEventListener('click', () => { if (e._t) select(byT[e._t].i); }); return e; });
+}
+function districtMetric(d){
+  const cs = d.comps; const capW = cs.reduce((a, c) => a + (c.cap || 0), 0) || 1;
+  if (mode === 'market') return fmtPct(cs.reduce((a, c) => a + (c.chg || 0) * (c.cap || 0), 0) / capW);
+  if (mode === 'hunt') { const n = cs.filter(c => c.beacon).length; if (n) return n === 1 ? 'אלומה אחת' : `${n} אלומות`; const top = cs.filter(c => c.sc).sort((a, b) => b.sc.tot - a.sc.tot)[0]; return top ? `${top.t} ${Math.round(top.sc.tot)}` : '—'; }
+  if (mode === 'earnings') return `${cs.filter(c => c.rep?.st === 'done').length}/${cs.length} דיווחו`;
+  const w = cs.reduce((a, c) => a + (c.hold ? c.hold.w || 0 : 0), 0); return w ? `${w.toFixed(0)}% מהתיק` : '—';
+}
+function tkValue(c){
+  if (mode === 'market') return `<i class="${sg(c.chg)}">${fmtPct(c.chg, 1)}</i>`;
+  if (mode === 'hunt') return c.sc ? `<i>${Math.round(c.sc.tot)}</i>` : '';
+  if (mode === 'earnings') return c.rep?.st === 'done' ? `<i class="${sg(c.rep.react)}">${fmtPct(c.rep.react, 1)}</i>` : '';
+  if (mode === 'portfolio') return c.hold ? `<i class="${sg(c.hold.pnl)}">${fmtPct(c.hold.pnl, 1)}</i>` : '';
+  return '';
+}
+let pinCache = null;
+function PIN_ORDER(){
+  // the next five sessions, holdings and watchlist first, then by size: at most 24 pins on screen
+  if (pinCache && pinCache.mode === mode && pinCache.n === C.length) return pinCache.list;
+  const list = C.filter(c => c.rep?.st === 'soon' && c.rep.days <= 5).sort((a, b) => (!!b.hold - !!a.hold) || (!!b.watch - !!a.watch) || (b.cap || 0) - (a.cap || 0));
+  pinCache = { mode, n: C.length, list }; return list;
+}
+function calloutItems(){
+  const out = [];
+  if (selI >= 0) {
+    const c = C[selI];
+    for (const r of selRelations) {
+      const o = byT[r.other]; if (!o) continue;
+      out.push({ c: o, tile: 'ac', glyph: 'link', title: `${o.t} · ${r.role}`, chips: [[esc(r.note || ''), '']], small: true, prio: 10 });
+    }
+    return out;
+  }
+  const unread = (CITY.alerts || []).filter(a => !a.read && a.t && byT[a.t] && a.level !== 'digest');
+  for (const a of unread.slice(0, 3)) {
+    const c = byT[a.t]; const tile = a.level === 'urgent' ? 'dn' : 'wr';
+    const chips = [[a.level === 'urgent' ? 'דחוף' : 'חשוב', a.level === 'urgent' ? 'dn' : 'wr']];
+    if (c.hold) chips.push(['בתיק', '']); else if (c.watch) chips.push(['במעקב', '']);
+    if (isNum(c.sig) && Math.abs(c.sig) >= 1.5) chips.push([N(`${fmtNum(c.sig, 1)}σ`), c.sig < 0 ? 'dn' : 'up']);
+    out.push({ c, tile, glyph: 'alert', title: a.title.replace(/^[A-Z.]+:\s*/, `${c.t} · `), chips, prio: a.level === 'urgent' ? 9 : 7 });
+  }
+  if (mode === 'hunt') for (const c of C.filter(c => c.beacon).sort((a, b) => (b.sc?.tot || 0) - (a.sc?.tot || 0)).slice(0, 3))
+    out.push({ c, tile: 'bc', glyph: 'star', title: `${c.t} · אלומה`, mprio: 8, chips: [[`ציון ${N(Math.round(c.sc.tot))}`, ''], [`${N(fmtPct(c.dd, 0))} מהשיא`, 'dn'], ...(isNum(c.val) ? [[`אחוזון מכפיל ${N(Math.round(c.val))}`, 'up']] : [])], prio: 6 });
+  if (mode === 'earnings') for (const c of C.filter(c => (c.hold || c.watch) && c.rep?.st === 'soon' && c.rep.days <= 10).sort((a, b) => a.rep.days - b.rep.days).slice(0, 3))
+    out.push({ c, tile: 'ac', glyph: 'cal', title: `${c.t} · דוח בעוד ${c.rep.days} ימי מסחר`, mprio: 8, chips: [[c.rep.hour === 'amc' ? 'אחרי הסגירה' : c.rep.hour === 'bmo' ? 'לפני הפתיחה' : dLabel(c.rep.day), ''], [c.hold ? 'בתיק' : 'במעקב', '']], prio: 6 });
+  if (mode === 'portfolio') for (const c of C.filter(c => c.hold && c.hold.th && c.hold.th !== 'ok'))
+    out.push({ c, tile: c.hold.th === 'broken' ? 'dn' : 'wr', glyph: 'case', title: `${c.t} · ${THESIS[c.hold.th][0]}`, chips: [[N(fmtPct(c.hold.pnl, 1)), sg(c.hold.pnl) === 'up' ? 'up' : 'dn'], [`${N(c.hold.w + '%')} מהתיק`, '']], prio: 8 });
+  for (const o of out) if (o.mprio) o.prio = o.mprio;
+  const seen = new Set(); return out.filter(o => !seen.has(o.c.t) && seen.add(o.c.t)).sort((a, b) => b.prio - a.prio).slice(0, isPhone() ? 2 : 5);
+}
+function updateLabels(){
+  const camDist = camera.position.distanceTo(controls.target); const flat2D = HS.v < 0.5;
+  const showD = (camDist > 330 || flat2D) && selI < 0;
+  const boxes = [];
+  const hit = box => boxes.some(b => b.x < box.x + box.w && box.x < b.x + b.w && b.y < box.y + box.h && box.y < b.y + b.h);
+  // callouts first: they carry the news (alerts, beacons, upcoming reports), then district names around them
+  const items = calloutItems(); let ci = 0;
+  const R = reserves();
+  for (const it of items) {
+    if (ci >= CO_POOL.length) break;
+    const c = it.c; const p = proj(c.x, c.topY + 0.3, c.z);
+    if (!p.ok || p.y < R.top + 60 || p.y > VIEW.h - 50 || p.x < R.left + 20 || p.x > VIEW.w - R.right - 20) continue;
+    const e = CO_POOL[ci]; const small = !!it.small;
+    const key = it.title + it.tile + JSON.stringify(it.chips) + small;
+    if (e._k !== key) { e._k = key; e.classList.toggle('small', small); const tile = e.querySelector('.tile'); tile.className = 'tile ' + it.tile; tile.innerHTML = GLYPH[it.glyph]; e.querySelector('b').textContent = it.title; e.querySelector('.chips').innerHTML = it.chips.filter(x => x[0]).map(([t, k]) => `<span class="${k}">${t}</span>`).join(''); e.style.display = ''; e._cw = e.firstChild.offsetWidth; e._ch = e.firstChild.offsetHeight; }
+    const cw = e._cw || 200, ch = e._ch || 50, stem = small ? 30 : 44;
+    const dx = clamp(p.x, R.left + cw / 2 + 10, VIEW.w - R.right - cw / 2 - 10) - p.x;
+    const box = { x: p.x + dx - cw / 2 - 4, y: p.y - stem - ch - 4, w: cw + 8, h: ch + 8 };
+    if (hit(box) || box.y < R.top) { e.style.display = 'none'; continue; }
+    boxes.push({ x: box.x - 10, y: box.y - 4, w: box.w + 20, h: box.h + 8 }); ci++;
+    e._t = c.t; e.style.display = ''; setT(e, p.x, p.y + 4); e.style.setProperty('--dx', dx.toFixed(1) + 'px');
+  }
+  for (; ci < CO_POOL.length; ci++) CO_POOL[ci].style.display = 'none';
+  for (const d of DIST.filter(d => d.lab).sort((a, b) => b.capSum - a.capSum)) {
+    const topY = BASE_Y + d.topH * HS.v + (flat2D ? 1 : 6);
+    const a = proj(d.cx, PLATE_H, d.cz), b = proj(d.cx, topY, d.cz);
+    let vis = showD && a.ok && b.ok && b.y > 90;
+    const lw = d.lab._w || 130; const box = { x: b.x - lw / 2 - 4, y: b.y - 38, w: lw + 8, h: 36 };
+    if (vis && hit(box)) vis = false;
+    d.lab.style.opacity = vis ? 1 : 0; d.lab.style.pointerEvents = vis ? 'auto' : 'none';
+    d.lead.style.display = d.dot.style.display = vis && !flat2D ? '' : 'none';
+    if (!vis) continue;
+    const html = `<i style="background:${d.s.hue}"></i>${esc(d.s.he)} ${N(districtMetric(d))}`; if (d.lab._h !== html) { d.lab.innerHTML = html; d.lab._h = html; d.lab._w = d.lab.offsetWidth; }
+    d.lab.classList.toggle('on', d === focusD); setT(d.lab, b.x, b.y - 4);
+    d.lead.setAttribute('x1', a.x); d.lead.setAttribute('y1', a.y); d.lead.setAttribute('x2', b.x); d.lead.setAttribute('y2', b.y - 4);
+    d.dot.setAttribute('cx', a.x); d.dot.setAttribute('cy', a.y);
+    boxes.push(box);
+  }
+  // tickers by on-screen footprint
+  const cand = [];
+  for (const c of C) {
+    const size = Math.min(c.fw, c.fd) * pxPerUnit(c.x, c.topY, c.z); if (size < (flat2D ? 30 : 40)) continue;
+    const p = proj(c.x, c.topY + 0.2, c.z); if (!p.ok || p.y < 70 || p.y > VIEW.h - 20) continue;
+    if (mode === 'portfolio' && !c.hold && size < 70) continue;
+    cand.push({ c, p, size });
+  }
+  cand.sort((a, b) => b.size - a.size);
+  const occ = new Set(); let n = 0; const cap = isPhone() ? 18 : 44;
+  for (const { c, p } of cand) {
+    if (n >= cap) break; if (boxes.some(b => p.x > b.x && p.x < b.x + b.w && p.y > b.y && p.y < b.y + b.h + 20)) continue;
+    const kx = Math.round(p.x / 60), ky = Math.round(p.y / 22); if (occ.has(kx + ':' + ky) || occ.has((kx - 1) + ':' + ky) || occ.has((kx + 1) + ':' + ky)) continue; occ.add(kx + ':' + ky);
+    const e = TK_POOL[n++]; const html = esc(c.t) + tkValue(c); if (e._h !== html) { e.innerHTML = html; e._h = html; }
+    e.style.display = ''; setT(e, p.x, p.y - 3);
+  }
+  for (; n < TK_POOL.length; n++) TK_POOL[n].style.display = 'none';
+  let sn = 0;
+  if (camDist < 260 && !flat2D) {
+    const sts = [];
+    for (const d of DIST) for (const st of d.streets) { const r = st.rect; const p = proj(r.x + r.w / 2, BASE_Y, r.y + r.h - 0.1); if (!p.ok) continue; const size = Math.min(r.w, r.h) * pxPerUnit(r.x + r.w / 2, BASE_Y, r.y + r.h); if (size < 120) continue; sts.push({ st, p, size }); }
+    sts.sort((a, b) => b.size - a.size);
+    for (const { st, p } of sts.slice(0, ST_POOL.length)) { const e = ST_POOL[sn++]; if (e._h !== st.name) { e.textContent = st.name; e._h = st.name; } e.style.display = ''; e.style.transform = `translate(${p.x.toFixed(1)}px,${(p.y + 14).toFixed(1)}px) translate(-50%,-100%)`; }
+  }
+  for (; sn < ST_POOL.length; sn++) ST_POOL[sn].style.display = 'none';
+  let pn = 0;
+  if (mode === 'earnings' && selI < 0) for (const c of PIN_ORDER()) {
+    if (pn >= 24) break;
+    const p = proj(c.x, c.topY + 0.6, c.z); if (!p.ok) continue;
+    const e = PIN_POOL[pn++]; e.textContent = c.rep.days; e.classList.toggle('hold', !!c.hold); e.style.display = ''; setT(e, p.x, p.y - 2);
+  }
+  for (; pn < PIN_POOL.length; pn++) PIN_POOL[pn].style.display = 'none';
+  positionHover();
+}
+
+/* ================= picking & hover ================= */
+const ray = new THREE.Raycaster(); const ndc = new THREE.Vector2();
+let hoverI = -1, selI = -1, focusD = null, pointer = null, needPick = false, downAt = null, dragging = false, dirty = true;
+function pick(cx, cy){
+  const r = renderer.domElement.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects([...tier, roofMesh, tankMesh, ...plateMeshes], false);
+  for (const h of hits) { if (h.object.isInstancedMesh) { const id = h.object === roofMesh || h.object === tankMesh ? Math.floor(h.instanceId / 2) : h.instanceId; return { b: id }; } if (h.object.userData.d) return { d: h.object.userData.d }; }
+  return {};
+}
+const hcard = $('#hcard'); let hcardHold = false, hideTimer = 0;
+hcard.addEventListener('pointerenter', () => { hcardHold = true; clearTimeout(hideTimer); });
+hcard.addEventListener('pointerleave', () => { hcardHold = false; setHover(-1); });
+function hoverRows(c){
+  const g = c.rep?.guide ? GUIDE[c.rep.guide] : null;
+  if (mode === 'market') return [['שינוי', `<b class="num ${sg(c.chg)}">${fmtPct(c.chg)}</b>`], ['מול התנודתיות', `<b class="num">${fmtNum(c.sig, 1)}σ</b>`], ['נפח יחסי', `<b class="num">${isNum(c.rvol) ? c.rvol.toFixed(1) + '×' : '–'}</b>`]];
+  if (mode === 'hunt') return [['ציון', `<b class="num">${c.sc ? Math.round(c.sc.tot) : '–'}</b>`], ['מהשיא', `<b class="num down">${fmtPct(c.dd, 1)}</b>`], ['אחוזון מכפיל', `<b class="num">${isNum(c.val) ? Math.round(c.val) : '–'}</b>`]];
+  if (mode === 'earnings') return c.rep?.st === 'done' ? [['הפתעה', `<b class="num ${sg(c.rep.surp)}">${fmtPct(c.rep.surp, 1)}</b>`], ['תחזית', `<b class="${g ? g[1] : ''}">${g ? g[0] : 'ממתין'}</b>`], ['תגובה', `<b class="num ${sg(c.rep.react)}">${fmtPct(c.rep.react, 1)}</b>`]]
+    : [['דוח הבא', `<b>${c.rep?.day ? dLabel(c.rep.day) : '–'}</b>`], ['ימי מסחר', `<b class="num">${c.rep?.days ?? '–'}</b>`], ['תנועה ביום דוח', `<b class="num">${isNum(c.atr) ? '±' + (c.atr * 2.1).toFixed(1) + '%' : '–'}</b>`]];
+  return c.hold ? [['משקל', `<b class="num">${c.hold.w}%</b>`], ['רווח/הפסד', `<b class="num ${sg(c.hold.pnl)}">${fmtPct(c.hold.pnl, 1)}</b>`], ['תזה', `<b class="${THESIS[c.hold.th]?.[1] || ''}">${THESIS[c.hold.th]?.[0] || 'אין'}</b>`]]
+    : [['שינוי', `<b class="num ${sg(c.chg)}">${fmtPct(c.chg)}</b>`], ['בתיק', '<b>לא</b>'], ['ציון', `<b class="num">${c.sc ? Math.round(c.sc.tot) : '–'}</b>`]];
+}
+function setHover(i){
+  if (i === hoverI) return; hoverI = i;
+  if (i < 0) { hoverEdges.visible = false; renderer.domElement.style.cursor = ''; hideTimer = setTimeout(() => { if (!hcardHold && hoverI < 0) hcard.hidden = true; }, 160); return; }
+  clearTimeout(hideTimer); renderer.domElement.style.cursor = 'pointer';
+  const c = C[i];
+  hcard.innerHTML = `<div class="h1"><span class="tkr">${esc(c.t)}</span><span class="num ${sg(c.chg)}">${fmtUsd(c.px)}</span></div>
+    <div class="nm">${esc(c.n)} · ${esc(SECTORS[c.si].he)}</div><div class="kv3">${hoverRows(c).map(([k, v]) => `<div><span>${k}</span>${v}</div>`).join('')}</div>
+    <button class="cta" type="button">פתח כרטיס חברה</button>`;
+  hcard.querySelector('.cta').onclick = () => select(i);
+  hcard.hidden = isPhone(); dirty = true;
+}
+function positionHover(){
+  if (hoverI < 0) return; const c = C[hoverI];
+  hoverEdges.visible = true; hoverEdges.position.set(c.x, BASE_Y, c.z); hoverEdges.scale.set(c.fw * 1.02, c.h * 1.004, c.fd * 1.02);
+  if (!hcard.hidden) { const p = proj(c.x, c.topY, c.z); const w = hcard.offsetWidth, hh = hcard.offsetHeight; const x = clamp(p.x - w / 2, 8, VIEW.w - w - 8), y = clamp(p.y - hh - 24, 74, VIEW.h - hh - 8); hcard.style.transform = `translate(${x}px,${y}px)`; }
+}
+
+/* ================= selection, routes ================= */
+let selRelations = [];
+function placeSelection(){
+  if (selI < 0) { selEdges.visible = false; if (frameMesh) frameMesh.visible = false; return; }
+  const c = C[selI]; selEdges.visible = true; selEdges.position.set(c.x, BASE_Y, c.z); selEdges.scale.set(c.fw * 1.03, c.h * 1.006, c.fd * 1.03);
+  if (frameMesh) frameMesh.visible = true;
+}
+function ribbon(points, width, y){
+  const pos = [], uv = [], au = [], idx = []; let acc = 0;
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i], prev = points[Math.max(0, i - 1)], next = points[Math.min(points.length - 1, i + 1)];
+    let dx = next[0] - prev[0], dz = next[1] - prev[1]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
+    if (i > 0) acc += Math.hypot(p[0] - points[i - 1][0], p[1] - points[i - 1][1]);
+    const nx = -dz * width / 2, nz = dx * width / 2;
+    pos.push(p[0] + nx, y, p[1] + nz, p[0] - nx, y, p[1] - nz); uv.push(0, 0, 0, 1); au.push(acc, acc);
+    if (i > 0) { const b = (i - 1) * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('aU', new THREE.Float32BufferAttribute(au, 1)); g.setIndex(idx);
+  const m = new THREE.Mesh(g, routeMat); m.renderOrder = 3; return m;
+}
+function densify(pts){ const out = []; for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1]; const n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 4)); for (let k = 0; k < n; k++) out.push([lerp(a[0], b[0], k / n), lerp(a[1], b[1], k / n)]); } out.push(pts[pts.length - 1]); return out; }
+function drawRoutes(c){
+  for (const ch of [...routeGroup.children]) { routeGroup.remove(ch); ch.geometry.dispose(); }
+  selRelations = (CITY.relations || []).filter(r => (r.from === c.t || r.to === c.t) && byT[r.from === c.t ? r.to : r.from])
+    .map(r => ({ ...r, other: r.from === c.t ? r.to : r.from, role: r.from === c.t ? (r.kind === 'service' ? 'לקוח שירות' : 'לקוח') : 'ספק' }));
+  if (!selRelations.length || !ROADS) return;
+  const na = nearestNode(c.x, c.z);
+  for (const r of selRelations) {
+    const o = byT[r.other]; const nb = nearestNode(o.x, o.z); const path = roadPath(na.k, nb.k); if (!path) continue;
+    routeGroup.add(ribbon(densify(path), 0.95, 0.03));
+    routeGroup.add(ribbon(densify([[c.x, c.z], na.p]), 0.6, BASE_Y + 0.04)); routeGroup.add(ribbon(densify([nb.p, [o.x, o.z]]), 0.6, BASE_Y + 0.04));
+  }
+}
+function select(i, opt = {}){
+  selI = i; const c = C[i];
+  if (frameMesh) { scene.remove(frameMesh); frameMesh.geometry.dispose(); }
+  const sh = rrShape(c.fw + 2.2, c.fd + 2.2, 0.9); sh.holes.push(rrShape(c.fw + 0.9, c.fd + 0.9, 0.5));
+  const g = new THREE.ShapeGeometry(sh, 6); g.rotateX(-Math.PI / 2); frameMesh = new THREE.Mesh(g, frameMat); frameMesh.position.set(c.x, BASE_Y + 0.03, c.z); frameMesh.renderOrder = 2; scene.add(frameMesh);
+  drawRoutes(c); placeSelection(); setHover(-1); hcard.hidden = true; focusD = c.dist; paintPlates(); renderRail();
+  openPanel(c);
+  if (opt.fly !== false) { const size = Math.max(c.fw, c.fd); const far = isPhone() ? 1.7 : selRelations.length ? 1.9 : 1; flyTo(new THREE.Vector3(c.x, c.h * 0.35 + BASE_Y, c.z), clamp(size * 7 + c.h * 4.5 + 110, 140, 360) * far, { polar: HS.v < 0.5 ? 0.02 : isPhone() ? 0.7 : 0.86 }); }
+  dirty = true;
+}
+function clearSelection(){
+  selI = -1; selRelations = []; for (const ch of [...routeGroup.children]) { routeGroup.remove(ch); ch.geometry.dispose(); }
+  placeSelection(); dirty = true;
+}
+function focusDistrict(d){
+  focusD = d; paintPlates(); renderRail();
+  const size = Math.max(d.rect.w, d.rect.h); flyTo(new THREE.Vector3(d.cx, 2, d.cz), clamp(size * 3.2 + 60, 200, 700), { polar: HS.v < 0.5 ? 0.02 : 0.86 });
+  if (isPhone()) toggleRail(false); dirty = true;
+}
+function goHome(){ focusD = null; paintPlates(); renderRail(); const H = HOME(); flyTo(H.t, H.dist, { polar: HS.v < 0.5 ? 0.02 : H.polar, az: H.az }); }
+
+/* ================= company panel ================= */
+const panel = $('#panel'), ui = $('#ui');
+let panelTab = store.get(LS_PREFIX + 'tab', 'overview'); let CO = null; let coSeq = 0;
+function openPanel(c){
+  panel.classList.add('open'); panel.setAttribute('aria-hidden', 'false'); ui.classList.add('panel-open'); VO.to = 1;
+  panel.innerHTML = `<div class="p-head">${headHTML({ company: { t: c.t, n: c.n, sector: c.s, sub: c.u, alts: c.alts }, quote: { px: c.px }, score: c.sc }, c)}</div><div class="p-body"><div class="sec"><p class="note">טוען את כרטיס החברה…</p></div></div>`;
+  wireHead(c);
+  const seq = ++coSeq;
+  api(`/api/company/${encodeURIComponent(c.t)}`).then(js => { if (seq !== coSeq) return; CO = js; renderPanel(); }).catch(err => { if (seq !== coSeq) return; $('.p-body', panel).innerHTML = `<div class="sec"><div class="empty"><b>הכרטיס לא נטען</b>${esc(err.message)}</div></div>`; });
+}
+function closePanel(){ panel.classList.remove('open'); panel.setAttribute('aria-hidden', 'true'); ui.classList.remove('panel-open'); VO.to = 0; clearSelection(); CO = null; }
+function headHTML(js, c){
+  const q = js.quote || {}; const px = q.px ?? c.px; const chg = c.chg;
+  return `<div class="crumbs"><button type="button" data-act="dist">${esc(SECTORS[c.si].he)}</button><span aria-hidden="true">‹</span><span class="street">${esc(c.u)}</span>
+    <span class="p-x"><button type="button" data-act="watch" aria-pressed="${!!c.watch}" aria-label="${c.watch ? 'הסר ממעקב' : 'הוסף למעקב'}" title="${c.watch ? 'במעקב' : 'הוסף למעקב'}"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2.2l2.1 4.3 4.7.7-3.4 3.3.8 4.7L9 13 4.8 15.2l.8-4.7-3.4-3.3 4.7-.7z" fill="${c.watch ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+    <button type="button" data-act="close" aria-label="סגירת הכרטיס"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></span></div>
+    <div class="p-id"><span class="tkr num">${esc(c.t)}</span><span class="nm">${esc(c.n)}</span>${(c.alts || []).length ? `<span class="alts">+ ${c.alts.map(esc).join(', ')}</span>` : ''}</div>
+    <div class="p-px"><span class="px num">${fmtUsd(px)}</span><span class="ch num ${sg(chg)}">${fmtPct(chg)}</span>${isNum(c.sig) ? `<span class="chip ${Math.abs(c.sig) >= 2 ? (c.sig < 0 ? 'down' : 'up') : ''}">${N(fmtNum(c.sig, 1) + 'σ')} מול התנודתיות</span>` : ''}</div>
+    <div class="p-meta"><span class="chip">שווי ${N(fmtCapB(c.cap))}</span>${isNum(c.beta) ? `<span class="chip">בטא ${N(c.beta.toFixed(2))}</span>` : ''}${isNum(c.rvol) ? `<span class="chip">נפח ${N(c.rvol.toFixed(1) + '×')}</span>` : ''}${c.hold ? `<span class="chip ${THESIS[c.hold.th]?.[1] || ''}">בתיק · ${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>` : ''}${(c.veto || []).map(v => `<span class="chip down">${esc(v)}</span>`).join('')}${CITY.mode === 'demo' ? '<span class="chip wr">נתוני הדגמה</span>' : ''}</div>
+    <div class="tabs" role="tablist">${[['overview', 'סקירה'], ['report', 'הדוח'], ['numbers', 'מספרים'], ['thesis', 'תזה ויומן']].map(([k, l]) => `<button type="button" class="tab" role="tab" data-tab="${k}" aria-selected="${panelTab === k}">${l}</button>`).join('')}</div>`;
+}
+function wireHead(c){
+  panel.querySelector('[data-act="close"]').onclick = closePanel;
+  panel.querySelector('[data-act="dist"]').onclick = () => { closePanel(); focusDistrict(c.dist); };
+  panel.querySelector('[data-act="watch"]').onclick = async () => {
+    try { if (c.watch) await api(`/api/watchlist/${c.t}`, { method: 'DELETE' }); else await api(`/api/watchlist/${c.t}`, { method: 'PUT', body: JSON.stringify({}) });
+      c.watch = !c.watch; toast(c.watch ? `${c.t} נוספה למעקב` : `${c.t} הוסרה מהמעקב`); if (CO) renderPanel(); else openPanel(c); renderRail(); dirty = true; } catch (e) { toast(e.message); }
+  };
+  panel.querySelectorAll('.tab').forEach(b => b.onclick = () => { panelTab = b.dataset.tab; store.set(LS_PREFIX + 'tab', panelTab); if (CO) renderPanel(); });
+}
+function renderPanel(){
+  const c = byT[CO.company.t]; if (!c) return;
+  const scroll = panel.querySelector('.p-body')?.scrollTop || 0; const sameTab = renderPanel.last === CO.company.t + panelTab;
+  panel.innerHTML = `<div class="p-head">${headHTML(CO, c)}</div><div class="p-body">${({ overview: tabOverview, report: tabReport, numbers: tabNumbers, thesis: tabThesis })[panelTab](CO, c)}</div>`;
+  wireHead(c); wireBody(CO, c);
+  panel.querySelector('.p-body').scrollTop = sameTab ? scroll : 0; renderPanel.last = CO.company.t + panelTab;
+}
+
+function chartSVG(js, c){
+  const P = js.series.c || []; const D = js.series.days || []; const MA = js.series.ma50 || []; const n = P.length;
+  if (n < 5) return '<div class="empty">אין עדיין היסטוריית מחירים.</div>';
+  const W = 420, H = 150, padT = 10, padB = 20;
+  const vals = P.concat(MA.filter(isNum)); const lo = Math.min(...vals), hi = Math.max(...vals);
+  const X = i => i / (n - 1) * (W - 8) + 4; const Y = v => padT + (1 - (v - lo) / (hi - lo || 1)) * (H - padT - padB);
+  const line = P.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join('');
+  const ma = MA.map((v, i) => isNum(v) ? `${MA.slice(0, i).some(isNum) ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(v).toFixed(1)}` : '').join('');
+  const eDays = (js.earnings || []).map(e => D.indexOf(e.day)).filter(i => i > 1);
+  const vp = (js.volume_profile || []).filter(z => z.high >= lo && z.low <= hi);
+  const col = (c.chg ?? 0) >= 0 ? 'var(--up)' : 'var(--down)';
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="גרף מחיר חצי שנה">
+    <defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+    ${vp.map(z => `<rect x="0" width="${W}" y="${Y(Math.min(hi, z.high)).toFixed(1)}" height="${Math.max(1.5, Y(Math.max(lo, z.low)) - Y(Math.min(hi, z.high))).toFixed(1)}" fill="var(--warn)" opacity=".08"/>`).join('')}
+    ${[0.25, 0.5, 0.75].map(f => `<line x1="0" x2="${W}" y1="${padT + f * (H - padT - padB)}" y2="${padT + f * (H - padT - padB)}" stroke="var(--line)"/>`).join('')}
+    <path d="${line}L${X(n - 1)} ${H - padB}L${X(0)} ${H - padB}Z" fill="url(#ga)"/>
+    <path d="${ma}" fill="none" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 3"/>
+    <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round"/>
+    <circle cx="${X(n - 1)}" cy="${Y(P[n - 1])}" r="4" fill="${col}" stroke="var(--glass-strong)" stroke-width="2"/>
+    ${eDays.map(i => `<g><line x1="${X(i)}" x2="${X(i)}" y1="${padT}" y2="${H - padB}" stroke="var(--line-2)" stroke-dasharray="2 3"/><circle cx="${X(i)}" cy="${H - 9}" r="7" fill="var(--glass-strong)" stroke="var(--line-2)"/><text x="${X(i)}" y="${H - 5.5}" text-anchor="middle" font-size="9" font-weight="700" fill="var(--ink-2)" font-family="IBM Plex Sans Condensed, Arial Narrow, sans-serif">E</text></g>`).join('')}
+  </svg><span class="yl num" style="top:${(Y(hi) / H * 100).toFixed(1)}%">${fmtUsd(hi, 0)}</span><span class="yl num" style="top:${(Y(lo) / H * 100).toFixed(1)}%">${fmtUsd(lo, 0)}</span></div>`;
+}
+function ringSVG(v){ const r = 18, cc = 2 * Math.PI * r, k = clamp((v || 0) / 25, 0, 1); const col = k > 0.62 ? 'var(--accent)' : k > 0.38 ? 'var(--ink-2)' : 'var(--ink-3)';
+  return `<svg viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--line)" stroke-width="5"/><circle cx="23" cy="23" r="${r}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(cc * k).toFixed(1)} ${cc.toFixed(1)}" transform="rotate(-90 23 23)"/><text x="23" y="27" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)" font-family="IBM Plex Sans Condensed, Arial Narrow, sans-serif">${Math.round(v || 0)}</text></svg>`; }
+function decompHTML(js, c){
+  const d = js.metrics?.decomp; if (!d) return '<p class="note">צריך שנה של מחירים כדי לפרק את התנועה.</p>';
+  const parts = [['שוק', d.market], ['סקטור', d.sector], ['ייחודי לחברה', d.idio]]; const mx = Math.max(3, ...parts.map(p => Math.abs(p[1])));
+  const tot = parts.reduce((a, p) => a + Math.abs(p[1]), 0) || 1; const share = Math.round(Math.abs(d.idio) / tot * 100);
+  const others = (js.peers || []).filter(o => o.t !== c.t && isNum(o.chg)); const avg = others.length ? others.reduce((a, o) => a + o.chg, 0) / others.length : null;
+  return `<div class="decomp">${parts.map(([k, v]) => { const w = Math.abs(v) / mx * 50; return `<span>${k}</span><div class="bar"><i style="${v >= 0 ? 'left:50%' : 'right:50%'};width:${w.toFixed(1)}%;background:var(--${v >= 0 ? 'up' : 'down'})"></i></div><span class="val num ${sg(v)}">${fmtPct(v)}</span>`; }).join('')}</div>
+    <p class="note">${N(share + '%')} מהתנועה ייחודי לחברה.${avg !== null ? ` שאר הרחוב (${others.length} חברות) ${N(fmtPct(avg))} בממוצע.` : ''}</p>`;
+}
+function tabOverview(js, c){
+  const m = js.metrics || {}; const s = js.score;
+  const hi = m.high52, lo = m.low52, px = js.quote?.px ?? c.px; const rpos = isNum(hi) && isNum(lo) && hi > lo ? clamp((px - lo) / (hi - lo), 0, 1) * 100 : 50;
+  const fr = m.fair; const pe = m.pe_ttm; const band = fr?.pe; const med = js.street?.pe_median;
+  const pmin = band ? Math.min(band.p20, pe || band.p20, med || band.p20) * 0.85 : null, pmax = band ? Math.max(band.p80, pe || band.p80, med || band.p80) * 1.1 : null;
+  const pos = v => isNum(v) && pmin ? clamp((v - pmin) / (pmax - pmin), 0, 1) * 100 : null;
+  const atrUsd = isNum(m.atr_pct) ? px * m.atr_pct / 100 : px * 0.02; const stop = px - 2 * atrUsd; const tgtPx = fr?.base && fr.base > px ? fr.base : px * 1.15;
+  const st = js.street || {};
+  return `
+  <div class="sec"><h4>חצי שנה <small>קו מקווקו: ממוצע 50 · E: דוח · פס כתום: אזור נפח</small></h4>${chartSVG(js, c)}
+    <div class="range"><div class="trl"><span>שפל שנתי ${N(fmtUsd(lo, 0))}</span><span>שיא ${N(fmtUsd(hi, 0))}</span></div><div class="track"><i style="left:${rpos.toFixed(1)}%"></i></div><span>${N(fmtPct(m.dd_pct, 1))} מהשיא${isNum(m.dist_ma200) ? ` · ${N(fmtPct(m.dist_ma200, 1))} מממוצע 200` : ''}${isNum(m.rsi) ? ` · RSI ${N(Math.round(m.rsi))}` : ''}</span></div></div>
+  <div class="sec"><h4>למה זזה היום <small>פירוק לשוק, סקטור וחברה</small></h4>${decompHTML(js, c)}</div>
+  <div class="sec"><h4>ציון התכנסות <small>4 רכיבים × 25</small></h4>${s ? `
+    <div class="rings"><div class="total"><b class="num">${Math.round(s.tot)}</b><span>מתוך 100</span></div><div class="ring">${ringSVG(s.q)}איכות</div><div class="ring">${ringSVG(s.d)}כיוון</div><div class="ring">${ringSVG(s.v)}תמחור</div><div class="ring">${ringSVG(s.t)}תזמון</div></div>
+    <p class="note">${(s.veto || []).length ? `דגלים: ${s.veto.map(esc).join(' · ')}` : 'אין דגלי וטו פעילים.'}${s.beacon ? ' הבניין מקבל אלומה במצב ציד.' : ''}</p>` : '<p class="note">הציון יחושב אחרי שיהיו מחירים ודוחות.</p>'}</div>
+  <div class="sec"><h4>תמחור <small>מכפיל רווח (12 חודשים)</small></h4>
+    <div class="kvg"><div><span>P/E</span><b class="num">${isNum(pe) ? pe.toFixed(1) : '–'}</b></div><div><span>אחוזון מול 5 שנים</span><b class="num">${isNum(m.pe_pct_5y) ? Math.round(m.pe_pct_5y) : '–'}</b></div><div><span>חציון הרחוב</span><b class="num">${isNum(med) ? med.toFixed(1) : '–'}</b><small>${st.n || 0} חברות</small></div></div>
+    ${band ? `<div class="range"><div class="track"><span class="zone" style="left:${pos(band.p20)}%;width:${(pos(band.p80) - pos(band.p20)).toFixed(1)}%"></span>${isNum(med) ? `<s style="left:${pos(med)}%"></s>` : ''}<i style="left:${pos(pe) ?? 50}%"></i></div><div class="trl"><span>${N(pmin.toFixed(0))}</span><span>רצועת המכפיל של החברה (אחוזון 20-80) · קו: חציון הרחוב</span><span>${N(pmax.toFixed(0))}</span></div></div>` : ''}
+    ${fr ? `<div class="fair"><div><span>דובי</span><b class="num">${fmtUsd(fr.bear, 0)}</b></div><div><span>בסיס</span><b class="num">${fmtUsd(fr.base, 0)}</b></div><div><span>שורי</span><b class="num">${fmtUsd(fr.bull, 0)}</b></div></div>
+      <p class="note">טווח מרצועת המכפיל של החברה על רווח שנה קדימה (צמיחה ${N(fmtPct(fr.growth_used_pct, 0))}).${isNum(m.implied_growth) ? ` המחיר מגלם צמיחת תזרים של ${N(fmtPct(m.implied_growth, 0))} בשנה לעשור, מול צמיחת הכנסות של ${N(fmtPct(m.rev_yoy, 0))}.` : ''}</p>` : ''}</div>
+  <div class="sec"><h4>מחשבון עסקה <small>גודל פוזיציה לפי הסטופ</small></h4>
+    <div class="calc">
+      <div class="fld"><label for="cPort">גודל תיק ($)</label><input id="cPort" inputmode="decimal" value="${store.get(LS_PREFIX + 'port', js.defaults?.portfolio || 100000)}"></div>
+      <div class="fld"><label for="cRisk">סיכון לעסקה (%)</label><input id="cRisk" inputmode="decimal" value="${store.get(LS_PREFIX + 'risk', js.defaults?.risk_pct || 1)}"></div>
+      <div class="fld"><label for="cEntry">כניסה</label><input id="cEntry" inputmode="decimal" value="${px.toFixed(2)}"></div>
+      <div class="fld"><label for="cStop">סטופ (2×ATR)</label><input id="cStop" inputmode="decimal" value="${stop.toFixed(2)}"></div>
+      <div class="fld"><label for="cTgt">יעד (בסיס)</label><input id="cTgt" inputmode="decimal" value="${tgtPx.toFixed(2)}"></div>
+      <div class="fld"><label for="cAtr">ATR יומי</label><input id="cAtr" value="${atrUsd.toFixed(2)}" disabled></div>
+    </div><div class="res" id="cRes"></div><div class="warnline" id="cWarn"></div>
+    ${js.next_earnings ? `<p class="note">הדוח הבא ${N(dLabel(js.next_earnings))}. אם הוא בתוך תקופת ההחזקה, הסטופ עלול לא להחזיק בפער של יום הדוח.</p>` : ''}</div>
+  <div class="sec"><h4>שכנים ברחוב <small dir="ltr">${esc(c.u)}</small></h4>
+    <div class="peer hd"><span>סימול</span><span>חברה</span><span>היום</span><span>P/E</span></div>
+    ${(js.peers || []).map(o => `<button type="button" class="peer ${o.t === c.t ? 'me' : ''}" data-t="${o.t}"><span class="t">${esc(o.t)}</span><span class="n">${esc(o.n)}</span><span class="num ${sg(o.chg)}">${fmtPct(o.chg, 1)}</span><span class="num">${isNum(o.pe) ? o.pe.toFixed(1) : '–'}</span></button>`).join('')}</div>
+  ${js.relations?.length ? `<div class="sec"><h4>שרשרת אספקה <small>רשימה שאתה מתחזק</small></h4>${js.relations.map(r => { const other = r.from === c.t ? r.to : r.from; return `<button type="button" class="peer" data-t="${other}"><span class="t">${esc(other)}</span><span class="n">${r.from === c.t ? 'לקוח' : 'ספק'} · ${esc(r.note || '')}</span><span></span><span></span></button>`; }).join('')}</div>` : ''}`;
+}
+
+const VI = { xbrl: ['ok', '✓', 'תואם ל-XBRL'], text: ['mid', '≈', 'נמצא בטקסט'], unverified: ['no', '!', 'לא נמצא במקור'], exact: ['ok', '✓', 'ציטוט מדויק'], close: ['mid', '≈', 'ציטוט כמעט מדויק'], missing: ['no', '!', 'ציטוט לא נמצא'] };
+const vi = s => s && VI[s] ? `<span class="vi ${VI[s][0]}" title="${VI[s][2]}" aria-label="${VI[s][2]}">${VI[s][1]}</span>` : '';
+const SCALE_TXT = { billions: 'B', millions: 'M', thousands: 'K', units: '' };
+function fmtMetric(m){ if (!isNum(m.value)) return '–'; if (m.unit === 'percent') return `${m.value}%`; if (m.unit === 'USD_per_share') return `$${m.value}`; if (m.unit === 'USD') return `$${m.value}${SCALE_TXT[m.scale] || ''}`; return `${m.value}${SCALE_TXT[m.scale] || ''}`; }
+function cite(ci){ return ci && ci.quote ? `<p class="quote">“${esc(ci.quote)}” ${vi(ci._q)}<br><small>${esc(ci.section || '')}</small></p>` : ''; }
+const COV_HE = { revenue_sources: 'מקורות הכנסה', customer_concentration: 'ריכוזיות לקוחות', gaap_vs_non_gaap: 'GAAP מול Non-GAAP', dilution_sbc: 'דילול ו-SBC', working_capital: 'הון חוזר', backlog_rpo: 'צבר / RPO', debt_maturities: 'חוב ופירעונות', hidden_liabilities: 'התחייבויות נסתרות', risk_factor_changes: 'שינויים בגורמי הסיכון', legal: 'הליכים משפטיים', capital_allocation: 'הקצאת הון', accounting_changes: 'שינויים חשבונאיים', subsequent_events: 'אירועים אחרי המאזן', guidance: 'תחזית', kpis: 'מדדי פעילות' };
+const STAGE_HE = { light: 'סיכום מהיר', release: 'אחרי ההודעה לעיתונות', call: 'אחרי שיחת הוועידה', final: 'סופי, אחרי ה-10-Q' };
+function tabReport(js){
+  const rc = js.card; if (!rc) return `<div class="sec"><div class="empty"><b>${js.card_pending ? 'הכרטיסייה בעבודה' : 'עדיין אין כרטיסיית דוח'}</b>${js.card_pending ? 'הדוח האחרון נקלט וממתין לעיבוד.' : 'הכרטיסייה תיווצר כשהחברה תגיש את הדוח הבא, או בהרצה ידנית: metro card ' + esc(js.company.t)}</div></div>`;
+  const k = rc.card; const v = rc.verification || {}; const g = GUIDE[k.guidance_direction] || ['', ''];
+  const rv = rc.review || {};
+  return `
+  <div class="sec"><div class="verif">${k.demo ? '<span class="chip wr">כרטיסיית דוגמה</span>' : ''}<span class="chip">${STAGE_HE[rc.stage] || rc.stage}</span><span class="chip ${v.number_ok_pct >= 90 ? 'up' : v.number_ok_pct >= 70 ? 'wr' : 'down'}">מספרים מאומתים ${N(Math.round(v.number_ok_pct ?? 0) + '%')}</span>${(v.quotes && (v.quotes.exact + v.quotes.close + v.quotes.missing)) ? `<span class="chip ${v.quote_ok_pct >= 95 ? 'up' : 'wr'}">ציטוטים ${N(Math.round(v.quote_ok_pct) + '%')}</span>` : ''}<span class="chip">כיסוי ${N((v.coverage_keys ?? 0) + '/15')}</span>${rv.verdict ? `<span class="chip ${rv.verdict === 'pass' ? 'up' : 'wr'}">${rv.verdict === 'pass' ? 'עבר ביקורת' : 'לביקורת'}</span>` : ''}</div>
+    <p class="headline">${esc(k.headline_he)}</p>${(v.problems || []).length ? `<p class="note warn">${v.problems.slice(0, 3).map(esc).join(' · ')}</p>` : ''}
+    ${(rv.issues || []).length ? `<p class="note">${rv.issues.slice(0, 3).map(i => esc(i.text_he)).join(' · ')}</p>` : ''}</div>
+  <div class="sec"><h4>מה היה</h4><p class="para">${esc(k.what_happened_he)}</p>
+    ${(k.metrics || []).length ? `<div class="tw"><table class="mt"><thead><tr><th>מדד</th><th>ערך</th><th>שנתי</th></tr></thead><tbody>${k.metrics.map(m => `<tr><td>${esc(m.label)}${m.gaap ? '' : ' <span class="muted">(Non-GAAP)</span>'}${m.note_he ? `<br><small class="muted">${esc(m.note_he)}</small>` : ''}${cite(m.citation)}</td><td class="n">${fmtMetric(m)}${vi(m._n)}</td><td class="n ${sg(m.yoy_pct)}">${isNum(m.yoy_pct) ? fmtPct(m.yoy_pct, 1) : '–'}</td></tr>`).join('')}</tbody></table></div>` : ''}</div>
+  <div class="sec"><h4>מה יהיה <small>התחזית <span class="chip ${g[1]}">${g[0]}</span></small></h4><p class="para">${esc(k.what_next_he)}</p>
+    ${(k.guidance || []).length ? `<div class="tw"><table class="mt"><thead><tr><th>מדד</th><th>טווח</th><th>קודם</th></tr></thead><tbody>${k.guidance.map(x => { const u = x.unit === 'percent' ? '%' : x.unit === 'USD' ? SCALE_TXT[x.scale] || '' : ''; const p = x.unit === 'USD' || x.unit === 'USD_per_share' ? '$' : ''; return `<tr><td>${esc(x.metric)} <small class="muted">${esc(x.period)}</small>${cite(x.citation)}</td><td class="n">${isNum(x.low) ? p + x.low + u : '–'}${x.high !== x.low && isNum(x.high) ? '–' + p + x.high + u : ''}${vi(x._n_low)}</td><td class="n">${isNum(x.prior_low) ? p + x.prior_low + u + (x.prior_high !== x.prior_low ? '–' + p + x.prior_high + u : '') : '–'}</td></tr>`; }).join('')}</tbody></table></div>` : ''}</div>
+  <div class="sec"><h4>לאן הולכים</h4><p class="para">${esc(k.where_going_he)}</p>
+    <div class="wwl" style="margin-top:10px">${(k.growth_drivers_he || []).length ? `<div><b>מנועי צמיחה</b><ul class="clean">${k.growth_drivers_he.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}${(k.risks_he || []).length ? `<div><b>סיכונים</b><ul class="clean">${k.risks_he.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div></div>
+  <div class="sec"><h4>רשימת כיסוי <small>${(k.coverage || []).filter(x => x.status === 'reported').length} מתוך 15 דווחו</small></h4><div class="cov">${(k.coverage || []).map(x => `<details class="covi"><summary><span class="sv ${x.severity}"></span><span>${COV_HE[x.key] || x.key}</span><span class="chip ${x.status === 'reported' ? '' : 'wr'}">${x.status === 'reported' ? 'דווח' : x.status === 'not_applicable' ? 'לא רלוונטי' : 'לא דווח'}</span></summary><div class="body">${esc(x.finding_he)}${(x.citations || []).map(cite).join('')}</div></details>`).join('')}</div></div>
+  ${(k.qa || []).length ? `<div class="sec"><h4>שאלות ותשובות <small>השאלות הקשות בשיחה</small></h4>${k.qa.map(q => `<div class="qa"><div class="q">${esc(q.question_he)}${q.analyst ? ` <small class="muted">· ${esc(q.analyst)}</small>` : ''}</div><div class="a">${esc(q.answer_he)}</div><div class="row" style="margin-top:5px">${q.numeric_answer ? '<span class="chip up">נענה במספר</span>' : ''}${q.evasive ? '<span class="chip down">התחמקות</span>' : ''}</div>${cite(q.citation)}</div>`).join('')}</div>` : ''}
+  <div class="sec"><h4>ספר ההבטחות <small>מעקב בין רבעונים</small></h4>${(js.promises || []).length ? `<div class="tw"><table class="mt"><thead><tr><th>מדד</th><th>יעד</th><th>סטטוס</th></tr></thead><tbody>${js.promises.map(p => `<tr><td>${esc(p.metric)}<br><small class="muted">${esc(p.deadline)}</small></td><td>${esc(p.target)}${p.evidence ? `<br><small class="muted">${esc(p.evidence)}</small>` : ''}</td><td><span class="chip ${({ kept: 'up', on_track: 'up', missed: 'down', dropped: 'down', revised: 'wr' })[p.status] || ''}">${({ open: 'פתוח', on_track: 'בדרך', kept: 'עמדו', missed: 'פספסו', dropped: 'נעלם', revised: 'עודכן' })[p.status] || p.status}</span></td></tr>`).join('')}</tbody></table></div>` : '<p class="note">אין עדיין הבטחות שנרשמו.</p>'}</div>
+  ${(k.risk_changes || []).length ? `<div class="sec"><h4>מה השתנה בניסוח</h4>${k.risk_changes.map(r => `<div class="qa"><span class="chip ${r.kind === 'added' ? 'wr' : r.kind === 'removed' ? 'up' : ''}">${({ added: 'נוסף', removed: 'הוסר', modified: 'שונה' })[r.kind]}</span> ${esc(r.summary_he)}${cite(r.citation)}</div>`).join('')}</div>` : ''}
+  ${(k.flags || []).length ? `<div class="sec"><h4>דגלים</h4>${k.flags.map(f => `<p class="note"><span class="chip ${f.severity === 'red_flag' ? 'down' : f.severity === 'positive' ? 'up' : 'wr'}">${({ red_flag: 'דגל אדום', watch: 'לבדיקה', positive: 'חיובי' })[f.severity]}</span> ${esc(f.text_he)}</p>`).join('')}</div>` : ''}
+  <div class="sec"><a class="link" href="${js.links.edgar}" target="_blank" rel="noopener">כל הדיווחים של ${esc(js.company.t)} ב-SEC EDGAR</a></div>`;
+}
+function tabNumbers(js){
+  const qs = js.quarters || []; const m = js.metrics || {};
+  const cell = (q, k, f) => { const v = q.values[k]; return `<td class="n">${isNum(v) ? f(v) : '–'}</td>`; };
+  const yoyOf = i => { const q = qs[i]; const p = qs[i + 4]; return q && p && isNum(q.values.revenue) && isNum(p.values.revenue) ? (q.values.revenue / p.values.revenue - 1) * 100 : null; };
+  const SEV = { veto: 'veto', high: 'high', watch: 'watch', good: 'good', info: 'info' };
+  return `
+  <div class="sec"><h4>רבעונים <small>מ-XBRL של ה-SEC · ${qs.length ? esc(qs[0].fiscal) + ' ראשון' : ''}</small></h4>${qs.length ? `<div class="tw"><table class="mt q"><thead><tr><th>רבעון</th><th>הכנסות</th><th>שנתי</th><th>גולמי</th><th>תפעולי</th><th>FCF</th><th>EPS</th></tr></thead><tbody>
+    ${qs.map((q, i) => `<tr><td style="white-space:nowrap">${esc(q.fiscal)}<br><small class="muted num">${esc(q.calendar)}</small>${(q.restated || []).length ? ' <span class="chip wr" title="נתונים שתוקנו">תוקן</span>' : ''}</td>${cell(q, 'revenue', fmtBig)}<td class="n ${sg(yoyOf(i))}">${isNum(yoyOf(i)) ? fmtPct(yoyOf(i), 1) : '–'}</td>${cell(q, 'gross_margin', v => v.toFixed(1) + '%')}${cell(q, 'op_margin', v => v.toFixed(1) + '%')}${cell(q, 'fcf', fmtBig)}${cell(q, 'eps_diluted', v => '$' + v.toFixed(2))}</tr>`).join('')}</tbody></table></div>` : '<div class="empty">אין עדיין נתוני XBRL. הרץ: metro backfill</div>'}</div>
+  <div class="sec"><h4>מאזן ומכפילים</h4><div class="kvg">
+    <div><span>שווי שוק</span><b class="num">${fmtBig(m.market_cap)}</b></div><div><span>חוב נטו</span><b class="num">${fmtBig(m.net_debt)}</b></div><div><span>חוב נטו / תפעולי</span><b class="num">${isNum(m.net_debt_to_oi) ? m.net_debt_to_oi.toFixed(1) + '×' : '–'}</b></div>
+    <div><span>P/S</span><b class="num">${isNum(m.ps) ? m.ps.toFixed(1) : '–'}</b></div><div><span>EV/Sales</span><b class="num">${isNum(m.ev_sales) ? m.ev_sales.toFixed(1) : '–'}</b></div><div><span>P/FCF</span><b class="num">${isNum(m.p_fcf) ? m.p_fcf.toFixed(1) : '–'}</b></div>
+    <div><span>שולי FCF (12 ח׳)</span><b class="num">${isNum(m.fcf_margin) ? m.fcf_margin.toFixed(1) + '%' : '–'}</b></div><div><span>דילול שנתי</span><b class="num ${(m.shares_yoy || 0) > 2 ? 'down' : ''}">${fmtPct(m.shares_yoy, 1)}</b></div><div><span>תשואה להון</span><b class="num">${isNum(m.roe) ? m.roe.toFixed(1) + '%' : '–'}</b></div>
+  </div></div>
+  <div class="sec"><h4>דוחות קודמים <small>הפתעה ותגובת המניה</small></h4>${(js.earnings || []).length ? `<div class="tw"><table class="mt"><thead><tr><th>תאריך</th><th>EPS בפועל</th><th>הפתעה</th><th>תגובה</th></tr></thead><tbody>${js.earnings.map(e => `<tr><td class="num">${esc(e.day)} <small class="muted">${e.hour === 'amc' ? 'אחרי' : e.hour === 'bmo' ? 'לפני' : ''}</small></td><td class="n">${isNum(e.eps_act) ? '$' + e.eps_act.toFixed(2) : 'בקרוב'}</td><td class="n ${sg(e.surp)}">${isNum(e.surp) ? fmtPct(e.surp, 1) : '–'}</td><td class="n ${sg(e.react)}">${isNum(e.react) ? fmtPct(e.react, 1) : '–'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="note">אין עדיין יומן דוחות.</p>'}</div>
+  <div class="sec"><h4>אירועים <small>8-K, בעלי עניין ותזה, 120 יום</small></h4>${(js.events || []).length ? `<div class="tl">${js.events.map(e => `<div class="tli"><time>${esc(e.ts.slice(5, 10).split('-').reverse().join('.'))}</time><i class="${SEV[e.severity] || 'info'}"></i><span>${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title)} <small class="muted num">${esc(e.code)}</small></span></div>`).join('')}</div>` : '<p class="note">אין אירועים ב-120 הימים האחרונים.</p>'}</div>`;
+}
+const ACT_HE = { buy: 'קנייה', add: 'הוספה', trim: 'מימוש חלקי', sell: 'מכירה', pass: 'ויתור', note: 'הערה' };
+let thesisOpts = null;
+function tabThesis(js, c){
+  const th = js.thesis; const opts = thesisOpts || { metrics: {}, kills: {} };
+  const mrows = (th?.metrics?.length ? th.metrics : [{ name: 'rev_yoy', op: '>', value: '' }]);
+  const kill = t => (th?.kills || []).find(k => k.type === t);
+  const pb = kill('price_below');
+  return `
+  <div class="sec"><h4>התזה <small>${th ? `<span class="chip ${THESIS[th.status]?.[1] || ''}">${THESIS[th.status]?.[0] || ''}</span>` : 'עדיין לא נכתבה'}</small></h4>
+    ${th?.reasons?.length ? `<p class="note">${th.reasons.map(esc).join(' · ')}</p>` : ''}
+    ${(th?.checks || []).length ? '' : ''}
+    <form id="thForm" class="checks" style="gap:10px">
+      <div class="fld"><label for="thText">למה המניה תעלה, ומה השוק מפספס</label><textarea id="thText" maxlength="4000">${esc(th?.text || '')}</textarea></div>
+      <div><div class="muted" style="font-size:12px;margin-bottom:6px">מדדים שחייבים להחזיק (נבדקים בכל דוח)</div><div id="mrows">${mrows.map((r, i) => metricRow(r, i, opts)).join('')}</div>
+        <button type="button" class="btn2 quiet" id="addM" ${mrows.length >= 5 ? 'disabled' : ''}>הוסף מדד</button></div>
+      <div><div class="muted" style="font-size:12px;margin-bottom:6px">תנאי ביטול: אם אחד מתקיים, התזה נשברת</div>
+        <label><input type="checkbox" id="kG" ${kill('guidance_lowered') ? 'checked' : ''}> ${esc(opts.kills.guidance_lowered || 'ההנהלה הורידה תחזית')}</label>
+        <label><input type="checkbox" id="kE" ${kill('exec_departure') ? 'checked' : ''}> ${esc(opts.kills.exec_departure || 'עזיבת מנכ״ל או סמנכ״ל כספים')}</label>
+        <label><input type="checkbox" id="kV" ${kill('veto') ? 'checked' : ''}> ${esc(opts.kills.veto || 'דגל וטו')}</label>
+        <label><input type="checkbox" id="kP" ${pb ? 'checked' : ''}> המחיר יורד מתחת ל- <input type="number" id="kPv" step="0.01" value="${pb?.value ?? (c.px * 0.85).toFixed(2)}" aria-label="מחיר ביטול"></label></div>
+      <div class="row"><button type="submit" class="btn2">שמור תזה</button>${th ? '<button type="button" class="btn2 quiet" id="thDel">מחק</button>' : ''}<span class="muted" style="font-size:12px">${th?.updated ? 'עודכנה ' + ago(th.updated) : ''}</span></div>
+    </form></div>
+  <div class="sec"><h4>מעקב ואזור כניסה <small>${c.watch ? 'במעקב' : 'לא במעקב'}</small></h4>
+    <form id="wForm"><div class="calc"><div class="fld"><label for="wLo">מ-</label><input id="wLo" inputmode="decimal" value="${js.watch?.entry_low ?? ''}"></div><div class="fld"><label for="wHi">עד</label><input id="wHi" inputmode="decimal" value="${js.watch?.entry_high ?? ''}"></div><div class="fld"><label>&nbsp;</label><button type="submit" class="btn2 ghost">${c.watch ? 'עדכן' : 'הוסף למעקב'}</button></div></div>
+    <p class="note">כשהמחיר נכנס לטווח תקבל התראה.</p></form></div>
+  <div class="sec"><h4>יומן החלטות <small>נשמר עם הציון והמחיר של אותו רגע</small></h4>
+    <form id="jForm"><div class="calc"><div class="fld"><label for="jAct">פעולה</label><select id="jAct">${Object.entries(ACT_HE).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div><div class="fld"><label for="jPx">מחיר</label><input id="jPx" inputmode="decimal" value="${(c.px || 0).toFixed(2)}"></div><div class="fld"><label>&nbsp;</label><button type="submit" class="btn2">רשום</button></div></div>
+    <div class="fld" style="margin-top:8px"><label for="jNote">נימוק</label><textarea id="jNote" maxlength="4000" placeholder="למה עכשיו? מה יגרום לך לטעות?"></textarea></div></form>
+    <div style="margin-top:8px">${(js.journal || []).map(j => `<div class="jr"><div class="h"><span class="chip ac">${ACT_HE[j.action] || j.action}</span><span class="num">${fmtUsd(j.price)}</span><span class="muted" style="font-size:12px">${ago(j.ts)}</span>${j.snapshot?.score ? `<span class="muted num" style="font-size:12px">ציון ${Math.round(j.snapshot.score.tot)}</span>` : ''}</div>${j.note ? `<div class="note" style="margin-top:4px">${esc(j.note)}</div>` : ''}</div>`).join('') || '<p class="note">עוד לא נרשמו החלטות.</p>'}</div></div>`;
+}
+function metricRow(r, i, opts){
+  const names = Object.keys(opts.metrics || {}).length ? opts.metrics : { rev_yoy: 'צמיחת הכנסות שנתית (%)', gross_margin: 'שולי רווח גולמי (%)', op_margin: 'שולי רווח תפעולי (%)', fcf_margin: 'שולי תזרים חופשי (%)', eps_yoy: 'צמיחת רווח למניה (%)' };
+  return `<div class="krow" data-i="${i}"><div class="fld"><label for="mN${i}">מדד</label><select id="mN${i}">${Object.entries(names).map(([k, v]) => `<option value="${k}" ${k === r.name ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></div>
+    <div class="fld"><label for="mO${i}">תנאי</label><select id="mO${i}">${['>', '>=', '<', '<='].map(o => `<option ${o === r.op ? 'selected' : ''}>${o}</option>`).join('')}</select></div>
+    <div class="fld"><label for="mV${i}">ערך</label><input id="mV${i}" inputmode="decimal" value="${r.value ?? ''}"></div><button type="button" class="x" data-rm="${i}" aria-label="הסר מדד">✕</button></div>`;
+}
+function wireBody(js, c){
+  panel.querySelectorAll('.peer[data-t]').forEach(b => b.onclick = () => { const o = byT[b.dataset.t]; if (o) select(o.i); });
+  if (panelTab === 'overview') {
+    const calc = () => {
+      const v = id => parseFloat(String($('#' + id).value).replace(/[^0-9.\-]/g, ''));
+      const port = v('cPort'), risk = v('cRisk'), en = v('cEntry'), sp = v('cStop'), tg = v('cTgt');
+      store.set(LS_PREFIX + 'port', isFinite(port) ? port : 100000); store.set(LS_PREFIX + 'risk', isFinite(risk) ? risk : 1);
+      const res = $('#cRes'), warn = $('#cWarn');
+      if (![port, risk, en, sp, tg].every(isFinite) || en <= sp || port <= 0 || risk <= 0) { res.innerHTML = ''; warn.textContent = 'הסטופ צריך להיות מתחת למחיר הכניסה, וכל השדות מספרים חיוביים.'; return; }
+      const per = en - sp, shares = Math.floor(port * risk / 100 / per), pos = shares * en, pct = pos / port * 100, rr = (tg - en) / per;
+      res.innerHTML = `<div><span>מניות</span><b class="num">${shares.toLocaleString('en-US')}</b></div><div><span>סכום</span><b class="num">${fmtUsd(pos, 0)}</b></div><div><span>מהתיק</span><b class="num">${pct.toFixed(1)}%</b></div><div><span>סיכוי/סיכון</span><b class="num ${rr >= 2 ? 'up' : rr < 1 ? 'down' : ''}">1:${Math.max(0, rr).toFixed(1)}</b></div>`;
+      const sectorW = C.filter(o => o.si === c.si && o.hold).reduce((a, o) => a + (o.hold.w || 0), 0);
+      warn.textContent = pct > 20 ? `הפוזיציה תהיה ${pct.toFixed(0)}% מהתיק. מעל 20% זה ריכוז גבוה.` : sectorW + pct > 35 ? `יחד עם ההחזקות הקיימות, החשיפה לרובע ${SECTORS[c.si].he} תגיע ל-${(sectorW + pct).toFixed(0)}%.` : '';
+    };
+    panel.querySelectorAll('.calc input').forEach(inp => inp.addEventListener('input', calc)); calc();
+  }
+  if (panelTab === 'thesis') {
+    if (!thesisOpts) api('/api/thesis-options').then(o => { thesisOpts = o; if (CO && panelTab === 'thesis') renderPanel(); }).catch(() => {});
+    const rows = () => [...panel.querySelectorAll('#mrows .krow')].map(r => { const i = r.dataset.i; return { name: $('#mN' + i).value, op: $('#mO' + i).value, value: parseFloat($('#mV' + i).value) }; });
+    $('#addM').onclick = () => { const cur = rows(); cur.push({ name: 'gross_margin', op: '>', value: '' }); $('#mrows').innerHTML = cur.map((r, i) => metricRow(r, i, thesisOpts || {})).join(''); wireRm(); };
+    const wireRm = () => panel.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { const cur = rows().filter((_, i) => i !== +b.dataset.rm); $('#mrows').innerHTML = cur.map((r, i) => metricRow(r, i, thesisOpts || {})).join(''); wireRm(); });
+    wireRm();
+    $('#thForm').onsubmit = async e => {
+      e.preventDefault();
+      const kills = []; if ($('#kG').checked) kills.push({ type: 'guidance_lowered' }); if ($('#kE').checked) kills.push({ type: 'exec_departure' }); if ($('#kV').checked) kills.push({ type: 'veto' });
+      if ($('#kP').checked && isFinite(parseFloat($('#kPv').value))) kills.push({ type: 'price_below', value: parseFloat($('#kPv').value) });
+      const metrics = rows().filter(r => isFinite(r.value));
+      try { await api(`/api/thesis/${c.t}`, { method: 'PUT', body: JSON.stringify({ text: $('#thText').value, metrics, kills }) }); toast(DEMO ? 'התזה נשמרה בדפדפן (מצב הדגמה)' : 'התזה נשמרה ותיבדק מול כל דוח'); CO = await api(`/api/company/${c.t}`); renderPanel(); } catch (err) { toast(err.message); }
+    };
+    if ($('#thDel')) $('#thDel').onclick = async () => { try { await api(`/api/thesis/${c.t}`, { method: 'DELETE' }); toast('התזה נמחקה'); CO = await api(`/api/company/${c.t}`); renderPanel(); } catch (err) { toast(err.message); } };
+    $('#wForm').onsubmit = async e => { e.preventDefault(); const lo = parseFloat($('#wLo').value), hi = parseFloat($('#wHi').value);
+      try { await api(`/api/watchlist/${c.t}`, { method: 'PUT', body: JSON.stringify({ entry_low: isFinite(lo) ? lo : null, entry_high: isFinite(hi) ? hi : null }) }); c.watch = true; toast('אזור הכניסה נשמר'); CO = await api(`/api/company/${c.t}`); renderPanel(); renderRail(); } catch (err) { toast(err.message); } };
+    $('#jForm').onsubmit = async e => { e.preventDefault(); const px = parseFloat($('#jPx').value);
+      try { await api('/api/journal', { method: 'POST', body: JSON.stringify({ ticker: c.t, action: $('#jAct').value, price: isFinite(px) ? px : null, note: $('#jNote').value }) }); toast('נרשם ביומן'); CO = await api(`/api/company/${c.t}`); renderPanel(); } catch (err) { toast(err.message); } };
+  }
+}
+
+/* ================= chrome ================= */
+function buildModes(){
+  $('#modes').innerHTML = MODES.map((m, i) => `<button type="button" class="mode" data-m="${m.k}" aria-pressed="${m.k === mode}" title="מקש ${i + 1}"><b>${m.he}</b><small>${m.sub}</small></button>`).join('');
+  $('#modes').querySelectorAll('.mode').forEach(b => b.onclick = () => setMode(b.dataset.m));
+}
+function legendHTML(){
+  const div = (l, r) => `<div class="ramp" style="background:linear-gradient(to right, var(--down), var(--clay) 50%, var(--up))"></div><div class="rampl"><span>${l}</span><span>${r}</span></div>`;
+  const cb = `<label><input type="checkbox" id="cbToggle" ${document.documentElement.classList.contains('cb') ? 'checked' : ''}> צבעים נגישים לעיוורי צבעים</label>`;
+  if (mode === 'market') return `<h3>שוק היום · ${dLabel(CITY.session.last_session)}</h3><div class="lrow"><span class="ico">▮</span>גובה = נפח מסחר יחסי</div><div class="lrow"><span class="ico">■</span>צבע = שינוי מול התנודתיות הרגילה; לבן = יום רגיל</div>${div(N(MINUS + '2.4σ'), N('+2.4σ'))}${cb}`;
+  if (mode === 'hunt') return `<h3>ציד הזדמנויות</h3><div class="lrow"><span class="ico">▮</span>גובה = ציון איכות</div><div class="lrow"><span class="ico" style="color:var(--beacon)">✦</span>אלומה = ציון גבוה, ירידה מהשיא, תמחור נמוך</div><div class="ramp" style="background:linear-gradient(to right, var(--clay), var(--cheap))"></div><div class="rampl"><span>יקרה מול עצמה</span><span>זולה מול עצמה</span></div>${cb}`;
+  if (mode === 'earnings') return `<h3>עונת דוחות</h3><div class="lrow"><span class="ico">▮</span>גובה = עוצמת התגובה לדוח</div><div class="lrow"><span class="ico"><span class="pin" style="display:inline-grid;width:16px;height:16px;font-size:9px;border-width:1px">3</span></span>מספר = ימי מסחר לדוח</div>${div('פספוס / הורדת תחזית', 'הכאה / העלאת תחזית')}${cb}`;
+  return `<h3>התיק שלי</h3><div class="lrow"><span class="ico">▮</span>גובה = משקל בתיק; שאר העיר מושטחת</div><div class="lrow"><span class="ico">■</span>צבע = רווח או הפסד על הפוזיציה</div>${div(N(MINUS + '25%'), N('+25%'))}${cb}`;
+}
+function renderLegend(){ $('#legend').innerHTML = legendHTML(); const t = $('#cbToggle'); if (t) t.onchange = () => { document.documentElement.classList.toggle('cb', t.checked); store.set(LS_PREFIX + 'cb', t.checked); readTheme(); renderRail(); }; }
+function setMode(m){
+  if (m === mode) return; mode = m; store.set(LS_PREFIX + 'mode', m);
+  $('#modes').querySelectorAll('.mode').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
+  renderLegend(); retarget(); placeBeams(); renderRail(); if (hoverI >= 0) { const i = hoverI; hoverI = -1; setHover(i); }
+  dirty = true;
+}
+const PORT = { data: null };
+function renderRail(){
+  const rail = $('#rail');
+  if (mode === 'portfolio') {
+    const hs = C.filter(c => c.hold).sort((a, b) => (b.hold.w || 0) - (a.hold.w || 0));
+    const total = hs.reduce((a, c) => a + (c.hold.w || 0), 0);
+    const bySec = {}; for (const c of hs) bySec[c.si] = (bySec[c.si] || 0) + (c.hold.w || 0);
+    rail.innerHTML = `<header><h2>התיק שלי</h2><small>${hs.length} פוזיציות · ${N(total.toFixed(0) + '%')} מושקע</small></header>
+      <div class="expo"><div class="bar">${Object.entries(bySec).map(([si, w]) => `<i style="width:${(w / Math.max(total, 1) * 100).toFixed(1)}%;background:${SECTORS[si].hue}" title="${SECTORS[si].he}"></i>`).join('')}</div>
+      <div class="keys">${Object.entries(bySec).sort((a, b) => b[1] - a[1]).map(([si, w]) => `<span style="--c:${SECTORS[si].hue}">${SECTORS[si].he} ${N(w.toFixed(0) + '%')}</span>`).join('')}</div></div>
+      <ol>${hs.map(c => `<li><button type="button" class="hrow" data-t="${c.t}"><span class="t">${esc(c.t)}</span><span class="w" title="משקל"><i style="width:${clamp((c.hold.w || 0) * 4, 2, 100)}%"></i></span><span class="num ${sg(c.hold.pnl)}">${fmtPct(c.hold.pnl, 1)}</span>
+        <span class="meta"><span class="num">${c.hold.w}%</span>·<span class="chip ${THESIS[c.hold.th]?.[1] || ''}" style="height:19px">${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>${c.rep?.st === 'soon' && c.rep.days <= 10 ? `<span class="chip ac" style="height:19px">דוח בעוד ${c.rep.days}</span>` : ''}</span></button></li>`).join('') || '<li class="note" style="padding:12px">אין פוזיציות. חבר את IBKR Flex כדי למשוך את התיק.</li>'}</ol>
+      <footer>משקלים ותשואות מדוח ה-Flex האחרון</footer>`;
+    rail.querySelectorAll('.hrow').forEach(b => b.onclick = () => select(byT[b.dataset.t].i));
+    return;
+  }
+  const rows = DIST.filter(d => d.rect).sort((a, b) => b.capSum - a.capSum);
+  rail.innerHTML = `<header><h2>רובעים</h2><small>${C.length} חברות</small></header><ol>${rows.map(d => { const up = d.comps.filter(c => (c.chg || 0) > 0).length / d.comps.length * 100; const v = districtMetric(d); const etf = CITY.sector_etf?.[d.s.en];
+    const cls = mode === 'market' ? sg(parseFloat(v.replace(MINUS, '-'))) : '';
+    return `<li><button type="button" class="drow ${d === focusD ? 'on' : ''}" data-si="${d.si}"><span class="sw" style="background:${d.s.hue}"></span><span class="nm">${esc(d.s.he)}<em>${d.s.etf}${isNum(etf) && mode === 'market' ? ' ' + fmtPct(etf, 1) : ''}</em></span><span class="v num ${cls}">${v}</span><span class="br" title="${Math.round(up)}% מהחברות עלו"><i style="width:${up.toFixed(0)}%"></i></span></button></li>`; }).join('')}</ol>
+    <footer>רובע = סקטור GICS · רחוב = תת-ענף · בניין = חברה</footer>`;
+  rail.querySelectorAll('.drow').forEach(b => b.onclick = () => focusDistrict(DIST[+b.dataset.si]));
+}
+function toggleRail(force){ const el = $('#rail'); const on = force ?? !el.classList.contains('show'); el.classList.toggle('show', on); $('#railBtn').setAttribute('aria-expanded', on); }
+$('#railBtn').onclick = () => toggleRail();
+function demoClock(){
+  // the embedded demo keeps a real clock even though its data is frozen at build time
+  const now = new Date(); const f = (tz, o) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, ...o }).format(now);
+  const ny = f('America/New_York', { hour: '2-digit', minute: '2-digit', hour12: false }); const il = f('Asia/Jerusalem', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const wd = f('America/New_York', { weekday: 'short' }); const [h, m] = ny.split(':').map(Number); const t = h * 60 + m;
+  const state = wd === 'Sat' || wd === 'Sun' ? 'closed' : t >= 570 && t < 960 ? 'open' : t >= 240 && t < 570 ? 'pre' : t >= 960 && t < 1200 ? 'post' : 'closed';
+  Object.assign(CITY.session, { ny, il, state });
+}
+function renderStrip(){
+  if (DEMO) demoClock();
+  const s = CITY.session; const st = { open: 'השוק פתוח', pre: 'טרום מסחר', post: 'אחרי המסחר', closed: 'השוק סגור' }[s.state];
+  const soon = C.filter(c => c.rep?.st === 'soon' && c.rep.days <= 5).length;
+  $('#strip').innerHTML = `<div class="stat"><span>${st}</span><b><i class="dot ${s.state}"></i>${N(s.ny)} ניו יורק</b></div><div class="stat"><span>ישראל</span><b>${N(s.il)}</b></div>
+    <div class="stat"><span>S&amp;P 500 · ${dLabel(s.last_session)}</span><b class="num ${sg(CITY.index.chg)}">${fmtPct(CITY.index.chg)}</b></div><div class="stat"><span>רוחב שוק</span><b>${N(Math.round(CITY.index.breadth) + '%')} עלו</b></div>
+    <div class="stat"><span>דוחות ב-5 ימים</span><b>${N(soon)} חברות</b></div>`;
+  const chip = $('#modeChip'); chip.className = 'modechip ' + (CITY.mode === 'demo' ? 'demo' : 'live');
+  chip.innerHTML = CITY.mode === 'demo' ? '<span class="full">נתוני </span>הדגמה' : '<i class="dot ok" style="margin:0 2px 0 0"></i>חי';
+  chip.title = CITY.mode === 'demo' ? 'רשימת החברות, הסקטורים ותתי-הענפים אמיתיים. מחירים, דוחות, ציונים והתיק הם נתוני הדגמה עד שמחברים את IBKR, ה-SEC ו-Claude.' : 'מחובר למקורות החיים';
+  const unread = (CITY.alerts || []).filter(a => !a.read && a.level !== 'digest').length; const b = $('#bellBadge'); b.hidden = !unread; b.textContent = unread;
+}
+
+/* alerts drawer */
+const LV = { urgent: ['דחוף', 'alert'], important: ['חשוב', 'alert'], digest: ['לסיכום', 'star'] };
+function renderDrawer(){
+  const list = CITY.alerts || [];
+  $('#drawer').innerHTML = `<header><h2>התראות</h2><button class="btn icon" type="button" id="drawerX" aria-label="סגירה"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></header>
+    <div class="list">${list.map(a => `<button type="button" class="al ${a.read ? 'read' : ''}" data-id="${a.id}" data-t="${esc(a.t)}"><span class="tile ${a.level}">${GLYPH[LV[a.level]?.[1] || 'alert']}</span><span><b>${esc(a.title)}</b>${a.body ? `<p>${esc(a.body)}</p>` : ''}<time>${LV[a.level]?.[0] || ''} · ${ago(a.ts)}</time></span></button>`).join('') || '<p class="note" style="padding:12px">אין התראות בשלושת הימים האחרונים.</p>'}</div>`;
+  $('#drawerX').onclick = () => { $('#drawer').hidden = true; };
+  $('#drawer').querySelectorAll('.al').forEach(b => b.onclick = () => { const a = list.find(x => x.id === +b.dataset.id); if (a && !a.read) { a.read = true; api(`/api/alerts/${a.id}/read`, { method: 'POST' }).catch(() => {}); renderStrip(); } $('#drawer').hidden = true; const c = byT[b.dataset.t]; if (c) select(c.i); dirty = true; });
+}
+$('#bellBtn').onclick = () => { const d = $('#drawer'); d.hidden = !d.hidden; $('#statusPop').hidden = true; if (!d.hidden) renderDrawer(); };
+
+/* status */
+const SRC_HE = { sec: ['דוחות SEC', 'SEC_USER_AGENT'], prices: ['מחירים (Alpaca)', 'ALPACA_KEY_ID'], ibkr_live: ['מחירים חיים (IBKR)', 'IBKR_LIVE'], ibkr_flex: ['תיק (IBKR Flex)', 'IBKR_FLEX_TOKEN'], earnings: ['יומן דוחות (Finnhub)', 'FINNHUB_API_KEY'], scores: ['ציונים', ''], ai: ['כרטיסיות (Claude)', 'ANTHROPIC_API_KEY'], telegram: ['התראות לטלגרם', 'TELEGRAM_BOT_TOKEN'] };
+let STATUS = null;
+async function loadStatus(){
+  try { STATUS = await api('/api/status'); } catch { STATUS = null; }
+  const states = STATUS ? Object.values(STATUS.sources).filter(s => s.configured).map(s => s.state) : [];
+  $('#statusDot').className = 'dot ' + (!STATUS || STATUS.mode === 'demo' ? 'never' : states.includes('stale') || states.includes('never') ? 'stale' : 'ok');
+}
+function renderStatus(){
+  const el = $('#statusPop'); if (!STATUS) { el.innerHTML = '<h2>מצב החיבורים</h2><p class="note">לא ניתן לקרוא את מצב השרת.</p>'; return; }
+  el.innerHTML = `<h2>מצב החיבורים</h2>${STATUS.mode === 'demo' ? '<p class="note" style="margin:0 0 6px">מצב הדגמה: הנתונים מומצאים. כדי לעבור לנתונים חיים: metro init ואז metro backfill.</p>' : ''}
+    ${Object.entries(STATUS.sources).map(([k, s]) => { const [he, env] = SRC_HE[k] || [k, '']; const st = !s.configured ? 'לא מוגדר' : s.state === 'ok' ? (s.age_s != null ? 'עודכן ' + Math.round(s.age_s / 60) + ' דק׳' : 'פעיל') : s.state === 'never' ? 'ממתין להרצה ראשונה' : s.state === 'stale' ? 'לא עודכן זמן רב' : s.state;
+      return `<div class="srow"><i class="dot ${!s.configured ? '' : s.state}"></i><span>${he}${!s.configured && env ? `<br><small>הגדר ${env} בקובץ ‎.env</small>` : ''}${k === 'ai' && s.configured ? `<br><small>${s.queued} בתור · ${N('$' + s.spend_month_usd)} החודש מתוך ${N('$' + s.budget_usd)}</small>` : ''}</span><small>${st}</small></div>`; }).join('')}`;
+}
+$('#modeChip').onclick = () => $('#statusBtn').onclick();
+$('#statusBtn').onclick = () => { const d = $('#statusPop'); d.hidden = !d.hidden; $('#drawer').hidden = true; if (!d.hidden) { renderStatus(); loadStatus().then(renderStatus); } };
+
+/* brief */
+async function openBrief(){
+  const o = $('#brief'); o.hidden = false; const body = $('#briefBody'); body.innerHTML = '<header><h2>תדריך בוקר</h2></header><div class="body"><p class="note">טוען…</p></div>';
+  try {
+    const b = await api('/api/brief');
+    const tk = (rows, key = 'ticker') => `<div class="tickers">${rows.map(r => `<button type="button" class="${r.focus ? 'f' : ''}" data-t="${esc(r[key])}">${esc(r[key])}</button>`).join('')}</div>`;
+    body.innerHTML = `<header><h2>תדריך בוקר</h2><button class="btn icon" type="button" id="briefX" aria-label="סגירה"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></header><div class="body">
+      <div class="sec"><h4>התיק <small>שינוי יומי ומצב התזה</small></h4>${b.portfolio.length ? `<div class="bgrid">${b.portfolio.map(p => `<button type="button" class="bcard" data-t="${esc(p.ticker)}"><span class="t">${esc(p.ticker)}</span><span class="num ${sg(p.chg)}">${fmtPct(p.chg, 1)}</span><span class="chip ${THESIS[p.thesis]?.[1] || ''}" style="align-self:flex-start">${THESIS[p.thesis]?.[0] || 'בלי תזה'}</span>${p.reasons?.length ? `<small class="muted">${esc(p.reasons[0])}</small>` : ''}</button>`).join('')}</div>` : '<p class="note">אין פוזיציות.</p>'}</div>
+      <div class="sec"><h4>דיווחו ב-20 השעות האחרונות <small>${b.reported.length} חברות · מודגש = בתיק או במעקב</small></h4>${b.reported.length ? tk(b.reported) : '<p class="note">אין דיווחים חדשים.</p>'}</div>
+      ${b.events.length ? `<div class="sec"><h4>אירועים חשובים</h4><div class="tl">${b.events.map(e => `<div class="tli"><time>${esc(e.ticker)}</time><i class="${e.severity}"></i><span>${esc(e.title)}</span></div>`).join('')}</div></div>` : ''}
+      <div class="sec"><h4>דוחות היום ומחר</h4>${b.calendar.length ? tk(b.calendar) : '<p class="note">אין דוחות ביומיים הקרובים.</p>'}</div>
+      <div class="sec"><h4>אלומות</h4>${b.beacons.length ? tk(b.beacons) : '<p class="note">אין כרגע מניות שעוברות את כל התנאים.</p>'}</div></div>`;
+    $('#briefX').onclick = () => { o.hidden = true; };
+    body.querySelectorAll('[data-t]').forEach(x => x.onclick = () => { const c = byT[x.dataset.t]; if (c) { o.hidden = true; select(c.i); } });
+  } catch (e) { body.innerHTML = `<header><h2>תדריך בוקר</h2></header><div class="body"><div class="empty">${esc(e.message)}</div></div>`; }
+}
+$('#briefBtn').onclick = openBrief;
+$('#brief').addEventListener('pointerdown', e => { if (e.target.id === 'brief') $('#brief').hidden = true; });
+
+/* search */
+const sEl = $('#search'), qEl = $('#q'), qres = $('#qres'); let sItems = [], sIdx = 0;
+function openSearch(){ sEl.hidden = false; qEl.value = ''; runSearch(); requestAnimationFrame(() => qEl.focus()); }
+function closeSearch(){ sEl.hidden = true; renderer.domElement.focus({ preventScroll: true }); }
+function runSearch(){
+  const q = qEl.value.trim().toLowerCase(); let items = [];
+  if (!q) items = C.slice().sort((a, b) => Math.abs(b.sig || 0) - Math.abs(a.sig || 0)).slice(0, 7).map(c => ({ c }));
+  else {
+    for (const d of DIST) if (d.rect && (d.s.he.includes(q) || d.s.en.toLowerCase().includes(q) || d.s.etf.toLowerCase() === q)) items.push({ d });
+    const sc = c => { const t = c.t.toLowerCase(), n = c.n.toLowerCase(); if (t === q || (c.alts || []).some(a => a.toLowerCase() === q)) return 0; if (t.startsWith(q)) return 1; if (n.startsWith(q)) return 2; if (n.includes(q)) return 3; if (c.u.toLowerCase().includes(q)) return 4; if ((c.th || []).some(x => x.includes(q))) return 4; return 9; };
+    items.push(...C.map(c => ({ c, s: sc(c) })).filter(x => x.s < 9).sort((a, b) => a.s - b.s || (b.c.cap || 0) - (a.c.cap || 0)).slice(0, 9));
+  }
+  sItems = items.slice(0, 9); sIdx = 0; paintSearch();
+}
+function paintSearch(){
+  if (!sItems.length) { qres.innerHTML = `<li class="none">לא נמצאה מניה כזו ב-S&amp;P 500. נסה סימול (למשל NVDA) או שם חברה באנגלית.</li>`; return; }
+  qres.innerHTML = sItems.map((it, i) => it.d ? `<li><button type="button" class="sres" role="option" aria-selected="${i === sIdx}" data-i="${i}"><span class="t">${it.d.s.etf}</span><span class="n">רובע ${esc(it.d.s.he)}<small>${it.d.comps.length} חברות</small></span><span class="num">${districtMetric(it.d)}</span></button></li>`
+    : `<li><button type="button" class="sres" role="option" aria-selected="${i === sIdx}" data-i="${i}"><span class="t">${esc(it.c.t)}</span><span class="n">${esc(it.c.n)}<small>${esc(SECTORS[it.c.si].he)} · <span dir="ltr">${esc(it.c.u)}</span></small></span><span class="num ${sg(it.c.chg)}">${fmtPct(it.c.chg)}</span></button></li>`).join('');
+  qres.querySelectorAll('.sres').forEach(b => { b.onclick = () => { sIdx = +b.dataset.i; chooseSearch(); }; b.onpointerenter = () => { sIdx = +b.dataset.i; qres.querySelectorAll('.sres').forEach(x => x.setAttribute('aria-selected', +x.dataset.i === sIdx)); }; });
+}
+function chooseSearch(){ const it = sItems[sIdx]; if (!it) return; closeSearch(); if (it.d) focusDistrict(it.d); else select(it.c.i); }
+qEl.addEventListener('input', runSearch);
+qEl.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sIdx = (sIdx + (e.key === 'ArrowDown' ? 1 : -1) + sItems.length) % Math.max(1, sItems.length); paintSearch(); } else if (e.key === 'Enter') { e.preventDefault(); chooseSearch(); } });
+sEl.addEventListener('pointerdown', e => { if (e.target === sEl) closeSearch(); });
+$('#searchBtn').onclick = openSearch;
+
+addEventListener('keydown', e => {
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); sEl.hidden ? openSearch() : closeSearch(); return; }
+  if (e.key === 'Escape') { if (!sEl.hidden) closeSearch(); else if (!$('#brief').hidden) $('#brief').hidden = true; else if (!$('#drawer').hidden) $('#drawer').hidden = true; else if (!$('#statusPop').hidden) $('#statusPop').hidden = true; else if (selI >= 0) closePanel(); else if (focusD) goHome(); return; }
+  if (typing || !sEl.hidden) return;
+  if (e.key === '/') { e.preventDefault(); openSearch(); }
+  else if (['1', '2', '3', '4'].includes(e.key)) setMode(MODES[+e.key - 1].k);
+  else if (selI >= 0 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { const cs = C[selI].street.comps; const j = cs.indexOf(C[selI]); select(cs[(j + (e.key === 'ArrowLeft' ? 1 : -1) + cs.length) % cs.length].i); }
+});
+
+/* camera buttons */
+function zoomBy(f){ const s = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)); flyTo(controls.target.clone(), clamp(s.radius * f, controls.minDistance, controls.maxDistance), { dur: 420 }); }
+$('#zIn').onclick = () => zoomBy(0.62); $('#zOut').onclick = () => zoomBy(1.6); $('#home').onclick = goHome;
+$('#rotate').onclick = () => { const s = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)); flyTo(controls.target.clone(), s.radius, { az: s.theta + Math.PI / 2, dur: 900 }); };
+$('#flat').onclick = () => {
+  const on = HS.to > 0.5; HS.from = HS.v; HS.to = on ? 0.05 : 1; HS.t0 = performance.now(); $('#flat').setAttribute('aria-pressed', on);
+  const s = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+  flyTo(controls.target.clone(), s.radius, on ? { polar: 0.02, az: 0, dur: 900 } : { polar: 0.9, az: -Math.PI / 4, dur: 900 }); controls.enableRotate = !on;
+};
+$('#themeBtn').onclick = () => { const next = dark ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', next); store.set(LS_PREFIX + 'theme', next); readTheme(); renderRail(); };
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!store.get(LS_PREFIX + 'theme', null)) { readTheme(); renderRail(); } });
+
+/* live refresh */
+let lastQuoteTs = null;
+async function pollQuotes(){
+  if (DEMO || !CITY) return;
+  try {
+    const q = await api('/api/quotes' + (lastQuoteTs ? '?since=' + encodeURIComponent(lastQuoteTs) : '')); lastQuoteTs = q.now; CITY.session = q.session;
+    let n = 0; for (const [t, [px, chg]] of Object.entries(q.quotes)) { const c = byT[t]; if (!c || !isNum(chg)) continue; c.px = px; c.chg = chg; if (isNum(c.std) && c.std) c.sig = chg / c.std; n++; }
+    if (n) { if (mode === 'market') { for (const c of C) colorFor(c, mode, tgt[c.i].col); for (const c of C) { from[c.i].h = cur[c.i].h; from[c.i].col.copy(cur[c.i].col); } anim = { t0: performance.now(), dur: 600 }; } renderStrip(); renderRail(); }
+  } catch {}
+}
+async function refreshCity(){
+  if (DEMO) return;
+  try { const city = await api('/api/city'); for (const r of city.companies) { const c = byT[r.t]; if (c) Object.assign(c, r); } CITY.alerts = city.alerts; CITY.index = city.index; CITY.session = city.session; CITY.sector_etf = city.sector_etf; CITY.mode = city.mode; retarget(); renderStrip(); renderRail(); dirty = true; } catch {}
+}
+
+/* ================= picking events ================= */
+function wirePointer(){
+  const cv = renderer.domElement;
+  cv.addEventListener('pointermove', e => { pointer = { x: e.clientX, y: e.clientY }; needPick = true; if (downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) dragging = true; });
+  cv.addEventListener('pointerdown', e => { downAt = { x: e.clientX, y: e.clientY }; dragging = false; fly = null; $('#drawer').hidden = true; $('#statusPop').hidden = true; });
+  cv.addEventListener('pointerup', e => { if (downAt && !dragging && e.button === 0) { const h = pick(e.clientX, e.clientY); if (h.b !== undefined) select(h.b); else if (h.d) focusDistrict(h.d); } downAt = null; dragging = false; });
+  cv.addEventListener('pointerleave', () => { pointer = null; setHover(-1); });
+  controls.addEventListener('change', () => { dirty = true; });
+}
+
+/* ================= loop & boot ================= */
+const clock = new THREE.Clock(); let lastT = performance.now();
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+  stepAnim(now); stepFly(now);
+  if (HS.t0 !== undefined) { const k = ease(clamp((now - HS.t0) / (reduceMotion ? 1 : 850), 0, 1)); HS.v = lerp(HS.from, HS.to, k); writeAll(); if (k >= 1) HS.t0 = undefined; }
+  const vk = VO.to - VO.v; if (Math.abs(vk) > 0.001) { VO.v += vk * (reduceMotion ? 1 : 1 - Math.exp(-dt * 9)); applyView(); dirty = true; } else if (VO.v !== VO.to) { VO.v = VO.to; applyView(); }
+  if (!fly) controls.update();
+  const tg = controls.target; const cx = clamp(tg.x, -WORLD.w / 2, WORLD.w / 2), cz = clamp(tg.z, -WORLD.d / 2, WORLD.d / 2);
+  if (cx !== tg.x || cz !== tg.z) { camera.position.x += cx - tg.x; camera.position.z += cz - tg.z; tg.x = cx; tg.z = cz; }
+  const et = clock.getElapsedTime();
+  BEAM.a += (BEAM.target - BEAM.a) * 0.08; beamMat.uniforms.uAlpha.value = BEAM.a * (dark ? 1.1 : 0.85); haloMat.uniforms.uAlpha.value = BEAM.a * (dark ? 0.32 : 0.22); beamMat.uniforms.uTime.value = haloMat.uniforms.uTime.value = et; beams.visible = halo.visible = BEAM.a > 0.01;
+  routeMat.uniforms.uTime.value = et;
+  if (frameMesh && frameMesh.visible) frameMat.opacity = 0.55 + 0.35 * Math.sin(now / 380);
+  stepCars(dt);
+  if (needPick && pointer && !dragging && !fly && sEl.hidden) { needPick = false; const h = pick(pointer.x, pointer.y); setHover(h.b ?? -1); }
+  if (dirty) { updateLabels(); dirty = false; }
+  renderer.render(scene, camera);
+}
+async function boot(){
+  const t = store.get(LS_PREFIX + 'theme', null); if (t) document.documentElement.setAttribute('data-theme', t); if (store.get(LS_PREFIX + 'cb', false)) document.documentElement.classList.add('cb');
+  let city;
+  try { city = await api('/api/city'); }
+  catch (e) { $('#app').insertAdjacentHTML('beforeend', `<div id="fail"><div><b>השרת לא זמין</b><br>${esc(e.message)}<br><br>הפעל אותו עם: metro run</div></div>`); return; }
+  buildData(city);
+  cur = C.map(() => ({ h: 0, col: new THREE.Color() })); from = C.map(() => ({ h: 0, col: new THREE.Color() })); tgt = C.map(() => ({ h: 1, col: new THREE.Color() }));
+  buildScene(); buildLabels(); wirePointer();
+  buildModes(); renderLegend(); renderStrip(); renderRail(); loadStatus();
+  resize();
+  { const H = HOME(); if (reduceMotion) setCam(H.t, H.dist, H.polar, H.az); else { setCam(H.t, H.dist * 1.3, 0.55, H.az + 0.5); flyTo(H.t, H.dist, { polar: H.polar, az: H.az, dur: 2100 }); } }
+  readTheme(); introT0 = performance.now(); if (!reduceMotion) for (const c of C) cur[c.i].h = 0; writeAll();
+  requestAnimationFrame(frame);
+  requestAnimationFrame(() => { const b = $('#boot'); b.style.opacity = 0; setTimeout(() => b.remove(), 700); });
+  if (!DEMO) { setInterval(pollQuotes, 20000); setInterval(refreshCity, 120000); setInterval(loadStatus, 60000); }
+  setInterval(() => { if (!DEMO) return; renderStrip(); }, 30000);
+  const hashT = decodeURIComponent(location.hash.slice(1)).toUpperCase(); if (hashT && byT[hashT]) setTimeout(() => select(byT[hashT].i), 2300);
+  window.__metro = { get C(){ return C; }, where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); } };
+}
+boot();
+</script>

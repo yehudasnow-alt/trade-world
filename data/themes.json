@@ -1,0 +1,11 @@
+{
+  "note": "Your own themes on top of GICS. A company can sit in several. Edit freely.",
+  "themes": {
+    "תשתיות AI": ["NVDA", "AVGO", "AMD", "MU", "ANET", "VRT", "DELL", "SMCI", "CEG", "VST", "ETN", "GEV", "ORCL"],
+    "סייבר": ["PANW", "CRWD", "FTNT", "ZS", "NET", "OKTA"],
+    "ענן ותוכנה": ["MSFT", "AMZN", "GOOGL", "CRM", "NOW", "ADBE", "INTU", "WDAY", "SNPS", "CDNS"],
+    "GLP-1 והשמנה": ["LLY", "NVO"],
+    "ציוד שבבים": ["AMAT", "LRCX", "KLAC", "TER"],
+    "תעופה": ["BA", "GE", "RTX", "HWM", "TDG", "DAL", "UAL"]
+  }
+}

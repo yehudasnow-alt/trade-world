@@ -1,0 +1,15 @@
+# secrets and local state
+.env
+data/*.db
+data/*.db-*
+data/docs/
+data/cache/
+data/transcripts/
+
+# generated
+web/index.html
+dist/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
