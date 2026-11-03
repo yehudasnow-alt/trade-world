@@ -81,6 +81,11 @@ class Runner:
         stats = runner.run_jobs(self.engine)
         return f"{stats} batches_done={runner.poll_batches(self.engine)}"
 
+    def alerts_tick(self) -> str:
+        """Rules every 5 minutes, day and night: an 8-K filed after the close must not wait for the next session."""
+        a = alerts.evaluate_rules()
+        return f"alerts={a} sent={alerts.dispatch()}"
+
     def brief_tick(self) -> str:
         b = brief.build()
         sent = alerts.send_telegram(brief.to_text(b))
@@ -128,7 +133,7 @@ class Runner:
             on.append("Claude")
         hh, mm = (int(x) for x in st.brief_time.split(":"))
         add(safe("brief", self.brief_tick), "cron", hour=hh, minute=mm, timezone=clock.IL)
-        add(safe("alerts", lambda: alerts.dispatch()), "cron", minute="*/5")
+        add(safe("alerts", self.alerts_tick), "cron", minute="*/5")
         if st.ibkr_live:
             from .sources.ibkr import IbkrLive
             self.live = IbkrLive(lambda rows: pipeline.update_quotes(rows, "ibkr"))

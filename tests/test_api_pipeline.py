@@ -97,3 +97,12 @@ def test_live_quote_appends_today(monkeypatch):
             e.ts = q.ts
     sc = pipeline.compute_scores()
     assert sc["MSFT"]["raw"]["chg_pct"] > 4
+
+
+def test_alert_rules_run_outside_the_session():
+    demo.generate(years=1.6)
+    from metro.jobs import Runner
+    with session() as s:
+        s.query(Alert).delete()
+    out = Runner().alerts_tick()  # no Telegram configured: rules raise alerts, nothing is sent
+    assert out.startswith("alerts=") and int(out.split()[0].split("=")[1]) >= 1
