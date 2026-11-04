@@ -178,6 +178,16 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .cam button:hover{background:var(--accent-soft); color:var(--ink)}
 .cam button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
 .cam hr{border:0; height:1px; background:var(--line); margin:2px 6px}
+.cam #compass svg{transition:none} .cam #helpBtn{font-size:14px}
+@media (max-height: 760px){ .cam button{width:36px; height:34px} }
+.camhelp{width:268px; padding:12px 14px; border-radius:16px; font-size:12.5px; color:var(--ink-2)}
+.camhelp h3{margin:0 0 8px; font-size:13.5px; color:var(--ink)}
+.camhelp dl{display:grid; grid-template-columns:auto 1fr; gap:5px 10px; margin:0}
+.camhelp dt{font-weight:600; color:var(--ink); white-space:nowrap} .camhelp dd{margin:0}
+.camhelp p{margin:8px 0 0; font-size:11.5px; color:var(--ink-3)}
+.hint{position:fixed; z-index:30; left:50%; bottom:calc(var(--gb) + 92px); transform:translateX(-50%); display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:14px; font-size:13px; color:var(--ink-2); white-space:nowrap; transition:opacity .4s}
+.hint b{color:var(--ink); font-weight:600} .hint i{width:4px; height:4px; border-radius:50%; background:var(--ink-3)}
+@media (min-width: 861px){ .only-desk{display:block} } @media (max-width: 860px){ .only-desk{display:none !important} .hint{bottom:auto; top:calc(var(--gt) + 52px); font-size:12px; white-space:normal; width:max-content; max-width:calc(100vw - 32px)} }
 
 .foot{grid-area:foot; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:end; gap:14px; pointer-events:none; min-width:0; transition:margin-left .45s cubic-bezier(.2,.8,.2,1)}
 .foot > *{pointer-events:auto}
@@ -411,7 +421,8 @@ ul.clean li{margin:2px 0}
   .brand{padding:7px 11px}
   .brand small,.brand div,.btn .lbl,.btn kbd,.modechip .full,#statusBtn,#themeBtn{display:none}
   .tlwhere{grid-template-columns:1fr}
-  .cam #zIn,.cam #zOut,.cam #rotate,.cam hr{display:none}
+  .cam #zIn,.cam #zOut,.cam #rotate,.cam #rotL,.cam hr{display:none}
+  .camhelp{width:250px}
   .actions{gap:6px}
   .btn.icon,.btn{width:38px; height:38px; padding:0; justify-content:center}
   .foot,#ui.panel-open .foot{display:flex; flex-direction:column; align-items:stretch; gap:8px}
@@ -467,13 +478,38 @@ ul.clean li{margin:2px 0}
     <section class="rail glass" id="rail" aria-label="איים"></section>
 
     <div class="side">
+      <div class="camhelp glass" id="camHelp" hidden role="dialog" aria-label="איך מזיזים את המפה">
+        <h3>שליטה במפה</h3>
+        <div class="only-desk"><dl>
+          <dt>גרירה</dt><dd>הזזת המפה</dd>
+          <dt>גלגלת · צביטה במשטח מגע</dt><dd>זום אל הסמן</dd>
+          <dt>קליק ימני וגרירה · Shift+גרירה</dt><dd>סיבוב (ימינה-שמאלה) והטיה (למעלה-למטה)</dd>
+          <dt>חצים / WASD</dt><dd>הזזה</dd>
+          <dt>Q · E</dt><dd>סיבוב</dd>
+          <dt>R · F</dt><dd>הטיה</dd>
+          <dt>+ · −</dt><dd>זום</dd>
+          <dt>H</dt><dd>חזרה לכל העיר</dd>
+        </dl></div>
+        <div class="only-phone"><dl>
+          <dt>אצבע אחת</dt><dd>הזזת המפה</dd>
+          <dt>שתי אצבעות: צביטה</dt><dd>זום</dd>
+          <dt>שתי אצבעות: סיבוב</dt><dd>סיבוב המפה</dd>
+          <dt>שתי אצבעות למעלה-למטה</dt><dd>הטיה</dd>
+        </dl></div>
+        <p>המצפן מחזיר את הכיוון הרגיל, ⊙ מחזיר לכל העיר.</p>
+      </div>
       <div class="cam glass" role="group" aria-label="מצלמה">
-        <button type="button" id="zIn" aria-label="התקרבות">+</button>
-        <button type="button" id="zOut" aria-label="התרחקות">−</button>
+        <button type="button" id="compass" aria-label="כיוון רגיל" title="כיוון רגיל"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><g id="needle"><path d="M11 2.5 14 11h-6z" fill="var(--accent)"/><path d="M11 19.5 8 11h6z" fill="currentColor" opacity=".45"/></g><circle cx="11" cy="11" r="1.3" fill="var(--glass-strong)"/></svg></button>
         <hr>
-        <button type="button" id="home" aria-label="כל העיר"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="9" r="1.8" fill="currentColor"/></svg></button>
-        <button type="button" id="rotate" aria-label="סיבוב ברבע"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M14.5 9A5.5 5.5 0 1 1 9 3.5h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 1.5 12.5 3.5 10.5 5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button type="button" id="flat" aria-pressed="false" aria-label="מבט על דו-ממדי">2D</button>
+        <button type="button" id="zIn" aria-label="התקרבות" title="התקרבות">+</button>
+        <button type="button" id="zOut" aria-label="התרחקות" title="התרחקות">−</button>
+        <hr>
+        <button type="button" id="rotL" aria-label="סיבוב שמאלה" title="סיבוב שמאלה"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3.5 9A5.5 5.5 0 1 0 9 3.5H6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.5 1.5 5.5 3.5 7.5 5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" id="rotate" aria-label="סיבוב ימינה" title="סיבוב ימינה"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M14.5 9A5.5 5.5 0 1 1 9 3.5h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 1.5 12.5 3.5 10.5 5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" id="home" aria-label="כל העיר" title="כל העיר"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="9" r="1.8" fill="currentColor"/></svg></button>
+        <button type="button" id="flat" aria-pressed="false" aria-label="מבט על דו-ממדי" title="מבט מלמעלה">2D</button>
+        <hr>
+        <button type="button" id="helpBtn" aria-label="איך מזיזים את המפה" aria-expanded="false" title="איך מזיזים את המפה">?</button>
       </div>
     </div>
 
@@ -498,6 +534,7 @@ ul.clean li{margin:2px 0}
   <div id="tline" class="overlay" hidden><div class="sheet wide glass" role="dialog" aria-modal="true" aria-label="ציר זמן" id="tlineBody"></div></div>
   <div id="brief" class="overlay" hidden><div class="sheet glass" role="dialog" aria-modal="true" aria-label="תדריך בוקר" id="briefBody"></div></div>
   <div id="toast" class="toast" hidden role="status"></div>
+  <div id="hint" class="hint glass" hidden role="status"></div>
 </div>
 
 <script type="importmap">
@@ -505,7 +542,6 @@ ul.clean li{margin:2px 0}
 </script>
 <script type="module">
 import * as THREE from 'three';
-import { MapControls } from 'three/addons/controls/MapControls.js';
 
 const DEMO = /*__DEMO__*/null;
 
@@ -626,16 +662,19 @@ const GUIDE = { raised: ['הועלתה', 'up'], maintained: ['נשמרה', ''], 
 
 /* ================= layout ================= */
 const inset = (r, p) => ({ x: r.x + p, y: r.y + p, w: Math.max(0.2, r.w - 2 * p), h: Math.max(0.2, r.h - 2 * p) });
-/* The city is an archipelago: every sector is an island with a ring road, bridges cross the water to its neighbours. Inside a district every sub-industry is an
-   avenue: a street with buildings on both sides, the biggest companies at its head. Building height = market cap. */
+/* The city is an archipelago: every sector is an island ringed by a two-lane road, with bridges to its neighbours. Inside, a regular street grid:
+   avenues run the full width of the island and meet the ring road at both ends, cross streets cut them into blocks, so every street leads somewhere.
+   A sub-industry takes a stretch of an avenue, buildings facing each other across the street, the biggest first. The front row of every island is a
+   waterfront park with the sector's landmarks. Building height = market cap. */
 const WORLD = { w: 268, d: 178 };
-const ROAD = 3.6, WALK = 2.4, CH = 26, WATER_Y = -0.7, LAND_Y = 0.06, PLATE_H = 0.42, LOT_H = 0.12, BASE_Y = PLATE_H + LOT_H;
-const GAP = 2.6, STREET = 3.6, EDGE = 0.8, CROSS = 6, BAND_GAP = 2.6, B_MIN = 2.6, B_MAX = 9, H_MAX = 110;
+const ROAD = 3.6, RR = 2 * ROAD, CH = 26, WATER_Y = -0.7, LAND_Y = 0.06, PLATE_H = 0.34, BASE_Y = PLATE_H;
+const STREET = 4.8, EDGE = 1.0, ALLEY = 2.0, MARG = 2.0, SIDE = 1.6, GAP = 1.5, SUBGAP = 2.4, PARK_D = 15;
+const B_MIN = 3.0, B_MAX = 9.5, H_MAX = 110;
 let H_SCALE = store.get(LS_PREFIX + 'hscale', 'real') === 'compressed' ? 'compressed' : 'real';
 let CAP_MAX = 1, SPAN = 300, HOME_DIST = 800;
 const capFrac = c => clamp((c.capv || 0) / CAP_MAX, 0, 1);
 // a floor of a few storeys keeps every company visible; above it height grows in a straight line with market cap
-const H_FLOOR = 2.2;
+const H_FLOOR = 2.6;
 function capHeight(c){ const k = capFrac(c); return H_SCALE === 'real' ? H_FLOOR + k * (H_MAX - H_FLOOR) : H_FLOOR + 44 * Math.sqrt(k); }
 function shelf(items, width, gapX, gapY){
   const rows = []; let row = null;
@@ -645,33 +684,77 @@ function shelf(items, width, gapX, gapY){
   }
   return { rows, h: rows.length ? rows.at(-1).y + rows.at(-1).h : 0, w: Math.max(0, ...rows.map(r => r.used)) };
 }
-function avenueBlocks(sub, maxLen){
-  // buildings alternate sides of the street, so the two biggest face each other at the head of the avenue
-  const blocks = []; let cur = null;
-  const open = () => { cur = { sub, name: sub.name, top: [], bot: [], lt: GAP, lb: GAP }; blocks.push(cur); };
-  open();
-  for (const c of sub.comps) {
-    const len = Math.min(cur.lt, cur.lb);
-    if (len + c.b + GAP > maxLen && cur.top.length + cur.bot.length > 0) open();
-    if (cur.lt <= cur.lb) { cur.top.push(c); cur.lt += c.b + GAP; } else { cur.bot.push(c); cur.lb += c.b + GAP; }
+/* Fill the grid avenue by avenue, column by column (the head of every avenue is its east end), alternating the two sides of the street.
+   A new sub-industry starts level on both sides, a little apart from the one before. Returns null when the companies do not fit. */
+function fillGrid(order, Q, K, colW){
+  const len = colW - 2 * SIDE, out = []; let k = 0, f = 0, lt = 0, lb = 0, prev = null;
+  for (const c of order) {
+    if (prev && c.street !== prev && (lt || lb)) lt = lb = Math.max(lt, lb) + SUBGAP;
+    prev = c.street;
+    for (;;) {
+      let done = false;
+      for (const s of lt <= lb ? [0, 1] : [1, 0]) {
+        const u = s ? lb : lt, at = u ? u + GAP : 0;
+        if (at + c.b <= len + 1e-6) { out.push({ c, k, f, s, u: at }); if (s) lb = at + c.b; else lt = at + c.b; done = true; break; }
+      }
+      if (done) break;
+      if (++f >= Q) { f = 0; if (++k >= K) return null; }
+      lt = lb = 0;
+    }
   }
-  for (const b of blocks) { b.dt = Math.max(B_MIN, ...b.top.map(c => c.b)); b.db = Math.max(B_MIN, ...b.bot.map(c => c.b)); b.w = Math.max(b.lt, b.lb, 16); b.h = EDGE * 4 + b.dt + STREET + b.db; }
-  return blocks;
+  return out;
 }
-function layoutDistrict(d){
+function gridDepth(P, K){ const n = Array(K).fill(B_MIN), s = Array(K).fill(B_MIN); for (const p of P) { const a = p.s ? s : n; a[p.k] = Math.max(a[p.k], p.c.b); } return { n, s }; }
+function gridH(dp, K){ let h = MARG + dp.n[0] + EDGE + K * STREET + EDGE + dp.s[K - 1] + ALLEY + PARK_D + MARG; for (let k = 0; k < K - 1; k++) h += EDGE + dp.s[k] + ALLEY + dp.n[k + 1] + EDGE; return h; }
+function layoutIsland(d){
   const subs = {}; for (const c of d.comps) (subs[c.u] ||= []).push(c);
   d.subs = Object.entries(subs).map(([name, comps]) => ({ name, d, comps: comps.sort((a, b) => b.capv - a.capv), cap: comps.reduce((s, c) => s + c.capv, 0) })).sort((a, b) => b.cap - a.cap);
-  const area = d.comps.reduce((s, c) => s + (c.b + GAP) * (c.b + STREET + EDGE * 2), 0) / 2;
+  d.order = d.subs.flatMap(s => s.comps.map(c => { c.street = s; return c; }));
+  // try every grid: blocks as short as they can be, an island close to 1.25 : 1, blocks of a city length
   let best = null;
-  for (const f of [0.85, 1, 1.2, 1.45, 1.75, 2.1, 2.5]) {
-    const IW = Math.max(40, Math.sqrt(area * 1.4) * f);
-    const blocks = d.subs.flatMap(sub => avenueBlocks(sub, IW));
-    const pk = shelf(blocks, IW, CROSS, BAND_GAP);
-    const used = blocks.reduce((s, b) => s + b.w * b.h, 0);
-    const cost = (pk.w * pk.h - used) + Math.abs(Math.log(pk.w / Math.max(1, pk.h) / 1.3)) * used * 0.9;
-    if (!best || cost < best.cost) best = { cost, pk };
+  for (let Q = 1; Q <= 5; Q++) for (let K = 1; K <= 8; K++) {
+    let lo = 2 * SIDE + B_MIN, hi = 96;
+    if (!fillGrid(d.order, Q, K, hi)) continue;
+    for (let it = 0; it < 20; it++) { const m = (lo + hi) / 2; if (fillGrid(d.order, Q, K, m)) hi = m; else lo = m; }
+    const colW = Math.max(16, hi), P = fillGrid(d.order, Q, K, colW);
+    if (new Set(P.map(p => p.k)).size < K) continue;  // an avenue left empty: fewer avenues do the same
+    const dp = gridDepth(P, K), W = Q * colW + (Q - 1) * STREET, H = gridH(dp, K);
+    const cost = W * H * (1 + 0.9 * Math.abs(Math.log(W / H / 1.25))) * (1 + 0.3 * Math.abs(Math.log(colW / 32)));
+    if (!best || cost < best.cost) best = { cost, Q, K, colW, P, dp, W, H };
   }
-  d.pack = best.pk; d.innerW = best.pk.w; d.innerH = best.pk.h;
+  d.grid = best; d.innerW = best.W; d.innerH = best.H;
+}
+function placeIsland(d){
+  const g = d.grid, I = d.rect;
+  d.cols = Array.from({ length: g.Q }, (_, p) => I.x + p * (g.colW + STREET));
+  d.cross = d.cols.slice(0, -1).map(x => x + g.colW + STREET / 2);
+  d.zs = []; let z = I.y + MARG + g.dp.n[0] + EDGE + STREET / 2; d.zs.push(z);
+  for (let k = 1; k < g.K; k++) { z += STREET / 2 + EDGE + g.dp.s[k - 1] + ALLEY + g.dp.n[k] + EDGE + STREET / 2; d.zs.push(z); }
+  // raised blocks between the streets; the last row runs the full width and holds the waterfront park
+  d.blocks = [];
+  for (let r = 0; r < g.K; r++) {
+    const z0 = r === 0 ? I.y : d.zs[r - 1] + STREET / 2, z1 = d.zs[r] - STREET / 2;
+    for (const x of d.cols) d.blocks.push({ x, y: z0, w: g.colW, h: z1 - z0 });
+  }
+  const last = d.zs[g.K - 1] + STREET / 2;
+  d.blocks.push({ x: I.x, y: last, w: I.w, h: I.y + I.h - last });
+  const pz = last + EDGE + g.dp.s[g.K - 1] + ALLEY;
+  d.park = { x: I.x + SIDE, y: pz, w: I.w - 2 * SIDE, h: I.y + I.h - MARG - pz };
+  for (const pl of g.P) {
+    const c = pl.c, p = g.Q - 1 - pl.f, x1 = d.cols[p] + g.colW - SIDE;
+    c.fw = c.fd = c.b; c.x = x1 - pl.u - c.b / 2;
+    c.z = pl.s ? d.zs[pl.k] + STREET / 2 + EDGE + c.b / 2 : d.zs[pl.k] - STREET / 2 - EDGE - c.b / 2;
+    c.dist = d; c.av = pl.k; c.side = pl.s; c.col = p;
+  }
+  // each sub-industry's stretch of an avenue; its name goes on the longest one
+  const seg = new Map();
+  for (const c of d.comps) {
+    const key = c.street.name + '|' + c.av + '|' + c.col; let s = seg.get(key);
+    if (!s) { s = { name: c.street.name, sub: c.street, d, k: c.av, x0: Infinity, x1: -Infinity, zs: d.zs[c.av] }; seg.set(key, s); }
+    s.x0 = Math.min(s.x0, c.x - c.b / 2); s.x1 = Math.max(s.x1, c.x + c.b / 2);
+  }
+  const bySub = new Map(); for (const s of seg.values()) { const b = bySub.get(s.sub); if (!b || s.x1 - s.x0 > b.x1 - b.x0) bySub.set(s.sub, s); }
+  d.streets = [...bySub.values()];
 }
 
 let C = [], DIST = [], byT = {}, CITY = null, ROADS = null, BRIDGES = [];
@@ -685,9 +768,9 @@ function buildData(city){
   byT = {}; for (const c of C) { byT[c.t] = c; for (const a of c.alts || []) byT[a] = c; }
   DIST = SECTORS.map((s, si) => ({ si, s, streets: [], comps: C.filter(c => c.si === si) }));
   const live = DIST.filter(d => d.comps.length);
-  for (const d of live) { d.capSum = d.comps.reduce((a, c) => a + c.capv, 0); layoutDistrict(d); }
+  for (const d of live) { d.capSum = d.comps.reduce((a, c) => a + c.capv, 0); layoutIsland(d); }
   // islands packed in rows and spread evenly across the row; water fills the rest
-  const items = live.map(d => { const lw = d.innerW + 2 * (WALK + 2 * ROAD), lh = d.innerH + 2 * (WALK + 2 * ROAD); return { d, lw, lh, w: lw + CH, h: lh + CH }; }).sort((a, b) => b.d.capSum - a.d.capSum);
+  const items = live.map(d => { const lw = d.innerW + 2 * RR, lh = d.innerH + 2 * RR; return { d, lw, lh, w: lw + CH, h: lh + CH }; }).sort((a, b) => b.d.capSum - a.d.capSum);
   const total = items.reduce((s, o) => s + o.w * o.h, 0);
   let best = null;
   for (const f of [0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.4]) {
@@ -702,7 +785,7 @@ function buildData(city){
     const gap = (WORLD.w - row.items.reduce((s, r) => s + r.it.lw, 0)) / row.items.length; let x = -WORLD.w / 2 + gap / 2;
     for (const { it } of row.items) {
       const L = { x, y: -WORLD.d / 2 + row.y + (row.h - it.lh) / 2, w: it.lw, h: it.lh }; x += it.lw + gap;
-      it.d.land = L; it.d.outer = L; it.d.ring = inset(L, ROAD); it.d.rect = inset(L, 2 * ROAD);
+      it.d.land = L; it.d.ring = inset(L, ROAD); it.d.rect = inset(L, RR);
     }
   });
   BRIDGES = [];
@@ -719,35 +802,32 @@ function buildData(city){
       if (top && ov > 6) BRIDGES.push({ A: top.u, B: d, p: [top.x, top.u.ring.y + top.u.ring.h], q: [top.x, d.ring.y] });
     }
   });
-  for (const d of live) {
-    const ox = d.rect.x + (d.rect.w - d.innerW) / 2, oz = d.rect.y + (d.rect.h - d.innerH) / 2;
-    for (const row of d.pack.rows) for (const { it: b, x } of row.items) {
-      const bx = ox + x, bz = oz + row.y, zs = bz + EDGE * 2 + b.dt + STREET / 2;
-      const block = { name: b.name, sub: b.sub, d, rect: { x: bx, y: bz, w: b.w, h: b.h }, zs, top: b.top, bot: b.bot };
-      d.streets.push(block);
-      let xt = bx + GAP, xb = bx + GAP;
-      for (const c of b.top) { c.fw = c.fd = c.b; c.x = xt + c.b / 2; c.z = zs - STREET / 2 - EDGE - c.b / 2; xt += c.b + GAP; c.street = b.sub; c.dist = d; c.block = block; }
-      for (const c of b.bot) { c.fw = c.fd = c.b; c.x = xb + c.b / 2; c.z = zs + STREET / 2 + EDGE + c.b / 2; xb += c.b + GAP; c.street = b.sub; c.dist = d; c.block = block; }
-    }
-    d.cx = d.rect.x + d.rect.w / 2; d.cz = d.rect.y + d.rect.h / 2;
-  }
+  for (const d of live) { placeIsland(d); d.cx = d.land.x + d.land.w / 2; d.cz = d.land.y + d.land.h / 2; }
   ROADS = buildRoads(live, BRIDGES);
 }
+/* The road graph: ring roads, avenues, cross streets and bridges, split wherever two of them meet. Cars and supply routes run on it. */
 function buildRoads(islands, bridges){
-  const key = (x, z) => x.toFixed(2) + ',' + z.toFixed(2); const tol = 0.05;
-  const edges = new Map();
-  const add = (p, q, bridge) => { const len = Math.hypot(q[0] - p[0], q[1] - p[1]); if (len < 0.5) return; const ka = key(...p), kb = key(...q); const k = [ka, kb].sort().join('|'); if (!edges.has(k)) edges.set(k, { a: p, b: q, ka, kb, len, bridge }); };
+  const lines = [], pts = [];
   for (const d of islands) {
-    const r = d.ring, x0 = r.x, x1 = r.x + r.w, z0 = r.y, z1 = r.y + r.h;
-    const ends = bridges.flatMap(b => (b.A === d ? [b.p] : []).concat(b.B === d ? [b.q] : []));
-    const sides = [[[x0, z0], [x1, z0], 'h'], [[x1, z0], [x1, z1], 'v'], [[x0, z1], [x1, z1], 'h'], [[x0, z0], [x0, z1], 'v']];
-    for (const [a, b, o] of sides) {
-      const pts = [a, b, ...ends.filter(p => o === 'h' ? Math.abs(p[1] - a[1]) < tol && p[0] > a[0] && p[0] < b[0] : Math.abs(p[0] - a[0]) < tol && p[1] > a[1] && p[1] < b[1])]
-        .sort((p, q) => o === 'h' ? p[0] - q[0] : p[1] - q[1]);
-      for (let k = 0; k < pts.length - 1; k++) add(pts[k], pts.at(k + 1), false);
+    const r = d.ring, x0 = r.x, x1 = r.x + r.w, z0 = r.y, z1 = r.y + r.h, zl = d.zs.at(-1);
+    lines.push([[x0, z0], [x1, z0], 'ring'], [[x1, z0], [x1, z1], 'ring'], [[x0, z1], [x1, z1], 'ring'], [[x0, z0], [x0, z1], 'ring']);
+    for (const z of d.zs) lines.push([[x0, z], [x1, z], 'street']);
+    for (const x of d.cross) { lines.push([[x, z0], [x, zl], 'street']); for (const z of d.zs) pts.push([x, z]); }
+  }
+  for (const b of bridges) lines.push([b.p, b.q, 'bridge']);
+  for (const l of lines) pts.push(l[0], l[1]);
+  const key = p => p[0].toFixed(2) + ',' + p[1].toFixed(2), tol = 0.05;
+  const edges = new Map();
+  for (const [a, b, kind] of lines) {
+    const hz = Math.abs(a[1] - b[1]) < tol, lo = hz ? Math.min(a[0], b[0]) : Math.min(a[1], b[1]), hi = hz ? Math.max(a[0], b[0]) : Math.max(a[1], b[1]);
+    const on = pts.filter(p => hz ? Math.abs(p[1] - a[1]) < tol && p[0] > lo + tol && p[0] < hi - tol : Math.abs(p[0] - a[0]) < tol && p[1] > lo + tol && p[1] < hi - tol);
+    const all = [a, b, ...on].sort((p, q) => hz ? p[0] - q[0] : p[1] - q[1]);
+    for (let i = 0; i < all.length - 1; i++) {
+      const p = all[i], q = all[i + 1], len = Math.hypot(q[0] - p[0], q[1] - p[1]); if (len < 0.5) continue;
+      const ka = key(p), kb = key(q), k = [ka, kb].sort().join('|');
+      if (!edges.has(k)) edges.set(k, { a: p, b: q, ka, kb, len, kind, w: kind === 'street' ? STREET : 2 * ROAD });
     }
   }
-  for (const b of bridges) add(b.p, b.q, true);
   const nodes = new Map(); const E = [...edges.values()];
   E.forEach((e, i) => { e.i = i; for (const [k, p] of [[e.ka, e.a], [e.kb, e.b]]) { if (!nodes.has(k)) nodes.set(k, { k, p, edges: [] }); nodes.get(k).edges.push(i); } });
   return { edges: E, nodes };
@@ -796,8 +876,150 @@ renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadow
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(22, 1, 2, 6000);
-const controls = new MapControls(camera, renderer.domElement);
-Object.assign(controls, { enableDamping: true, dampingFactor: 0.085, screenSpacePanning: false, maxPolarAngle: 1.2, minDistance: 40, maxDistance: 3400, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.6 });
+/* ================= camera controls ================= */
+/* Map controls written for this city. Drag moves the ground under the pointer; the wheel, a trackpad pinch or two fingers zoom toward the pointer;
+   right-drag, Shift/Ctrl/⌘+drag or a two-finger twist rotates; dragging up and down while rotating, or two fingers sliding up and down, tilts.
+   Input moves a goal camera and the real camera eases toward it every frame, so every gesture lands smoothly and nothing jumps. */
+class CityControls extends THREE.EventDispatcher {
+  constructor(camera, el){
+    super();
+    Object.assign(this, { camera, el, target: new THREE.Vector3(), minDistance: 24, maxDistance: 3200, minPolar: 0.02, maxPolar: 1.25, enableRotate: true });
+    this.cur = { t: new THREE.Vector3(), r: 100, phi: 0.9, theta: 0 }; this.goal = { t: new THREE.Vector3(), r: 100, phi: 0.9, theta: 0 };
+    this.vel = { x: 0, z: 0, th: 0 }; this.ptrs = new Map(); this.mode = null; this.ghost = camera.clone();
+    this.ray = new THREE.Raycaster(); this.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); this.bounds = { x: 400, z: 400 };
+    el.addEventListener('pointerdown', e => this.down(e)); el.addEventListener('pointermove', e => this.move(e));
+    el.addEventListener('pointerup', e => this.up(e)); el.addEventListener('pointercancel', e => this.up(e)); el.addEventListener('lostpointercapture', e => this.up(e));
+    el.addEventListener('wheel', e => this.wheel(e), { passive: false }); el.addEventListener('contextmenu', e => e.preventDefault());
+  }
+  get busy(){ return this.ptrs.size > 0; }
+  // adopt the camera as it is now (after a scripted flight)
+  sync(){
+    const s = new THREE.Spherical().setFromVector3(this.camera.position.clone().sub(this.target));
+    for (const o of [this.cur, this.goal]) { o.t.copy(this.target); o.r = s.radius; o.phi = s.phi; o.theta = s.theta; }
+    this.vel.x = this.vel.z = this.vel.th = 0;
+  }
+  aim(cam, s){ cam.position.setFromSphericalCoords(s.r, s.phi, s.theta).add(s.t); cam.lookAt(s.t); cam.updateMatrixWorld(); }
+  // the point on the ground under a screen position, as the goal camera sees it
+  ground(cx, cy){
+    const g = this.ghost; g.projectionMatrix.copy(this.camera.projectionMatrix); g.projectionMatrixInverse.copy(this.camera.projectionMatrixInverse); this.aim(g, this.goal);
+    const r = this.el.getBoundingClientRect(); this.ray.setFromCamera(new THREE.Vector2((cx - r.left) / r.width * 2 - 1, -(cy - r.top) / r.height * 2 + 1), g);
+    if (this.ray.ray.direction.y > -0.03) return null;  // at or above the horizon
+    return this.ray.ray.intersectPlane(this.plane, new THREE.Vector3());
+  }
+  clampGoal(){ const G = this.goal; G.t.x = clamp(G.t.x, -this.bounds.x, this.bounds.x); G.t.z = clamp(G.t.z, -this.bounds.z, this.bounds.z); G.r = clamp(G.r, this.minDistance, this.maxDistance); G.phi = clamp(G.phi, this.minPolar, this.enableRotate ? this.maxPolar : this.minPolar); }
+  start(){ this.vel.x = this.vel.z = this.vel.th = 0; this.dispatchEvent({ type: 'start' }); }
+  /* ---- pointer ---- */
+  down(e){
+    if (e.pointerType === 'mouse' && e.button > 2) return;
+    try { this.el.setPointerCapture(e.pointerId); } catch {}
+    this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, button: e.button, mods: e.shiftKey || e.ctrlKey || e.metaKey || e.altKey, type: e.pointerType });
+    this.start(); this.begin();
+  }
+  begin(){
+    const P = [...this.ptrs.values()]; this.track = []; this.mode = null;
+    if (P.length === 1) {
+      const p = P[0]; const rot = p.type === 'mouse' && (p.button === 2 || p.mods);
+      this.mode = rot ? (this.enableRotate ? 'rotate' : null) : 'pan'; this.last = { x: p.x, y: p.y };
+      this.anchor = this.mode === 'pan' ? this.ground(p.x, p.y) : null;
+    } else if (P.length === 2) {
+      const [a, b] = P; this.mode = 'two';
+      this.two = { kind: null, a0: { ...a }, b0: { ...b }, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, dist: Math.hypot(b.x - a.x, b.y - a.y), ang: Math.atan2(b.y - a.y, b.x - a.x) };
+    }
+  }
+  move(e){
+    const p = this.ptrs.get(e.pointerId); if (!p) return;
+    p.x = e.clientX; p.y = e.clientY;
+    if (this.mode === 'pan' && this.ptrs.size === 1) this.panTo(p.x, p.y);
+    else if (this.mode === 'rotate') { this.rotate(p.x - this.last.x, p.y - this.last.y); this.last = { x: p.x, y: p.y }; }
+    else if (this.mode === 'two' && this.ptrs.size === 2) this.twoFinger();
+  }
+  up(e){
+    if (!this.ptrs.has(e.pointerId)) return;
+    this.ptrs.delete(e.pointerId); try { this.el.releasePointerCapture(e.pointerId); } catch {}
+    if (this.ptrs.size === 0) {
+      // a flick keeps the city gliding for a moment
+      const now = performance.now(), recent = this.track.filter(s => now - s.t < 90);
+      if (this.mode === 'pan' && recent.length > 1) { const a = recent[0], b = recent.at(-1), dt = Math.max(16, b.t - a.t); this.vel.x = (b.x - a.x) / dt; this.vel.z = (b.z - a.z) / dt; }
+      if (this.mode === 'rotate' && recent.length > 1) { const a = recent[0], b = recent.at(-1), dt = Math.max(16, b.t - a.t); this.vel.th = (b.th - a.th) / dt; }
+      this.mode = null;
+    } else this.begin();  // a finger lifted: carry on with the ones still down
+  }
+  panTo(x, y){
+    const G = this.goal;
+    if (this.anchor) { const h = this.ground(x, y); if (h) { G.t.x += this.anchor.x - h.x; G.t.z += this.anchor.z - h.z; } }
+    else { // no ground under the pointer (looking at the horizon): move by screen distance
+      const k = G.r * 2 * Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2) / Math.max(1, this.el.clientHeight), dx = x - this.last.x, dy = y - this.last.y;
+      G.t.x -= (Math.cos(G.theta) * dx + Math.sin(G.theta) * dy) * k; G.t.z -= (-Math.sin(G.theta) * dx + Math.cos(G.theta) * dy) * k;
+    }
+    this.last = { x, y }; this.clampGoal(); this.track.push({ t: performance.now(), x: G.t.x, z: G.t.z }); if (this.track.length > 8) this.track.shift();
+  }
+  rotate(dx, dy){
+    if (!this.enableRotate) return; const h = Math.max(300, this.el.clientHeight), G = this.goal;
+    G.theta -= 2 * Math.PI * dx / h * 0.5; G.phi = clamp(G.phi - Math.PI * dy / h * 0.6, this.minPolar, this.maxPolar);
+    this.track.push({ t: performance.now(), th: G.theta }); if (this.track.length > 8) this.track.shift();
+  }
+  twoFinger(){
+    const [a, b] = [...this.ptrs.values()], T = this.two, G = this.goal;
+    const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, dist = Math.hypot(b.x - a.x, b.y - a.y), ang = Math.atan2(b.y - a.y, b.x - a.x);
+    if (!T.kind) {
+      // wait until the gesture shows what it is: both fingers sliding the same way up or down = tilt, anything else = pinch, twist and pan together
+      const dmx = m.x - T.mid.x, dmy = m.y - T.mid.y, dd = dist - T.dist, da = Math.atan2(Math.sin(ang - T.ang), Math.cos(ang - T.ang)); // fingers report one at a time: decide once both have moved, or one has moved a lot
+      const ma = Math.hypot(a.x - T.a0.x, a.y - T.a0.y), mb = Math.hypot(b.x - T.b0.x, b.y - T.b0.y); if (!(ma > 5 && mb > 5) && Math.max(ma, mb) < 24) return;
+      const ya = a.y - T.a0.y, yb = b.y - T.b0.y;
+      T.kind = this.enableRotate && Math.abs(dmy) > 1.6 * Math.abs(dmx) && Math.abs(dd) < 0.5 * Math.abs(dmy) && Math.abs(da) * dist / 2 < 0.5 * Math.abs(dmy) && ya * yb > 0 ? 'tilt' : 'pinch';
+      T.pm = T.mid; T.pd = T.dist; T.pa = T.ang; this.anchor = this.ground(T.mid.x, T.mid.y);
+    }
+    if (T.kind === 'tilt') { G.phi = clamp(G.phi - Math.PI * (m.y - T.pm.y) / Math.max(300, this.el.clientHeight) * 0.9, this.minPolar, this.maxPolar); }
+    else {
+      const A = this.anchor;
+      if (A) {
+        // zoom and turn about the ground under the fingers, then slide so it stays under them
+        const r1 = clamp(G.r * T.pd / Math.max(10, dist), this.minDistance, this.maxDistance), f = r1 / G.r;
+        G.t.x = A.x + (G.t.x - A.x) * f; G.t.z = A.z + (G.t.z - A.z) * f; G.r = r1;
+        if (this.enableRotate) { const da = Math.atan2(Math.sin(ang - T.pa), Math.cos(ang - T.pa)), ox = G.t.x - A.x, oz = G.t.z - A.z, c = Math.cos(da), s = Math.sin(da); G.t.x = A.x + ox * c + oz * s; G.t.z = A.z - ox * s + oz * c; G.theta += da; }
+        const h = this.ground(m.x, m.y); if (h) { G.t.x += A.x - h.x; G.t.z += A.z - h.z; }
+      } else G.r = clamp(G.r * T.pd / Math.max(10, dist), this.minDistance, this.maxDistance);
+      this.clampGoal();
+    }
+    T.pm = m; T.pd = dist; T.pa = ang;
+  }
+  /* ---- wheel and trackpad ---- */
+  wheel(e){
+    e.preventDefault(); this.start();
+    const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+    // a trackpad pinch arrives as ctrl+wheel with small steps; a mouse notch is about 100
+    this.zoomAt(e.clientX, e.clientY, Math.exp(clamp(dy, -250, 250) * (e.ctrlKey ? 0.011 : 0.0016)));
+  }
+  zoomAt(x, y, f){
+    const G = this.goal, r1 = clamp(G.r * f, this.minDistance, this.maxDistance); f = r1 / G.r; if (Math.abs(f - 1) < 1e-5) return;
+    const A = (x === undefined ? null : this.ground(x, y)) || G.t.clone();
+    const off = A.clone().sub(G.t); off.y = 0; const lim = G.r * 1.1; if (off.length() > lim) off.setLength(lim);  // a point near the horizon would swing the view
+    G.t.x += off.x * (1 - f); G.t.z += off.z * (1 - f); G.r = r1; this.clampGoal();
+  }
+  /* ---- buttons and keys ---- */
+  zoomBy(f){ this.start(); this.zoomAt(undefined, undefined, f); }
+  rotateBy(a){ if (!this.enableRotate) return; this.start(); this.goal.theta += a; }
+  tiltBy(a){ if (!this.enableRotate) return; this.start(); this.goal.phi = clamp(this.goal.phi + a, this.minPolar, this.maxPolar); }
+  panBy(sx, sy){ this.start(); const G = this.goal, k = G.r * 0.14; G.t.x += (Math.cos(G.theta) * sx + Math.sin(G.theta) * sy) * k; G.t.z += (-Math.sin(G.theta) * sx + Math.cos(G.theta) * sy) * k; this.clampGoal(); }
+  faceNorth(theta){ this.start(); const G = this.goal; G.theta += Math.atan2(Math.sin(theta - G.theta), Math.cos(theta - G.theta)); }
+  /* ---- every frame ---- */
+  update(dt){
+    const G = this.goal, C = this.cur;
+    if (!this.busy) {
+      const k = Math.exp(-dt * 4.5);
+      if (Math.abs(this.vel.x) + Math.abs(this.vel.z) > 2e-4) { G.t.x += this.vel.x * dt * 1000; G.t.z += this.vel.z * dt * 1000; this.vel.x *= k; this.vel.z *= k; this.clampGoal(); } else this.vel.x = this.vel.z = 0;
+      if (Math.abs(this.vel.th) > 2e-6) { G.theta += this.vel.th * dt * 1000; this.vel.th *= k; } else this.vel.th = 0;
+    }
+    // one easing rate for target and distance keeps the point under the cursor still while a zoom settles
+    const a = 1 - Math.exp(-dt * 13);
+    const moved = C.t.distanceToSquared(G.t) > 1e-8 || Math.abs(C.r - G.r) > 1e-4 || Math.abs(C.phi - G.phi) > 1e-6 || Math.abs(C.theta - G.theta) > 1e-6;
+    if (!moved) return false;
+    C.t.lerp(G.t, a); C.r += (G.r - C.r) * a; C.phi += (G.phi - C.phi) * a; C.theta += (G.theta - C.theta) * a;
+    if (C.t.distanceToSquared(G.t) < 1e-6 && Math.abs(C.r - G.r) < 1e-3 && Math.abs(C.phi - G.phi) < 1e-5 && Math.abs(C.theta - G.theta) < 1e-5) { C.t.copy(G.t); C.r = G.r; C.phi = G.phi; C.theta = G.theta; }
+    this.target.copy(C.t); this.aim(this.camera, C); this.dispatchEvent({ type: 'change' }); return true;
+  }
+}
+const controls = new CityControls(camera, renderer.domElement);
 const hemi = new THREE.HemisphereLight(0xffffff, 0xd0d4dc, 1.3); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 2.0);
 sun.position.set(-150, 230, 90); sun.castShadow = true; sun.shadow.mapSize.set(isPhone() ? 2048 : 4096, isPhone() ? 2048 : 4096);
@@ -869,7 +1091,7 @@ function buildingMaterial(){
   return m;
 }
 
-let lotMesh, lotDist = [], tier = [], roofMesh, tankMesh, chimMesh, treeMesh, trunkMesh, laneMesh, zebraMesh, carBody, carCab, beams, halo, beamMat, haloMat;
+let tier = [], roofMesh, tankMesh, chimMesh, treeMesh, trunkMesh, laneMesh, zebraMesh, carBody, carCab, beams, halo, beamMat, haloMat;
 let hoverEdges, selEdges, frameMesh = null, routeGroup = new THREE.Group();
 const frameMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false });
 const routeMat = new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uTime: { value: 0 } }, transparent: true, depthWrite: false, side: THREE.DoubleSide,
@@ -879,14 +1101,268 @@ scene.add(routeGroup);
 const plateMeshes = [];
 let NB = 0;
 
+/* ================= geometry kit ================= */
+// Static props are merged into one mesh per material, so a whole island's landmarks cost a handful of draw calls.
+function mergeGeo(list){
+  let n = 0; for (const g of list) n += g.attributes.position.count;
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3); let o = 0;
+  for (const g of list) { pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); o += g.attributes.position.count; }
+  const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(pos, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); m.computeBoundingSphere(); return m;
+}
+const PRIM = (() => {
+  const ni = g => { const n = g.index ? g.toNonIndexed() : g; return n; };
+  const tri = new THREE.Shape([new THREE.Vector2(-0.5, 0), new THREE.Vector2(0.5, 0), new THREE.Vector2(0, 1)]);
+  const roof = new THREE.ExtrudeGeometry(tri, { depth: 1, bevelEnabled: false }); roof.translate(0, 0, -0.5); roof.computeVertexNormals();
+  const cool = new THREE.LatheGeometry([[3, 0], [2.7, 1.6], [2.2, 4], [2.15, 5.2], [2.35, 6.4], [2.5, 7]].map(([x, y]) => new THREE.Vector2(x, y)), 26);
+  return {
+    box: ni(new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0)), cbox: ni(new THREE.BoxGeometry(1, 1, 1)),
+    cyl: ni(new THREE.CylinderGeometry(1, 1, 1, 18).translate(0, 0.5, 0)), taper: ni(new THREE.CylinderGeometry(0.55, 1, 1, 14).translate(0, 0.5, 0)),
+    cone: ni(new THREE.ConeGeometry(1, 1, 18).translate(0, 0.5, 0)), pyr: ni(new THREE.ConeGeometry(1, 1, 4).rotateY(Math.PI / 4).translate(0, 0.5, 0)),
+    sph: ni(new THREE.SphereGeometry(1, 16, 12)), dome: ni(new THREE.SphereGeometry(1, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2)),
+    torus: ni(new THREE.TorusGeometry(1, 0.045, 6, 48)), oct: ni(new THREE.OctahedronGeometry(1, 0)), roof: ni(roof), cool: ni(cool),
+  };
+})();
+const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
+class Kit {
+  constructor(){ this.parts = new Map(); }
+  put(key, geo, m){ const g = new THREE.BufferGeometry(); g.setAttribute('position', geo.attributes.position.clone()); g.setAttribute('normal', geo.attributes.normal.clone()); g.applyMatrix4(m); if (!this.parts.has(key)) this.parts.set(key, []); this.parts.get(key).push(g); return this; }
+  add(key, geo, x, y, z, sx = 1, sy = 1, sz = 1, ry = 0, rx = 0, rz = 0){ return this.put(key, geo, _m4.compose(_v.set(x, y, z), _q.setFromEuler(_e.set(rx, ry, rz, 'YXZ')), _s.set(sx, sy, sz))); }
+  // a square bar from a to b
+  bar(key, a, b, t = 0.2){ const d = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2]); const L = d.length(); _q.setFromUnitVectors(_up, d.normalize()); return this.put(key, PRIM.cbox, _m4.compose(_v.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2), _q, _s.set(t, L, t))); }
+  build(matFor, shadow = true){ const out = []; for (const [key, list] of this.parts) { const m = new THREE.Mesh(mergeGeo(list), matFor(key)); m.castShadow = shadow; m.receiveShadow = true; out.push(m); } return out; }
+}
+// prop materials; colours follow the theme (readTheme)
+const PM = { clay: new THREE.MeshStandardMaterial({ roughness: 0.82, side: THREE.DoubleSide }), gold: new THREE.MeshStandardMaterial({ roughness: 0.6 }),
+  field: new THREE.MeshStandardMaterial({ roughness: 1 }), lawn: new THREE.MeshStandardMaterial({ roughness: 1 }), water: new THREE.MeshStandardMaterial({ roughness: 0.25 }), acc: SECTORS.map(() => new THREE.MeshStandardMaterial({ roughness: 0.7 })) };
+const ANIM = [];
+
+/* ================= landmarks: every island's waterfront park says what the sector is ================= */
+function propsFor(d, rng){
+  const T = [], si = d.si;
+  const L = (w, draw) => T.push({ w, draw });
+  switch (d.s.en) {
+    case 'Information Technology':
+      L(11, (K, x, z, y) => { // a chip on the ground, with its pins
+        K.add('acc', PRIM.box, x, y, z, 8, 0.3, 8); K.add('clay', PRIM.box, x, y + 0.3, z, 5.4, 0.45, 5.4); K.add('acc', PRIM.cyl, x - 1.8, y + 0.75, z - 1.8, 0.45, 0.06, 0.45);
+        for (let i = 0; i < 4; i++) { const t = -2.7 + i * 1.8; K.add('clay', PRIM.box, x + t, y, z - 4.7, 0.6, 0.22, 1.4).add('clay', PRIM.box, x + t, y, z + 4.7, 0.6, 0.22, 1.4).add('clay', PRIM.box, x - 4.7, y, z + t, 1.4, 0.22, 0.6).add('clay', PRIM.box, x + 4.7, y, z + t, 1.4, 0.22, 0.6); }
+      });
+      for (const o of [0, 1]) L(12, (K, x, z, y) => { // a data centre: long hall, rows of cooling fans
+        K.add('clay', PRIM.box, x, y, z, 10, 2.4, 5.6); K.add('dark', PRIM.box, x, y + 0.9, z + 2.81, 9.4, 0.6, 0.04);
+        for (let i = 0; i < 4; i++) for (const r of [-1.2, 1.2]) K.add('acc', PRIM.cyl, x - 3.6 + i * 2.4, y + 2.4, z + r, 0.6, 0.28, 0.6);
+      });
+      L(5, (K, x, z, y) => { K.add('clay', PRIM.box, x, y, z, 1, 6, 1); K.add('clay', PRIM.cyl, x, y + 6, z, 0.08, 3, 0.08); K.add('acc', PRIM.sph, x, y + 9.1, z, 0.3, 0.3, 0.3); K.add('clay', PRIM.dome, x + 0.7, y + 4.4, z + 0.5, 0.9, 0.4, 0.9, 0.6, Math.PI - 0.8); });
+      break;
+    case 'Communication Services':
+      L(9, (K, x, z, y) => { // the telecom tower
+        K.add('clay', PRIM.cyl, x, y, z, 1.6, 1.2, 1.6); K.add('clay', PRIM.taper, x, y + 1.2, z, 0.8, 21, 0.8);
+        K.add('acc', PRIM.cyl, x, y + 13, z, 1.9, 1.1, 1.9); K.add('clay', PRIM.cyl, x, y + 14.1, z, 1.5, 0.35, 1.5); K.add('clay', PRIM.cyl, x, y + 17, z, 1.15, 0.6, 1.15);
+        K.add('clay', PRIM.cyl, x, y + 22.2, z, 0.1, 5.2, 0.1); K.add('acc', PRIM.sph, x, y + 27.5, z, 0.32, 0.32, 0.32);
+      });
+      for (let i = 0; i < 3; i++) L(6.5, (K, x, z, y) => { // satellite dishes looking at the sky
+        const ry = -0.5 + i * 0.6, rx = Math.PI - 0.75; K.add('clay', PRIM.cyl, x, y, z, 0.35, 1.7, 0.35); K.add('clay', PRIM.box, x, y, z, 1.6, 0.3, 1.6);
+        K.add('clay', PRIM.dome, x, y + 2.3, z, 2.1, 0.75, 2.1, ry, rx);
+        const ax = new THREE.Vector3(0, -1, 0).applyEuler(new THREE.Euler(rx, ry, 0, 'YXZ')).multiplyScalar(-1.6);
+        K.bar('clay', [x, y + 2.3, z], [x + ax.x, y + 2.3 + ax.y, z + ax.z], 0.08); K.add('acc', PRIM.sph, x + ax.x, y + 2.3 + ax.y, z + ax.z, 0.28, 0.28, 0.28);
+      });
+      break;
+    case 'Consumer Discretionary':
+      L(15, (K, x, z, y, A) => { // a ferris wheel, turning
+        const hy = y + 7.6, R = 6;
+        for (const s of [-1, 1]) { K.bar('clay', [x - 3.2, y, z + s * 1.4], [x, hy, z + s * 0.5], 0.3); K.bar('clay', [x + 3.2, y, z + s * 1.4], [x, hy, z + s * 0.5], 0.3); }
+        K.add('clay', PRIM.box, x, y, z, 7.4, 0.3, 3.4);
+        const W = new Kit(); for (const s of [-0.45, 0.45]) W.add('acc', PRIM.torus, 0, 0, s, R, R, R);
+        for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; for (const s of [-0.45, 0.45]) W.bar('clay', [0, 0, s], [Math.cos(a) * R, Math.sin(a) * R, s], 0.09); }
+        W.add('clay', PRIM.cyl, 0, 0, -0.7, 0.45, 0.45, 0.45, 0, Math.PI / 2);
+        const g = new THREE.Group(); g.position.set(x, hy, z); for (const m of W.build(propMat(d))) g.add(m); scene.add(g);
+        const cab = new THREE.InstancedMesh(PRIM.box, PM.acc[si], 12); cab.castShadow = true; scene.add(cab);
+        A.push({ f: t => { g.rotation.z = t * 0.12; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + t * 0.12; setInst(cab, i, x + Math.cos(a) * R, hy + Math.sin(a) * R - 1.05, z, 0.9, 1.0, 1.1); } cab.instanceMatrix.needsUpdate = true; } });
+      });
+      L(8, (K, x, z, y) => { // a carousel
+        K.add('clay', PRIM.cyl, x, y, z, 2.8, 0.35, 2.8); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; K.add('clay', PRIM.cyl, x + Math.cos(a) * 2.2, y + 0.35, z + Math.sin(a) * 2.2, 0.08, 2.2, 0.08); }
+        K.add('clay', PRIM.cyl, x, y + 0.35, z, 0.5, 2.2, 0.5); K.add('acc', PRIM.cone, x, y + 2.55, z, 3.1, 1.5, 3.1); K.add('acc', PRIM.sph, x, y + 4.1, z, 0.25, 0.25, 0.25);
+      });
+      for (let i = 0; i < 2; i++) L(4.5, (K, x, z, y) => { K.add('clay', PRIM.box, x, y, z, 2.6, 1.9, 2.2); K.add('acc', PRIM.box, x, y + 1.5, z + 1.35, 2.9, 0.12, 1.1, 0, 0.35); });
+      break;
+    case 'Financials':
+      L(14, (K, x, z, y) => { // the exchange: steps, columns, pediment
+        for (let i = 0; i < 3; i++) K.add('clay', PRIM.box, x, y + i * 0.35, z, 12 - i * 0.8, 0.35, 8.2 - i * 0.8);
+        const y1 = y + 1.05; K.add('clay', PRIM.box, x, y1, z - 0.8, 9, 4.2, 4.4);
+        for (let i = 0; i < 6; i++) K.add('clay', PRIM.cyl, x - 4 + i * 1.6, y1, z + 2.4, 0.33, 4.2, 0.33);
+        K.add('clay', PRIM.box, x, y1 + 4.2, z, 10.6, 0.7, 6.6); K.add('acc', PRIM.roof, x, y1 + 4.9, z, 10.6, 1.7, 6.6);
+      });
+      for (let i = 0; i < 3; i++) L(3.6, (K, x, z, y) => { const n = 4 + Math.floor(rng() * 4); for (let j = 0; j < n; j++) K.add('gold', PRIM.cyl, x + (rng() - 0.5) * 0.18, y + j * 0.32, z + (rng() - 0.5) * 0.18, 1.1, 0.3, 1.1); });
+      L(4, (K, x, z, y) => { K.add('clay', PRIM.box, x, y, z, 1.8, 0.6, 1.8); K.add('clay', PRIM.box, x, y + 0.6, z, 1.1, 9, 1.1); K.add('acc', PRIM.pyr, x, y + 9.6, z, 0.8, 1.4, 0.8); });
+      break;
+    case 'Health Care':
+      L(14, (K, x, z, y) => { // the hospital, a cross on the roof
+        K.add('clay', PRIM.box, x - 1.5, y, z, 9, 4.4, 6); K.add('clay', PRIM.box, x + 3.6, y, z - 0.5, 4.6, 7, 5);
+        for (const h of [1.4, 2.9]) K.add('dark', PRIM.box, x - 1.5, y + h, z + 3.01, 8.2, 0.55, 0.04);
+        K.add('acc', PRIM.box, x + 3.6, y + 7, z - 0.5, 3.2, 0.35, 1.0); K.add('acc', PRIM.box, x + 3.6, y + 7, z - 0.5, 1.0, 0.35, 3.2);
+      });
+      L(7, (K, x, z, y) => { // helipad
+        K.add('clay', PRIM.cyl, x, y, z, 2.8, 0.14, 2.8); K.add('acc', PRIM.torus, x, y + 0.16, z, 2.3, 2.3, 1.2, 0, Math.PI / 2);
+        K.add('acc', PRIM.box, x - 0.55, y + 0.14, z, 0.3, 0.05, 1.7).add('acc', PRIM.box, x + 0.55, y + 0.14, z, 0.3, 0.05, 1.7).add('acc', PRIM.box, x, y + 0.14, z, 1.1, 0.05, 0.3);
+      });
+      L(5.5, (K, x, z, y, A) => { // a DNA helix, turning slowly
+        K.add('clay', PRIM.cyl, x, y, z, 1.7, 0.5, 1.7);
+        const H = new Kit(); for (let i = 0; i < 18; i++) { const a = i * 0.52, h = 0.6 + i * 0.6, p = [Math.cos(a) * 1.15, h, Math.sin(a) * 1.15], q = [-p[0], h, -p[2]]; H.add('acc', PRIM.sph, ...p, 0.3, 0.3, 0.3).add('clay', PRIM.sph, ...q, 0.3, 0.3, 0.3).bar('clay', p, q, 0.09); }
+        const g = new THREE.Group(); g.position.set(x, y + 0.5, z); for (const m of H.build(propMat(d))) g.add(m); scene.add(g); A.push({ f: t => { g.rotation.y = t * 0.35; } });
+      });
+      break;
+    case 'Industrials':
+      L(13, (K, x, z, y) => { // the container yard
+        const keys = ['acc', 'gold', 'clay', 'acc']; for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) { const n = 1 + Math.floor(rng() * 3); for (let k = 0; k < n; k++) K.add(keys[Math.floor(rng() * 4)], PRIM.box, x - 4.5 + i * 3, y + k * 1.15, z - 2.6 + j * 2.6, 2.7, 1.12, 1.2); }
+      });
+      L(9, (K, x, z, y) => { // a gantry crane
+        const H = 9; for (const [dx, dz] of [[-2.4, -1.8], [2.4, -1.8], [-2.4, 1.8], [2.4, 1.8]]) K.add('gold', PRIM.box, x + dx, y, z + dz, 0.45, H, 0.45);
+        for (const dz of [-1.8, 1.8]) K.add('gold', PRIM.box, x, y + H, z + dz, 5.4, 0.6, 0.5); K.add('gold', PRIM.box, x - 1, y + H + 0.6, z, 11, 0.55, 0.9); K.add('clay', PRIM.box, x + 2.6, y + H + 1.15, z, 1.6, 1.1, 1.6);
+      });
+      L(12, (K, x, z, y) => { // a factory with a sawtooth roof and a stack
+        K.add('clay', PRIM.box, x, y, z, 10, 2.6, 6.4); for (let i = 0; i < 4; i++) K.add('acc', PRIM.roof, x - 3.75 + i * 2.5, y + 2.6, z, 2.5, 1.3, 6.4);
+        K.add('clay', PRIM.cyl, x + 4, y, z - 2.2, 0.45, 8, 0.45); K.add('acc', PRIM.cyl, x + 4, y + 6.8, z - 2.2, 0.5, 0.4, 0.5);
+      });
+      break;
+    case 'Consumer Staples':
+      for (let i = 0; i < 2; i++) L(12, (K, x, z, y) => { // fields in rows
+        K.add('field', PRIM.box, x, y, z, 10.5, 0.1, 9); for (let r = 0; r < 8; r++) K.add(i ? 'gold' : 'acc', PRIM.box, x, y + 0.1, z - 3.85 + r * 1.1, 10, 0.24, 0.5);
+      });
+      L(8, (K, x, z, y) => { // grain silos
+        for (let i = 0; i < 3; i++) { K.add('clay', PRIM.cyl, x - 2.5 + i * 2.5, y, z, 1.15, 6, 1.15); K.add('acc', PRIM.dome, x - 2.5 + i * 2.5, y + 6, z, 1.15, 0.8, 1.15); }
+        K.add('clay', PRIM.box, x, y + 5.2, z, 5.4, 0.5, 0.6);
+      });
+      L(7.5, (K, x, z, y) => { K.add('clay', PRIM.box, x, y, z, 5, 2.6, 3.8); K.add('acc', PRIM.roof, x, y + 2.6, z, 5.4, 1.7, 4.2, Math.PI / 2); K.add('dark', PRIM.box, x, y, z + 1.91, 1.4, 1.8, 0.04); });
+      break;
+    case 'Energy':
+      const pump = i => (K, x, z, y, A) => { // a pumpjack, nodding
+        K.add('clay', PRIM.box, x, y, z, 5.6, 0.3, 1.4); const py = y + 3.4;
+        for (const s of [-0.5, 0.5]) { K.bar('clay', [x - 0.9, y + 0.3, z + s], [x, py, z + s * 0.25], 0.22); K.bar('clay', [x + 0.9, y + 0.3, z + s], [x, py, z + s * 0.25], 0.22); }
+        K.add('clay', PRIM.cyl, x - 2.2, y + 0.3, z, 0.12, 2.0, 0.12);
+        const B = new Kit(); B.add('acc', PRIM.cbox, 0.4, 0.15, 0, 5.4, 0.42, 0.45); B.add('acc', PRIM.cbox, 3.05, -0.35, 0, 0.6, 1.5, 0.5); B.add('clay', PRIM.cbox, -2.2, -0.45, 0, 0.9, 0.9, 0.7);
+        const g = new THREE.Group(); g.position.set(x, py, z); for (const m of B.build(propMat(d))) g.add(m); scene.add(g);
+        const ph = i * 1.9; A.push({ f: t => { g.rotation.z = Math.sin(t * 1.4 + ph) * 0.22; } });
+      };
+      const tank = (K, x, z, y) => { K.add('clay', PRIM.cyl, x, y, z, 2.4, 2.8, 2.4); K.add('acc', PRIM.cyl, x, y + 1.2, z, 2.43, 0.4, 2.43); K.add('clay', PRIM.dome, x, y + 2.8, z, 2.4, 0.45, 2.4); };
+      L(7.5, pump(0)); L(6.2, tank); L(5, (K, x, z, y) => { K.add('clay', PRIM.cyl, x - 0.8, y, z, 0.7, 9, 0.7); for (const h of [2.5, 5, 7.5]) K.add('acc', PRIM.cyl, x - 0.8, y + h, z, 0.85, 0.22, 0.85); K.add('clay', PRIM.cyl, x + 1.1, y, z + 0.4, 0.26, 11.5, 0.26); K.add('gold', PRIM.cone, x + 1.1, y + 11.5, z + 0.4, 0.4, 0.9, 0.4); });
+      L(7.5, pump(1)); L(6.2, tank); L(7.5, pump(2));
+      break;
+    case 'Utilities':
+      for (let i = 0; i < 2; i++) L(8, (K, x, z, y, A) => turbine(K, A, d, x, z, y, 15));
+      L(12, (K, x, z, y) => { // solar rows
+        for (let r = 0; r < 4; r++) { const zz = z - 3.6 + r * 2.4; K.add('dark', PRIM.cbox, x, y + 0.9, zz, 10, 0.08, 1.6, 0, -0.5); for (const dx of [-4, 0, 4]) K.add('clay', PRIM.box, x + dx, y, zz + 0.3, 0.12, 0.7, 0.12); }
+      });
+      L(7.5, (K, x, z, y) => { K.add('clay', PRIM.cool, x, y, z, 1, 1, 1); K.add('acc', PRIM.torus, x, y + 6.95, z, 2.5, 2.5, 2.5, 0, Math.PI / 2); });
+      break;
+    case 'Real Estate':
+      L(14, (K, x, z, y) => { // a street of houses
+        for (let i = 0; i < 5; i++) { const hx = x - 5.2 + i * 2.6; K.add('clay', PRIM.box, hx, y, z, 2.2, 1.7, 2.6); K.add('acc', PRIM.roof, hx, y + 1.7, z, 2.4, 1.1, 2.9); }
+        for (let i = 0; i < 4; i++) { const hx = x - 3.9 + i * 2.6; K.add('clay', PRIM.box, hx, y, z + 3.6, 2.2, 1.7, 2.4); K.add('acc', PRIM.roof, hx, y + 1.7, z + 3.6, 2.4, 1.1, 2.7); }
+      });
+      L(11, (K, x, z, y) => { // a tower crane over a building going up
+        for (let f = 0; f < 4; f++) K.add('clay', PRIM.box, x + 3, y + f * 2.1, z, 5, 0.25, 5); for (const [dx, dz] of [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]]) K.add('clay', PRIM.box, x + 3 + dx, y, z + dz, 0.3, 6.6, 0.3);
+        const H = 19; K.add('gold', PRIM.box, x - 2.5, y, z - 3, 0.7, H, 0.7); K.add('gold', PRIM.box, x + 2.5, y + H, z - 3, 15, 0.55, 0.6); K.add('clay', PRIM.box, x - 6.2, y + H - 0.4, z - 3, 2, 1.2, 1.1);
+        K.add('gold', PRIM.pyr, x - 2.5, y + H + 0.55, z - 3, 0.5, 2.2, 0.5); K.add('clay', PRIM.box, x - 1.6, y + H - 1.3, z - 3, 1.1, 1.1, 1.1); K.add('clay', PRIM.cyl, x + 6.5, y + 9.5, z - 3, 0.04, H - 9.5, 0.04); K.add('acc', PRIM.box, x + 6.5, y + 8.7, z - 3, 1.6, 0.8, 1.2);
+      });
+      break;
+    case 'Materials':
+      L(7.5, (K, x, z, y, A) => { // a cut gem, turning
+        K.add('clay', PRIM.cyl, x, y, z, 1.8, 1.1, 1.8);
+        const G = new Kit(); G.add('acc', PRIM.oct, 0, 0, 0, 2.2, 3, 2.2); const g = new THREE.Group(); g.position.set(x, y + 4.4, z); for (const m of G.build(propMat(d))) g.add(m); scene.add(g); A.push({ f: t => { g.rotation.y = t * 0.4; } });
+      });
+      for (let i = 0; i < 3; i++) L(6, (K, x, z, y) => { K.add(['acc', 'gold', 'clay'][i], PRIM.cone, x, y, z, 2.6, 2.3 + i * 0.3, 2.6); });
+      L(10, (K, x, z, y) => { K.bar('clay', [x - 4.5, y + 0.4, z], [x + 3.6, y + 3.4, z], 0.75); for (const t of [0.35, 0.7]) K.add('clay', PRIM.box, x - 4.5 + 8.1 * t, y, z, 0.18, 0.4 + 3 * t, 0.18); K.add('clay', PRIM.cyl, x + 4.2, y, z, 1.1, 5.6, 1.1); K.add('acc', PRIM.cone, x + 4.2, y + 5.6, z, 1.15, 1.1, 1.15); });
+      break;
+  }
+  // wide parks get a fountain and a pond in the spare room
+  L(7, (K, x, z, y) => { K.add('clay', PRIM.cyl, x, y, z, 2.7, 0.4, 2.7); K.add('water', PRIM.cyl, x, y + 0.05, z, 2.35, 0.4, 2.35); K.add('clay', PRIM.cyl, x, y, z, 0.32, 1.5, 0.32); K.add('clay', PRIM.dome, x, y + 1.6, z, 0.95, 0.4, 0.95, 0, Math.PI); K.add('water', PRIM.sph, x, y + 1.75, z, 0.35, 0.5, 0.35); });
+  L(11, (K, x, z, y) => { K.add('water', PRIM.cyl, x, y, z, 4.6, 0.09, 3.1); K.add('clay', PRIM.torus, x, y + 0.07, z, 4.6, 3.1, 2.2, 0, Math.PI / 2); for (const [dx, dz, r] of [[-3.6, -1.6, 0.7], [3.9, 1.2, 0.55], [-2.4, 2.4, 0.45]]) K.add('clay', PRIM.sph, x + dx, y, z + dz, r, r * 0.6, r); K.add('lawn2', PRIM.cyl, x + 1.2, y + 0.1, z - 0.6, 0.6, 0.03, 0.6).add('lawn2', PRIM.cyl, x - 0.4, y + 0.1, z + 1, 0.45, 0.03, 0.45); });
+  return T;
+}
+function turbine(K, A, d, x, z, y, H){ // a wind turbine; the rotor turns
+  K.add('clay', PRIM.taper, x, y, z, 0.42, H, 0.42); K.add('clay', PRIM.cbox, x, y + H + 0.35, z - 0.3, 0.75, 0.75, 2.1);
+  const R = new Kit(); R.add('clay', PRIM.sph, 0, 0, 0, 0.42, 0.42, 0.55); for (let k = 0; k < 3; k++) R.add('clay', PRIM.box, 0, 0, 0, 0.5, 6.6, 0.12, 0, 0, k * Math.PI * 2 / 3);
+  const g = new THREE.Group(); g.position.set(x, y + H + 0.35, z + 0.8); for (const m of R.build(propMat(d))) g.add(m); scene.add(g);
+  const ph = (x * 7.1 + z * 3.3) % 6.28; A.push({ f: t => { g.rotation.z = -t * 1.1 + ph; } });
+}
+// things offshore, west of the island: sailboats, a cargo ship, an oil platform, a wind farm
+function seaFor(d, rng, K, A){
+  const L = d.land, x = L.x - 10, avoid = BRIDGES.filter(b => b.B === d && Math.abs(b.q[0] - d.ring.x) < 0.1).map(b => b.q[1]);
+  const spots = []; for (let z = L.y + 8; z < L.y + L.h - 8; z += 3) if (avoid.every(b => Math.abs(b - z) > 11)) spots.push(z);
+  if (!spots.length) return;
+  const at = f => spots[Math.floor(clamp(f, 0, 0.999) * spots.length)], W = WATER_Y;
+  switch (d.s.en) {
+    case 'Financials': for (const f of [0.3, 0.7]) { const z = at(f), xx = x + (rng() - 0.5) * 4;
+      K.add('clay', PRIM.cbox, xx, W + 0.35, z, 1.2, 0.7, 3.4); K.add('clay', PRIM.cyl, xx, W + 0.7, z, 0.07, 4.2, 0.07); K.add('clay', PRIM.roof, xx, W + 1.2, z + 0.1, 0.05, 3.4, 2.2, Math.PI / 2); } break;
+    case 'Industrials': { const z = at(0.5); // a cargo ship
+      K.add('clay', PRIM.cbox, x, W + 0.8, z, 4.4, 1.9, 17); K.add('clay', PRIM.pyr, x, W + 0.8, z - 9.3, 2.2, 1.9, 1.6, 0, Math.PI / 2);
+      for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) K.add(['acc', 'gold', 'clay'][(i + j) % 3], PRIM.box, x - 0.9 + j * 1.8, W + 1.75, z - 6 + i * 2.6, 1.6, 0.9 + ((i + j) % 2) * 0.9, 2.4);
+      K.add('clay', PRIM.box, x, W + 1.75, z + 7, 3.6, 3, 2.2); K.add('acc', PRIM.cyl, x, W + 4.75, z + 7.4, 0.5, 1.4, 0.5); break; }
+    case 'Energy': { const z = at(0.5); // an oil platform
+      for (const [dx, dz] of [[-2.8, -2.8], [2.8, -2.8], [-2.8, 2.8], [2.8, 2.8]]) K.add('clay', PRIM.cyl, x + dx, W, z + dz, 0.42, 4.6 - W, 0.42);
+      K.add('clay', PRIM.box, x, 4.6, z, 8, 0.7, 8); K.add('acc', PRIM.pyr, x - 1.2, 5.3, z - 1, 1.8, 8, 1.8); K.add('clay', PRIM.box, x + 2.2, 5.3, z + 1.8, 2.8, 2, 2.8); K.add('clay', PRIM.cyl, x + 2.4, 7.3, z - 2.4, 1.5, 0.12, 1.5); break; }
+    case 'Utilities': for (const f of [0.15, 0.5, 0.85]) { const z = at(f); K.add('gold', PRIM.cyl, x, W, z, 0.5, 1.6, 0.5); turbine(K, A, d, x, z, W + 1.6, 13); } break;
+  }
+}
+const propMat = d => k => k === 'acc' ? PM.acc[d.si] : k === 'dark' ? MAT.glass : k === 'gold' ? PM.gold : k === 'field' ? PM.field : k === 'lawn' ? PM.lawn : k === 'lawn2' ? PM.field : k === 'water' ? PM.water : PM.clay;
+function buildLandmarks(d, rng){
+  const K = new Kit(), R = d.park, cz = R.y + R.h / 2, y = BASE_Y, occ = [];
+  K.put('lawn', slab(R.w, R.h, 0.05, 1.6), _m4.makeTranslation(R.x + R.w / 2, BASE_Y, R.y + R.h / 2));
+  // place the landmarks in priority order while they fit, spread evenly along the park
+  const want = propsFor(d, rng), pick = []; let used = 0;
+  for (const it of want) { if (used + it.w + (pick.length ? 3 : 0) > R.w - 4) continue; pick.push(it); used += it.w + (pick.length > 1 ? 3 : 0); }
+  const spare = (R.w - used) / (pick.length + 1); let x = R.x + spare;
+  // the signature piece goes in the middle
+  const order = pick.length > 2 ? [...pick.slice(1, 1 + Math.floor((pick.length - 1) / 2)), pick[0], ...pick.slice(1 + Math.floor((pick.length - 1) / 2))] : pick;
+  for (const it of order) { const cx = x + it.w / 2; it.draw(K, cx, cz, y, ANIM); occ.push([cx, it.w / 2]); x += it.w + 3 + spare; }
+  seaFor(d, rng, K, ANIM);
+  for (const m of K.build(propMat(d))) { m.userData.d = d; scene.add(m); plateMeshes.push(m); }
+  return occ;
+}
+
+/* ================= trees ================= */
+function plantTrees(d, rng, occ, out){
+  const g = d.grid, I = d.rect, y = BASE_Y, tree = (x, z, s = 0.5) => out.push([x, z, s + rng() * 0.16, y]);
+  // street trees: on the sidewalk in every gap between buildings, a double row on empty frontage
+  const rows = new Map();
+  for (const c of d.comps) { const k = c.av + '|' + c.side + '|' + (c.av === g.K - 1 && c.side === 1 ? 'all' : c.col); if (!rows.has(k)) rows.set(k, []); rows.get(k).push([c.x - c.b / 2, c.x + c.b / 2]); }
+  const spans = [];
+  for (let k = 0; k < g.K; k++) for (let s = 0; s < 2; s++) {
+    if (k === g.K - 1 && s === 1) spans.push([k, s, 'all', I.x + 1, I.x + I.w - 1]);
+    else d.cols.forEach((x, p) => spans.push([k, s, p, x + 0.9, x + g.colW - 0.9]));
+  }
+  for (const [k, s, p, x0, x1] of spans) {
+    const occR = (rows.get(k + '|' + s + '|' + p) || []).sort((a, b) => a[0] - b[0]);
+    const sg = s ? 1 : -1, z = d.zs[k] + sg * (STREET / 2 + EDGE * 0.5), deep = (s ? g.dp.s[k] : g.dp.n[k]);
+    let x = x0;
+    for (const [a, b] of [...occR, [x1, x1]]) {
+      const gap = a - x;
+      if (gap >= 1.25) { const n = Math.max(1, Math.floor(gap / 2.7)); for (let i = 0; i < n; i++) { const tx = x + gap * (i + 0.5) / n; tree(tx, z); if (gap > 4 && i % 2 === 0) for (let r = 2.6; r < deep - 0.6; r += 2.6) tree(tx + (rng() - 0.5) * 0.6, z + sg * (EDGE * 0.5 + r)); } }
+      x = Math.max(x, b);
+    }
+  }
+  // alleys between back-to-back rows, and the green margin along the ring road
+  for (let k = 0; k < g.K - 1; k++) { const z = d.zs[k] + STREET / 2 + EDGE + g.dp.s[k] + ALLEY / 2; for (const cx of d.cols) for (let x = cx + 1.6; x < cx + g.colW - 1.6; x += 3) if (rng() < 0.6) tree(x, z, 0.45); }
+  for (const cx of d.cols) for (let x = cx + 1.4; x < cx + g.colW - 1.4; x += 3.2) if (rng() < 0.75) tree(x, I.y + MARG / 2, 0.45);
+  for (const b of d.blocks) for (const ex of [I.x + 0.9, I.x + I.w - 0.9]) if (Math.abs(b.x - I.x) < 0.1 || Math.abs(b.x + b.w - (I.x + I.w)) < 0.1) {
+    if (Math.abs(ex - b.x) > 1.2 && Math.abs(ex - (b.x + b.w)) > 1.2) continue;
+    for (let z = b.y + 1.4; z < b.y + b.h - 1.4; z += 3.2) if (rng() < 0.6) tree(ex, z, 0.45);
+  }
+  // the park: a promenade of trees along the water, small groves between the landmarks
+  const R = d.park, free = x => occ.every(([cx, r]) => Math.abs(x - cx) > r + 1.2);
+  for (let x = R.x + 1; x < R.x + R.w - 1; x += 2.6) tree(x, I.y + I.h - MARG / 2 - 0.2, 0.5);
+  for (let x = R.x + 1.5; x < R.x + R.w - 1.5; x += 3.1) if (free(x)) for (let z = R.y + 1.6; z < R.y + R.h - 2.5; z += 3.1) if (rng() < 0.42) tree(x + (rng() - 0.5) * 1.2, z + (rng() - 0.5) * 1.2, 0.6);
+}
+
 function buildScene(){
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), MAT.ground); ground.rotation.x = -Math.PI / 2; ground.position.y = WATER_Y; ground.receiveShadow = true; scene.add(ground);
-  // islands: shallow water, a beach, the ring road on top, then the district plate
+  // islands: shallow water, a beach, asphalt (the ring road and every street), raised blocks on top
   for (const d of DIST) {
     if (!d.land) continue; const L = d.land, cx = L.x + L.w / 2, cz = L.y + L.h / 2;
     const shallow = new THREE.Mesh(slab(L.w + 14, L.h + 14, 0.04, 14), MAT.shallow); shallow.position.set(cx, WATER_Y, cz); shallow.receiveShadow = true; scene.add(shallow);
     const beach = new THREE.Mesh(slab(L.w + 3.6, L.h + 3.6, -WATER_Y, 8), MAT.sand); beach.position.set(cx, WATER_Y, cz); beach.receiveShadow = true; beach.userData.d = d; scene.add(beach); plateMeshes.push(beach);
     const land = new THREE.Mesh(slab(L.w, L.h, LAND_Y, 6), MAT.asphalt); land.position.set(cx, 0, cz); land.receiveShadow = true; land.userData.d = d; scene.add(land); plateMeshes.push(land);
+    d.mat = new THREE.MeshStandardMaterial({ roughness: 0.92 });
+    d.mesh = new THREE.Mesh(mergeGeo(d.blocks.map(b => slab(b.w, b.h, PLATE_H, 1.3).translate(b.x + b.w / 2, 0, b.y + b.h / 2))), d.mat);
+    d.mesh.receiveShadow = true; d.mesh.castShadow = true; d.mesh.userData.d = d; scene.add(d.mesh); plateMeshes.push(d.mesh);
   }
   // bridges over the channels: deck, railings, pillars
   const decks = [], rails = [], piers = [];
@@ -904,52 +1380,28 @@ function buildScene(){
   const pierMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, Math.max(1, piers.length)); pierMesh.count = piers.length;
   piers.forEach(([x, z], i) => setInst(pierMesh, i, x, WATER_Y, z, 0.32, LAND_Y - 0.42 - WATER_Y, 0.32));
   for (const m of [deckMesh, railMesh, pierMesh]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); }
-  const lots = [], streets = [], dashes = [], inner = [], zebras = [], trees = [];
-  for (const d of DIST) {
-    if (!d.rect) continue;
-    d.mat = new THREE.MeshStandardMaterial({ roughness: 0.92 });
-    d.mesh = new THREE.Mesh(slab(d.rect.w, d.rect.h, PLATE_H, 2.4), d.mat); d.mesh.position.set(d.cx, 0, d.cz);
-    d.mesh.receiveShadow = true; d.mesh.castShadow = true; d.mesh.userData.d = d; scene.add(d.mesh); plateMeshes.push(d.mesh);
-    const rng = mulberry32(hash(d.s.en));
-    for (const st of d.streets) {
-      const r = st.rect, s0 = st.zs - STREET / 2, s1 = st.zs + STREET / 2;
-      lots.push([r.x + r.w / 2, (r.y + s0) / 2, r.w, s0 - r.y, d], [r.x + r.w / 2, (s1 + r.y + r.h) / 2, r.w, r.y + r.h - s1, d]);
-      streets.push([r.x + r.w / 2, st.zs, r.w, STREET]);
-      for (let x = r.x + 2.2; x < r.x + r.w - 2.2; x += 3.4) inner.push([x, st.zs, 1, 0, 1.6, 0.16]);
-      // street trees in the gaps between buildings, on both sides
-      for (const [row, z] of [[st.top, s0 - 0.5], [st.bot, s1 + 0.5]]) for (let k = 0; k < row.length - 1; k++) {
-        const a = row[k], b = row.at(k + 1); if (rng() < 0.15) continue; trees.push([(a.x + a.b / 2 + b.x - b.b / 2) / 2, z, 0.5 + rng() * 0.18, BASE_Y]);
-      }
-    }
-    const r = d.rect;
-    const sides = [[r.x, r.y, 1, 0, r.w], [r.x + r.w, r.y, 0, 1, r.h], [r.x + r.w, r.y + r.h, -1, 0, r.w], [r.x, r.y + r.h, 0, -1, r.h]];
-    for (const [x0, z0, dx, dz, len] of sides) {
-      const nx = -dz, nz = dx;
-      for (let t = 3; t < len - 3; t += 3.6) { if (rng() < 0.25) continue; trees.push([x0 + dx * t + nx * 0.9, z0 + dz * t + nz * 0.9, 0.48 + rng() * 0.18, PLATE_H]); }
-    }
-  }
-  lotMesh = new THREE.InstancedMesh(unitBox, MAT.lot, lots.length); lotDist = lots.map(l => l[4]);
-  lots.forEach(([x, z, w, dd], i) => setInst(lotMesh, i, x, PLATE_H, z, w, LOT_H, Math.max(0.1, dd)));
-  lotMesh.receiveShadow = true; scene.add(lotMesh);
-  const streetMesh = new THREE.InstancedMesh(unitPlane, MAT.asphalt, streets.length);
-  streets.forEach(([x, z, w, dd], i) => setInst(streetMesh, i, x, PLATE_H + 0.01, z, w, 1, dd));
-  streetMesh.receiveShadow = true; scene.add(streetMesh);
-  // lane dashes + zebra crossings along the boulevards
+  // lane dashes along every road; zebra crossings at the edge of every junction
+  const dashes = [], zebras = [];
   for (const e of ROADS.edges) {
-    const dx = (e.b[0] - e.a[0]) / e.len, dz = (e.b[1] - e.a[1]) / e.len;
-    for (let t = ROAD + 2.4; t < e.len - ROAD - 2.4; t += 3.6) dashes.push([e.a[0] + dx * t, e.a[1] + dz * t, dx, dz, 1.8, 0.22]);
+    const dx = (e.b[0] - e.a[0]) / e.len, dz = (e.b[1] - e.a[1]) / e.len, st = e.kind === 'street';
+    const end = (k) => { const n = ROADS.nodes.get(k); return n.edges.length > 2 ? Math.max(...n.edges.map(i => ROADS.edges[i].w)) / 2 + (st ? 2.4 : 2.8) : 1.5; };
+    const t0 = end(e.ka), t1 = e.len - end(e.kb);
+    for (let t = t0; t < t1 - (st ? 1 : 1.6); t += st ? 3 : 3.6) dashes.push([e.a[0] + dx * (t + (st ? 0.6 : 0.9)), e.a[1] + dz * (t + (st ? 0.6 : 0.9)), dx, dz, st ? 1.2 : 1.8, st ? 0.16 : 0.22]);
   }
   for (const n of ROADS.nodes.values()) {
-    if (n.edges.length < 3) continue;
+    if (n.edges.length < 3) continue; const reach = Math.max(...n.edges.map(i => ROADS.edges[i].w)) / 2 + 1.1;
     for (const ei of n.edges) {
-      const e = ROADS.edges[ei]; if (e.len < 20) continue;
+      const e = ROADS.edges[ei]; if (e.len < reach * 2 + 2) continue;
       const far = e.ka === n.k ? e.b : e.a; const dx = (far[0] - n.p[0]) / e.len, dz = (far[1] - n.p[1]) / e.len;
-      const cx = n.p[0] + dx * (ROAD + 2), cz = n.p[1] + dz * (ROAD + 2); const px = -dz, pz = dx;
-      for (let o = -(ROAD - 0.8); o <= ROAD - 0.79; o += 0.7) zebras.push([cx + px * o, cz + pz * o, dx, dz, 1.6, 0.36]);
+      const cx = n.p[0] + dx * reach, cz = n.p[1] + dz * reach; const px = -dz, pz = dx;
+      for (let o = -(e.w / 2 - 0.6); o <= e.w / 2 - 0.59; o += 0.7) zebras.push([cx + px * o, cz + pz * o, dx, dz, 1.5, 0.34]);
     }
   }
-  const mkFlat = (list, y) => { const m = new THREE.InstancedMesh(unitPlane, MAT.lane, list.length); list.forEach(([x, z, dx, dz, len, wid], i) => { dummy.position.set(x, y, z); dummy.rotation.set(0, Math.atan2(dx, dz), 0); dummy.scale.set(wid, 1, len); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); }); m.receiveShadow = true; scene.add(m); return m; };
-  laneMesh = mkFlat(dashes, LAND_Y + 0.012); zebraMesh = mkFlat(zebras, LAND_Y + 0.014); mkFlat(inner, PLATE_H + 0.02); dummy.rotation.set(0, 0, 0);
+  const mkFlat = (list, y) => { const m = new THREE.InstancedMesh(unitPlane, MAT.lane, Math.max(1, list.length)); m.count = list.length; list.forEach(([x, z, dx, dz, len, wid], i) => { dummy.position.set(x, y, z); dummy.rotation.set(0, Math.atan2(dx, dz), 0); dummy.scale.set(wid, 1, len); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); }); m.receiveShadow = true; scene.add(m); return m; };
+  laneMesh = mkFlat(dashes, LAND_Y + 0.012); zebraMesh = mkFlat(zebras, LAND_Y + 0.014); dummy.rotation.set(0, 0, 0);
+  // landmarks, then trees around them
+  const trees = [];
+  for (const d of DIST) { if (!d.land) continue; const rng = mulberry32(hash(d.s.en)); const occ = buildLandmarks(d, rng); plantTrees(d, rng, occ, trees); }
   const crown = new THREE.IcosahedronGeometry(1, 0);
   treeMesh = new THREE.InstancedMesh(crown, MAT.tree, trees.length); trunkMesh = new THREE.InstancedMesh(unitCyl, MAT.trunk, trees.length);
   trees.forEach(([x, z, s, y0], i) => { dummy.position.set(x, y0 + 0.62 + s, z); dummy.scale.set(s, s * 1.12, s); dummy.updateMatrix(); treeMesh.setMatrixAt(i, dummy.matrix); dummy.position.set(x, y0, z); dummy.scale.set(0.07, 0.75, 0.07); dummy.updateMatrix(); trunkMesh.setMatrixAt(i, dummy.matrix); });
@@ -961,18 +1413,16 @@ function buildScene(){
   for (const m of [roofMesh, tankMesh, chimMesh]) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); }
   const white = new THREE.Color(1, 1, 1);
   for (let i = 0; i < NB; i++) { for (const m of tier) m.setColorAt(i, white); roofMesh.setColorAt(i * 2, white); roofMesh.setColorAt(i * 2 + 1, white); tankMesh.setColorAt(i * 2, white); tankMesh.setColorAt(i * 2 + 1, white); chimMesh.setColorAt(i, white); }
-  // cars and buses moving along the road graph
+  // cars and buses on every road, more of them where there is more road
   const carGeo = new THREE.BoxGeometry(0.82, 0.4, 1.75); carGeo.translate(0, 0.32, 0);
   const cabGeo = new THREE.BoxGeometry(0.68, 0.3, 0.92); cabGeo.translate(0, 0.66, -0.12);
-  const nCars = isPhone() ? 90 : 170;
+  const nCars = isPhone() ? 120 : 240;
   carBody = new THREE.InstancedMesh(carGeo, MAT.car, nCars); carCab = new THREE.InstancedMesh(cabGeo, MAT.glass, nCars);
   carBody.castShadow = true; carBody.frustumCulled = carCab.frustumCulled = false; scene.add(carBody, carCab);
-  const rng = mulberry32(20261103);
+  const rng = mulberry32(20261103), totalLen = ROADS.edges.reduce((s, e) => s + e.len, 0);
+  const pickEdge = () => { let r = rng() * totalLen; for (const e of ROADS.edges) { r -= e.len; if (r <= 0) return e; } return ROADS.edges[0]; };
   CARS.length = 0;
-  for (let i = 0; i < nCars; i++) {
-    const e = ROADS.edges[Math.floor(rng() * ROADS.edges.length)];
-    CARS.push({ e, fwd: rng() < 0.5, s: rng() * e.len, v: 3.2 + rng() * 3.2, bus: i % 19 === 0 });
-  }
+  for (let i = 0; i < nCars; i++) { const e = pickEdge(); CARS.push({ e, fwd: rng() < 0.5, s: rng() * e.len, v: 3.2 + rng() * 3.2, bus: i % 19 === 0, pe: null }); }
   // beacons, hover and selection helpers
   const beamGeo = new THREE.CylinderGeometry(1, 1, 1, 40, 1, true); beamGeo.translate(0, 0.5, 0);
   beamMat = new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uTime: { value: 0 }, uAlpha: { value: 0 } },
@@ -1007,6 +1457,10 @@ function readTheme(){
   hoverEdges.material.color.copy(COL.accent); selEdges.material.color.copy(COL.accent); frameMat.color.copy(COL.accent); routeMat.uniforms.uColor.value.copy(COL.accent);
   for (const m of [beamMat, haloMat]) { m.uniforms.uColor.value.copy(COL.beacon); m.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending; m.needsUpdate = true; }
   for (const d of DIST) if (d.mat) d.baseCol = COL.walk.clone().lerp(new THREE.Color(d.s.hue), dark ? 0.14 : 0.07);
+  // landmarks: clay like the buildings, the sector's colour as an accent
+  PM.clay.color.copy(COL.clay).lerp(COL.asphalt, dark ? 0.05 : 0.08); PM.gold.color.copy(COL.beacon).lerp(COL.clay, dark ? 0.2 : 0.3);
+  PM.field.color.copy(COL.walk).lerp(new THREE.Color('#8FA34B'), dark ? 0.25 : 0.32); PM.water.color.copy(COL.shallow).lerp(COL.water, 0.5); PM.lawn.color.copy(COL.walk).lerp(new THREE.Color(dark ? '#3F7A5A' : '#9CCFA4'), dark ? 0.32 : 0.34);
+  SECTORS.forEach((s, i) => PM.acc[i].color.copy(new THREE.Color(s.hue)).lerp(COL.clay, dark ? 0.2 : 0.28));
   paintPlates(); retarget(true); paintThemeBtn(); dirty = true;
 }
 function paintPlates(){ for (const d of DIST) if (d.mat) d.mat.color.copy(d.baseCol).lerp(COL.accent, d === focusD ? (dark ? 0.3 : 0.16) : 0); }
@@ -1081,7 +1535,7 @@ function writeOne(i){
 function writeAll(){
   for (let i = 0; i < NB; i++) writeOne(i);
   for (const m of [...tier, roofMesh, tankMesh, chimMesh]) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
-  placeBeams(); placeSelection(); dirty = true;
+  placeBeams(); placeSelection(); dirty = true; boundsDirty = true;
 }
 function stepAnim(now){
   if (intro) {
@@ -1105,19 +1559,24 @@ function placeBeams(){
 function stepCars(dt){
   if (!carBody) return;
   const flat = HS.v < 0.5;
+  // where a car is at distance s along an edge (beyond its end when s > len), keeping to its lane
+  const at = (e, fwd, s) => { const a = fwd ? e.a : e.b, b = fwd ? e.b : e.a, dx = (b[0] - a[0]) / e.len, dz = (b[1] - a[1]) / e.len, lane = e.kind === 'street' ? STREET * 0.23 : ROAD * 0.45;
+    return [a[0] + dx * s - dz * lane, a[1] + dz * s + dx * lane, Math.atan2(dx, dz)]; };
   CARS.forEach((car, i) => {
     if (!reduceMotion && dt > 0) {
       car.s += car.v * dt;
       let guard = 0;
       while (car.s > car.e.len && guard++ < 4) {
         car.s -= car.e.len; const nodeKey = car.fwd ? car.e.kb : car.e.ka; const node = ROADS.nodes.get(nodeKey);
+        // keep going: straight on or a turn, a U-turn only at a dead end
         const opts = node.edges.filter(ei => ei !== car.e.i); const ei = opts.length ? opts[Math.floor(Math.random() * opts.length)] : car.e.i;
-        car.e = ROADS.edges[ei]; car.fwd = car.e.ka === nodeKey;
+        car.pe = car.e; car.pfwd = car.fwd; car.e = ROADS.edges[ei]; car.fwd = car.e.ka === nodeKey;
       }
     }
-    const e = car.e; const a = car.fwd ? e.a : e.b, b = car.fwd ? e.b : e.a;
-    const dx = (b[0] - a[0]) / e.len, dz = (b[1] - a[1]) / e.len; const lane = ROAD * 0.42;
-    const x = a[0] + dx * car.s - dz * lane, z = a[1] + dz * car.s + dx * lane; const ry = Math.atan2(dx, dz);
+    let [x, z, ry] = at(car.e, car.fwd, car.s);
+    // round the corner: for the first few metres of an edge, blend from the line of the edge it came from
+    const B = 3.2;
+    if (car.pe && car.s < B) { const [px, pz, pry] = at(car.pe, car.pfwd, car.pe.len + car.s); const k = car.s / B, w = k * k * (3 - 2 * k); x = lerp(px, x, w); z = lerp(pz, z, w); ry = pry + Math.atan2(Math.sin(ry - pry), Math.cos(ry - pry)) * w; }
     const sc = car.bus ? 1.9 : 1; const y = flat ? -2 : LAND_Y;
     setInst(carBody, i, x, y, z, 1, 1, sc, ry); setInst(carCab, i, x, y, z, 1, 1, car.bus ? 2.6 : 1, ry);
   });
@@ -1145,7 +1604,7 @@ const HOME = () => {
   return { t: new THREE.Vector3(0, 0, 0), dist: clamp(dist, 300, 3000), polar, az };
 };
 let fly = null;
-function setCam(t, dist, polar, az){ controls.target.copy(t); camera.position.setFromSphericalCoords(dist, polar, az).add(t); camera.lookAt(t); }
+function setCam(t, dist, polar, az){ controls.target.copy(t); camera.position.setFromSphericalCoords(dist, polar, az).add(t); camera.lookAt(t); controls.sync(); }
 function flyTo(t, dist, opt = {}){
   const off = camera.position.clone().sub(controls.target); const s = new THREE.Spherical().setFromVector3(off);
   let az1 = opt.az ?? s.theta; let dAz = Math.atan2(Math.sin(az1 - s.theta), Math.cos(az1 - s.theta));
@@ -1163,7 +1622,11 @@ function applyView(){
   const F = w + r.left + r.right, Fh = h + r.top + r.bottom;
   camera.aspect = F / Fh; camera.setViewOffset(F, Fh, r.right, r.bottom, w, h); camera.updateProjectionMatrix();
 }
-function resize(){ const r = renderer.domElement.getBoundingClientRect(); VIEW.w = Math.max(1, r.width); VIEW.h = Math.max(1, r.height); renderer.setSize(VIEW.w, VIEW.h, false); applyView(); if (C.length) HOME_DIST = HOME().dist; dirty = true; }
+function resize(){
+  const r = renderer.domElement.getBoundingClientRect(); VIEW.w = Math.max(1, r.width); VIEW.h = Math.max(1, r.height); renderer.setSize(VIEW.w, VIEW.h, false); applyView();
+  if (C.length) { HOME_DIST = HOME().dist; controls.maxDistance = Math.max(900, HOME_DIST * 2.2); controls.bounds = { x: WORLD.w / 2 + 30, z: WORLD.d / 2 + 30 }; }
+  dirty = true;
+}
 addEventListener('resize', resize);
 
 /* ================= labels & callouts ================= */
@@ -1232,9 +1695,18 @@ function calloutItems(){
   for (const o of out) if (o.mprio) o.prio = o.mprio;
   const seen = new Set(); return out.filter(o => !seen.has(o.c.t) && seen.add(o.c.t)).sort((a, b) => b.prio - a.prio).slice(0, isPhone() ? 2 : 5);
 }
+function chromeBoxes(){
+  // the floating panels: nothing in the scene labels may sit under them
+  const out = [];
+  for (const el of document.querySelectorAll('#ui .top > *, #rail, .cam, .camhelp, .legend, .modes, #hint, #panel.open')) {
+    if (el.hidden || !el.offsetParent && el.id !== 'panel') continue; const r = el.getBoundingClientRect(); if (r.width && r.height) out.push({ x: r.left - 6, y: r.top - 6, w: r.width + 12, h: r.height + 12 });
+  }
+  return out;
+}
 function updateLabels(){
+  camera.updateMatrixWorld();  // a flight may have moved the camera since the last render
   const camDist = camera.position.distanceTo(controls.target); const flat2D = HS.v < 0.5;
-  const boxes = [];
+  const boxes = chromeBoxes();
   const hit = box => boxes.some(b => b.x < box.x + box.w && box.x < b.x + b.w && b.y < box.y + box.h && box.y < b.y + b.h);
   // callouts first: they carry the news (alerts, beacons, upcoming reports), then district names around them
   // island signs first: they name every island, so nothing may cover them
@@ -1242,21 +1714,29 @@ function updateLabels(){
     const L = d.land, e = d.lab;
     const html = `<span class="em" style="background:${d.s.hue}">${secIcon(d.s, isPhone() ? 15 : 19)}</span><span class="tx"><b>${esc(d.s.he)}</b><small>${esc(d.s.desc)}</small></span><span class="v num">${districtMetric(d)}</span>`;
     if (e._h !== html) { e.innerHTML = html; e._h = html; e.classList.remove('sm'); e._w = e.offsetWidth; e._hh = e.offsetHeight; e.classList.add('sm'); e._ws = e.offsetWidth; e._hs = e.offsetHeight; }
-    // every island keeps a sign: in front of its shore, else on the island, else behind it; full size, else symbol and name
+    // every island keeps a sign, standing in the water off the shore nearest the viewer so it does not hide the island:
+    // symbol and name from afar, the full sign once the island is big on screen; failing that, other shores, then the middle of the island
     let placed = null;
     if (!(camDist < HOME_DIST * 0.32 && selI >= 0)) {
-      outer: for (const [x, z] of [[L.x + L.w / 2, L.y + L.h + 7], [L.x + L.w / 2, L.y + L.h / 2], [L.x - 8, L.y + L.h / 2], [L.x + L.w + 8, L.y + L.h / 2], [L.x + L.w / 2, L.y - 7]]) {
-        const p = proj(x, LAND_Y, z); if (!p.ok || p.y < 84 || p.y > VIEW.h - 24 || p.x < 0 || p.x > VIEW.w) continue;
-        for (const small of [false, true]) {
-          const w = (small ? e._ws : e._w) || 160, h = (small ? e._hs : e._hh) || 40; const box = { x: p.x - w / 2 - 5, y: p.y - h / 2 - 5, w: w + 10, h: h + 10 };
-          if (!hit(box)) { placed = { p, box, small }; break outer; }
+      const big = Math.max(L.w, L.h) * pxPerUnit(d.cx, 0, d.cz) > 460 || d === focusD;
+      const spots = [[L.x + L.w / 2, L.y + L.h + 4], [L.x + L.w / 2, L.y - 4], [L.x - 4, L.y + L.h / 2], [L.x + L.w + 4, L.y + L.h / 2]]
+        .map(([x, z]) => ({ p: proj(x, LAND_Y, z), hang: true })).sort((a, b) => b.p.y - a.p.y);
+      spots.push({ p: proj(d.cx, LAND_Y, d.cz), hang: false });
+      outer: for (const { p, hang } of spots) {
+        if (!p.ok || p.x < 0 || p.x > VIEW.w) continue;
+        for (const small of big ? [false, true] : [true]) {
+          const w = (small ? e._ws : e._w) || 160, h = (small ? e._hs : e._hh) || 40, y0 = hang ? p.y + 6 : p.y - h / 2;
+          if (y0 < 76 || y0 + h > VIEW.h - 16) continue;
+          const box = { x: p.x - w / 2 - 5, y: y0 - 5, w: w + 10, h: h + 10 };
+          if (!hit(box)) { placed = { x: p.x, y: y0, box, small }; break outer; }
         }
       }
     }
-    e.style.opacity = placed ? 1 : 0; e.style.pointerEvents = placed ? 'auto' : 'none';
+    // hidden at once (a fade-out would leave a sign where its island no longer is), faded in when it appears
+    e.style.visibility = placed ? 'visible' : 'hidden'; e.style.opacity = placed ? 1 : 0; e.style.pointerEvents = placed ? 'auto' : 'none';
     if (!placed) continue;
     e.classList.toggle('sm', placed.small); e.classList.toggle('on', d === focusD);
-    e.style.transform = `translate(${placed.p.x.toFixed(1)}px,${placed.p.y.toFixed(1)}px) translate(-50%,-50%)`;
+    e.style.transform = `translate(${placed.x.toFixed(1)}px,${placed.y.toFixed(1)}px) translate(-50%,0)`;
     boxes.push(placed.box);
   }
   const items = calloutItems(); let ci = 0;
@@ -1298,8 +1778,8 @@ function updateLabels(){
     // avenue names sit on their street, the longest avenues first
     const sts = [];
     for (const d of DIST) for (const st of d.streets) {
-      const r = st.rect, lx = r.x + Math.min(r.w / 2, 14); const p = proj(lx, BASE_Y, st.zs); if (!p.ok || p.y < 80 || p.y > VIEW.h - 40) continue;
-      const size = r.w * pxPerUnit(r.x + r.w / 2, BASE_Y, st.zs); if (size < 150) continue; sts.push({ st, p, size });
+      const mx = (st.x0 + st.x1) / 2; const p = proj(mx, LAND_Y, st.zs); if (!p.ok || p.y < 80 || p.y > VIEW.h - 40) continue;
+      const size = (st.x1 - st.x0) * pxPerUnit(mx, LAND_Y, st.zs); if (size < 110) continue; sts.push({ st, p, size });
     }
     sts.sort((a, b) => b.size - a.size);
     for (const { st, p } of sts) {
@@ -1321,10 +1801,13 @@ function updateLabels(){
 /* ================= picking & hover ================= */
 const ray = new THREE.Raycaster(); const ndc = new THREE.Vector2();
 let hoverI = -1, selI = -1, focusD = null, pointer = null, needPick = false, downAt = null, dragging = false, dirty = true;
+let boundsDirty = true;
 function pick(cx, cy){
+  // three.js keeps a hit-sphere per instanced mesh from the first raycast; buildings grow and change, so refresh it
+  if (boundsDirty) { for (const m of [...tier, roofMesh, tankMesh]) m.computeBoundingSphere(); boundsDirty = false; }
   const r = renderer.domElement.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera);
-  const hits = ray.intersectObjects([...tier, roofMesh, tankMesh, lotMesh, ...plateMeshes], false);
-  for (const h of hits) { if (h.object === lotMesh) return { d: lotDist[h.instanceId] }; if (h.object.isInstancedMesh) { const id = h.object === roofMesh || h.object === tankMesh ? Math.floor(h.instanceId / 2) : h.instanceId; return { b: id }; } if (h.object.userData.d) return { d: h.object.userData.d }; }
+  const hits = ray.intersectObjects([...tier, roofMesh, tankMesh, ...plateMeshes], false);
+  for (const h of hits) { if (h.object.isInstancedMesh) { const id = h.object === roofMesh || h.object === tankMesh ? Math.floor(h.instanceId / 2) : h.instanceId; return { b: id }; } if (h.object.userData.d) return { d: h.object.userData.d }; }
   return {};
 }
 const hcard = $('#hcard'); let hcardHold = false, hideTimer = 0;
@@ -1916,20 +2399,45 @@ addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); sEl.hidden ? openSearch() : closeSearch(); return; }
   if (e.key === 'Escape') { if (!sEl.hidden) closeSearch(); else if (!$('#brief').hidden) $('#brief').hidden = true; else if (!$('#tline').hidden) $('#tline').hidden = true; else if (!$('#drawer').hidden) $('#drawer').hidden = true; else if (!$('#statusPop').hidden) $('#statusPop').hidden = true; else if (selI >= 0) closePanel(); else if (focusD) goHome(); return; }
   if (typing || !sEl.hidden) return;
-  if (e.key === '/') { e.preventDefault(); openSearch(); }
-  else if (['1', '2', '3', '4'].includes(e.key)) setMode(MODES[+e.key - 1].k);
-  else if (selI >= 0 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { const cs = C[selI].street.comps; const j = cs.indexOf(C[selI]); select(cs[(j + (e.key === 'ArrowLeft' ? 1 : -1) + cs.length) % cs.length].i); }
+  if (e.key === '/') { e.preventDefault(); openSearch(); return; }
+  if (['1', '2', '3', '4'].includes(e.key)) { setMode(MODES[+e.key - 1].k); return; }
+  if (selI >= 0 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { const cs = C[selI].street.comps; const j = cs.indexOf(C[selI]); select(cs[(j + (e.key === 'ArrowLeft' ? 1 : -1) + cs.length) % cs.length].i); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey || !$('#brief').hidden || !$('#tline').hidden) return;
+  // the map from the keyboard: arrows or WASD move, Q/E rotate, R/F tilt, +/- zoom, H home
+  // letters by physical key, so they work on a Hebrew layout too
+  const k = /^Key[A-Z]$/.test(e.code) ? e.code.slice(3).toLowerCase() : e.code === 'NumpadAdd' ? '+' : e.code === 'NumpadSubtract' ? '-' : e.key, K = {
+    ArrowUp: () => controls.panBy(0, -1), w: () => controls.panBy(0, -1), ArrowDown: () => controls.panBy(0, 1), s: () => controls.panBy(0, 1),
+    ArrowLeft: () => controls.panBy(-1, 0), a: () => controls.panBy(-1, 0), ArrowRight: () => controls.panBy(1, 0), d: () => controls.panBy(1, 0),
+    q: () => controls.rotateBy(-Math.PI / 12), e: () => controls.rotateBy(Math.PI / 12), r: () => controls.tiltBy(0.08), f: () => controls.tiltBy(-0.08),
+    '+': () => controls.zoomBy(0.8), '=': () => controls.zoomBy(0.8), '-': () => controls.zoomBy(1.25), _: () => controls.zoomBy(1.25), h: () => goHome(),
+  }[k];
+  if (K) { e.preventDefault(); fly = null; K(); hideHint(); }
 });
 
 /* camera buttons */
-function zoomBy(f){ const s = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)); flyTo(controls.target.clone(), clamp(s.radius * f, controls.minDistance, controls.maxDistance), { dur: 420 }); }
-$('#zIn').onclick = () => zoomBy(0.62); $('#zOut').onclick = () => zoomBy(1.6); $('#home').onclick = goHome;
-$('#rotate').onclick = () => { const s = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)); flyTo(controls.target.clone(), s.radius, { az: s.theta + Math.PI / 2, dur: 900 }); };
+const HOME_AZ = -Math.PI / 4;
+const camAct = fn => () => { fly = null; fn(); hideHint(); };
+$('#zIn').onclick = camAct(() => controls.zoomBy(0.6)); $('#zOut').onclick = camAct(() => controls.zoomBy(1.65)); $('#home').onclick = () => { hideHint(); goHome(); };
+$('#rotate').onclick = camAct(() => controls.rotateBy(Math.PI / 4)); $('#rotL').onclick = camAct(() => controls.rotateBy(-Math.PI / 4));
+$('#compass').onclick = camAct(() => controls.faceNorth(HS.to < 0.5 ? 0 : HOME_AZ));
 $('#flat').onclick = () => {
-  const on = HS.to > 0.5; HS.from = HS.v; HS.to = on ? 0.05 : 1; HS.t0 = performance.now(); $('#flat').setAttribute('aria-pressed', on);
+  fly = null; const on = HS.to > 0.5; HS.from = HS.v; HS.to = on ? 0.05 : 1; HS.t0 = performance.now(); $('#flat').setAttribute('aria-pressed', on);
   const s = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
-  flyTo(controls.target.clone(), s.radius, on ? { polar: 0.02, az: 0, dur: 900 } : { polar: 0.9, az: -Math.PI / 4, dur: 900 }); controls.enableRotate = !on;
+  controls.enableRotate = !on; flyTo(controls.target.clone(), s.radius, on ? { polar: 0.02, az: 0, dur: 900 } : { polar: 0.9, az: HOME_AZ, dur: 900 });
 };
+$('#helpBtn').onclick = () => { const h = $('#camHelp'); h.hidden = !h.hidden; $('#helpBtn').setAttribute('aria-expanded', !h.hidden); hideHint(); };
+// the compass needle points north on screen; in its usual position it is turned to the default view
+let compassAz = null;
+function paintCompass(){ const th = controls.cur.theta; if (compassAz !== null && Math.abs(th - compassAz) < 1e-4) return; compassAz = th; $('#needle').setAttribute('transform', `rotate(${(th * 180 / Math.PI).toFixed(1)} 11 11)`); }
+// first visit: one line on how to move around, gone at the first touch of the map
+function showHint(){
+  if (store.get(LS_PREFIX + 'hinted', false) || reduceMotion) return;
+  const h = $('#hint'); const ph = isPhone() || matchMedia('(pointer: coarse)').matches;
+  h.innerHTML = ph ? '<span><b>אצבע אחת</b> הזזה</span><i></i><span><b>צביטה</b> זום</span><i></i><span><b>שתי אצבעות</b> סיבוב והטיה</span>'
+    : '<span><b>גרירה</b> הזזה</span><i></i><span><b>גלגלת</b> זום</span><i></i><span><b>קליק ימני</b> או <b>Shift</b> + גרירה: סיבוב והטיה</span>';
+  h.hidden = false; showHint.t = setTimeout(hideHint, 9000);
+}
+function hideHint(){ const h = $('#hint'); if (h.hidden) return; clearTimeout(showHint.t); store.set(LS_PREFIX + 'hinted', true); h.style.opacity = 0; setTimeout(() => { h.hidden = true; h.style.opacity = ''; }, 400); }
 $('#themeBtn').onclick = () => { const next = dark ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', next); store.set(LS_PREFIX + 'theme', next); readTheme(); renderRail(); };
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!store.get(LS_PREFIX + 'theme', null)) { readTheme(); renderRail(); } });
 
@@ -1951,11 +2459,18 @@ async function refreshCity(){
 /* ================= picking events ================= */
 function wirePointer(){
   const cv = renderer.domElement;
+  // a click selects; a drag, a second finger or a long press does not
+  let downs = 0, multi = false;
   cv.addEventListener('pointermove', e => { pointer = { x: e.clientX, y: e.clientY }; needPick = true; if (downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) dragging = true; });
-  cv.addEventListener('pointerdown', e => { downAt = { x: e.clientX, y: e.clientY }; dragging = false; fly = null; $('#drawer').hidden = true; $('#statusPop').hidden = true; });
-  cv.addEventListener('pointerup', e => { if (downAt && !dragging && e.button === 0) { const h = pick(e.clientX, e.clientY); if (h.b !== undefined) select(h.b); else if (h.d) focusDistrict(h.d); } downAt = null; dragging = false; });
-  cv.addEventListener('pointerleave', () => { pointer = null; setHover(-1); });
+  cv.addEventListener('pointerdown', e => { downs++; if (downs > 1) multi = true; else { downAt = { x: e.clientX, y: e.clientY, t: performance.now() }; dragging = false; multi = false; } fly = null; hideHint(); $('#drawer').hidden = true; $('#statusPop').hidden = true; $('#camHelp').hidden = true; $('#helpBtn').setAttribute('aria-expanded', false); });
+  const lift = e => { downs = Math.max(0, downs - 1); if (e.type === 'pointerup' && downAt && !dragging && !multi && downs === 0 && e.button === 0 && performance.now() - downAt.t < 600) { const h = pick(e.clientX, e.clientY); if (h.b !== undefined) select(h.b); else if (h.d) focusDistrict(h.d); } if (!downs) { downAt = null; dragging = false; } };
+  cv.addEventListener('pointerup', lift); cv.addEventListener('pointercancel', lift);
+  cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { pointer = null; setHover(-1); } });
   controls.addEventListener('change', () => { dirty = true; });
+  controls.addEventListener('start', () => { fly = null; hideHint(); });
+  // pinching the page anywhere would zoom the whole browser page instead of the map
+  addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+  for (const t of ['gesturestart', 'gesturechange']) addEventListener(t, e => e.preventDefault(), { passive: false });
 }
 
 /* ================= loop & boot ================= */
@@ -1966,10 +2481,10 @@ function frame(now){
   stepAnim(now); stepFly(now);
   if (HS.t0 !== undefined) { const k = ease(clamp((now - HS.t0) / (reduceMotion ? 1 : 850), 0, 1)); HS.v = lerp(HS.from, HS.to, k); writeAll(); if (k >= 1) HS.t0 = undefined; }
   const vk = VO.to - VO.v; if (Math.abs(vk) > 0.001) { VO.v += vk * (reduceMotion ? 1 : 1 - Math.exp(-dt * 9)); applyView(); dirty = true; } else if (VO.v !== VO.to) { VO.v = VO.to; applyView(); }
-  if (!fly) controls.update();
-  const tg = controls.target; const cx = clamp(tg.x, -WORLD.w / 2, WORLD.w / 2), cz = clamp(tg.z, -WORLD.d / 2, WORLD.d / 2);
-  if (cx !== tg.x || cz !== tg.z) { camera.position.x += cx - tg.x; camera.position.z += cz - tg.z; tg.x = cx; tg.z = cz; }
+  if (!fly) controls.update(dt);
+  paintCompass();
   const et = clock.getElapsedTime();
+  if (!reduceMotion) for (const a of ANIM) a.f(et);
   BEAM.a += (BEAM.target - BEAM.a) * 0.08; beamMat.uniforms.uAlpha.value = BEAM.a * (dark ? 1.1 : 0.85); haloMat.uniforms.uAlpha.value = BEAM.a * (dark ? 0.32 : 0.22); beamMat.uniforms.uTime.value = haloMat.uniforms.uTime.value = et; beams.visible = halo.visible = BEAM.a > 0.01;
   routeMat.uniforms.uTime.value = et;
   if (frameMesh && frameMesh.visible) frameMat.opacity = 0.55 + 0.35 * Math.sin(now / 380);
@@ -1985,17 +2500,18 @@ async function boot(){
   catch (e) { $('#app').insertAdjacentHTML('beforeend', `<div id="fail"><div><b>השרת לא זמין</b><br>${esc(e.message)}<br><br>הפעל אותו עם: metro run</div></div>`); return; }
   buildData(city); fitSun();
   cur = C.map(() => ({ h: 0, col: new THREE.Color() })); from = C.map(() => ({ h: 0, col: new THREE.Color() })); tgt = C.map(() => ({ h: 1, col: new THREE.Color() }));
-  buildScene(); buildLabels(); wirePointer();
+  buildScene(); for (const a of ANIM) a.f(0); buildLabels(); wirePointer();
   buildModes(); renderLegend(); renderStrip(); renderRail(); loadStatus();
   resize();
   { const H = HOME(); if (reduceMotion) setCam(H.t, H.dist, H.polar, H.az); else { setCam(H.t, H.dist * 1.3, 0.55, H.az + 0.5); flyTo(H.t, H.dist, { polar: H.polar, az: H.az, dur: 2100 }); } }
   readTheme(); introT0 = performance.now(); if (!reduceMotion) for (const c of C) cur[c.i].h = 0; writeAll();
   requestAnimationFrame(frame);
   requestAnimationFrame(() => { const b = $('#boot'); b.style.opacity = 0; setTimeout(() => b.remove(), 700); });
+  setTimeout(showHint, 2600);
   if (!DEMO) { setInterval(pollQuotes, 20000); setInterval(refreshCity, 120000); setInterval(loadStatus, 60000); }
   setInterval(() => { if (!DEMO) return; renderStrip(); }, 30000);
   const hashT = decodeURIComponent(location.hash.slice(1)).toUpperCase(); if (hashT && byT[hashT]) setTimeout(() => select(byT[hashT].i), 2300);
-  window.__metro = { get C(){ return C; }, setHScale, where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); } };
+  window.__metro = { get C(){ return C; }, setHScale, controls, pick: (x, y) => { const h = pick(x, y); return { b: h.b, d: h.d?.s.en }; }, stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, trees: treeMesh.count, zebras: zebraMesh.count, dashes: laneMesh.count, cars: CARS.length }), where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); } };
 }
 boot();
 </script>
