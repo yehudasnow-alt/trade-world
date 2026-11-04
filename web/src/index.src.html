@@ -73,7 +73,7 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .tk{z-index:1; direction:ltr; font-family:var(--font-data); font-size:11.5px; font-weight:600; color:var(--ink); padding:1px 6px; border-radius:6px; background:var(--glass-strong); border:1px solid var(--line); line-height:16px}
 .tk i{font-style:normal; font-weight:500; margin-left:5px; color:var(--ink-2)}
 .tk i.up{color:var(--up)} .tk i.down{color:var(--down)}
-.st{font-size:11px; font-weight:500; color:var(--ink-3); letter-spacing:.02em; direction:ltr}
+.st{z-index:1; font-size:10.5px; font-weight:600; color:var(--ink-2); letter-spacing:.02em; direction:ltr; padding:1px 7px; border-radius:6px; background:color-mix(in srgb, var(--glass-strong) 82%, transparent); border:1px solid var(--line)}
 .pin{z-index:2; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-data); font-weight:700; font-size:11.5px; color:var(--accent-ink); background:var(--accent); border:2px solid var(--glass-strong); box-shadow:0 4px 10px -3px rgba(0,0,0,.35)}
 .pin.hold{background:var(--beacon); color:#2A1C00}
 /* anchored callout cards, in the style of the references */
@@ -178,12 +178,15 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .mode[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink)}
 .mode[aria-pressed="true"] small{color:color-mix(in srgb, var(--accent-ink) 72%, transparent)}
 .legend{grid-column:3; justify-self:end; border-radius:16px; padding:12px 14px; width:288px; font-size:12.5px; color:var(--ink-2)}
-#ui.panel-open .legend{width:230px} #ui.panel-open .legend .lrow,#ui.panel-open .legend label{display:none}
+#ui.panel-open .legend{width:230px} #ui.panel-open .legend .lrow,#ui.panel-open .legend label,#ui.panel-open .legend .hsc{display:none}
 .legend h3{margin:0 0 6px; font-size:13px; font-weight:600; color:var(--ink)}
 .legend .lrow{display:flex; gap:8px; align-items:center; margin:3px 0}
 .legend .ico{flex:none; width:16px; text-align:center; color:var(--ink-3)}
 .ramp{height:8px; border-radius:4px; margin:8px 0 4px}
 .rampl{display:flex; justify-content:space-between; font-size:11px; color:var(--ink-3); direction:ltr}
+.hsc{display:inline-flex; gap:2px; padding:2px; border-radius:9px; background:var(--line); margin:5px 0 3px}
+.hsc button{font-size:11.5px; padding:2px 10px; border-radius:7px; color:var(--ink-2)}
+.hsc button[aria-pressed="true"]{background:var(--glass-strong); color:var(--ink); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .legend label{display:flex; align-items:center; gap:7px; margin-top:8px; padding-top:8px; border-top:1px solid var(--line); font-size:12px; cursor:pointer}
 .legend input{accent-color:var(--accent); margin:0}
 
@@ -386,7 +389,7 @@ ul.clean li{margin:2px 0}
   .modes{overflow:visible} .mode{min-width:0; padding:8px 4px; flex:1 1 0; align-items:center; font-size:13px} .mode b{font-size:13px; white-space:nowrap}
   .mode small{display:none}
   .legend{order:1; align-self:flex-start; width:auto; max-width:100%; padding:8px 12px}
-  .legend .lrow,.legend label,.legend h3{display:none}
+  .legend .lrow,.legend label,.legend h3,.legend .hsc{display:none}
   .legend .ramp{width:200px; margin:2px 0}
   #panel{top:auto; left:0; right:0; bottom:0; width:auto; height:80%; border-radius:24px 24px 0 0; transform:translateY(105%); padding-bottom:env(safe-area-inset-bottom, 0px)}
   #panel.open{transform:none}
@@ -587,47 +590,93 @@ const THESIS = { ok: ['התזה תקפה', 'up'], watch: ['במעקב', 'wr'], b
 const GUIDE = { raised: ['הועלתה', 'up'], maintained: ['נשמרה', ''], lowered: ['הורדה', 'down'], initiated: ['ניתנה לראשונה', 'ac'], withdrawn: ['נמשכה', 'down'], none: ['לא ניתנה', ''], unknown: ['לא ברור', ''] };
 
 /* ================= layout ================= */
-function squarify(items, rect){
-  const out = []; const total = items.reduce((a, b) => a + b.v, 0) || 1;
-  const k = rect.w * rect.h / total;
-  const nodes = items.map(it => ({ it, a: Math.max(1e-6, it.v * k) })).sort((a, b) => b.a - a.a);
-  let { x, y, w, h } = rect; let row = [];
-  const worst = (r, side) => { let s = 0, mx = 0, mn = Infinity; for (const n of r) { s += n.a; mx = Math.max(mx, n.a); mn = Math.min(mn, n.a); } const s2 = s * s, q = side * side; return Math.max(q * mx / s2, s2 / (q * mn)); };
-  const flush = () => { const s = row.reduce((a, b) => a + b.a, 0); if (w >= h) { const rw = s / h; let cy = y; for (const n of row) { const rh = n.a / rw; out.push({ it: n.it, x, y: cy, w: rw, h: rh }); cy += rh; } x += rw; w -= rw; } else { const rh = s / w; let cx = x; for (const n of row) { const rw = n.a / rh; out.push({ it: n.it, x: cx, y, w: rw, h: rh }); cx += rw; } y += rh; h -= rh; } row = []; };
-  let i = 0;
-  while (i < nodes.length) { const side = Math.min(w, h); const n = nodes[i]; if (!row.length || worst([...row, n], side) <= worst(row, side)) { row.push(n); i++; } else flush(); }
-  if (row.length) flush();
-  return out;
-}
 const inset = (r, p) => ({ x: r.x + p, y: r.y + p, w: Math.max(0.2, r.w - 2 * p), h: Math.max(0.2, r.h - 2 * p) });
+/* The city is a grid of districts (sectors) with boulevards between them. Inside a district every sub-industry is an
+   avenue: a street with buildings on both sides, the biggest companies at its head. Building height = market cap. */
 const WORLD = { w: 268, d: 178 };
-const ROAD = 2.6, WALK = 1.3, ALLEY = 0.55, PLATE_H = 0.42, LOT_H = 0.12, BASE_Y = PLATE_H + LOT_H;
+const ROAD = 4.2, WALK = 2.4, PLATE_H = 0.42, LOT_H = 0.12, BASE_Y = PLATE_H + LOT_H;
+const GAP = 2.6, STREET = 3.6, EDGE = 0.8, CROSS = 6, BAND_GAP = 2.6, B_MIN = 2.6, B_MAX = 9, H_MAX = 110;
+let H_SCALE = store.get(LS_PREFIX + 'hscale', 'real') === 'compressed' ? 'compressed' : 'real';
+let CAP_MAX = 1, SPAN = 300, HOME_DIST = 800;
+const capFrac = c => clamp((c.capv || 0) / CAP_MAX, 0, 1);
+function capHeight(c){ const k = capFrac(c); return H_SCALE === 'real' ? Math.max(0.6, k * H_MAX) : 0.9 + 46 * Math.sqrt(k); }
+function shelf(items, width, gapX, gapY){
+  const rows = []; let row = null;
+  for (const it of items) {
+    if (!row || row.used + (row.items.length ? gapX : 0) + it.w > width + 1e-6) { row = { items: [], used: 0, h: 0, y: row ? row.y + row.h + gapY : 0 }; rows.push(row); }
+    const x = row.used + (row.items.length ? gapX : 0); row.items.push({ it, x }); row.used = x + it.w; row.h = Math.max(row.h, it.h);
+  }
+  return { rows, h: rows.length ? rows.at(-1).y + rows.at(-1).h : 0, w: Math.max(0, ...rows.map(r => r.used)) };
+}
+function avenueBlocks(sub, maxLen){
+  // buildings alternate sides of the street, so the two biggest face each other at the head of the avenue
+  const blocks = []; let cur = null;
+  const open = () => { cur = { sub, name: sub.name, top: [], bot: [], lt: GAP, lb: GAP }; blocks.push(cur); };
+  open();
+  for (const c of sub.comps) {
+    const len = Math.min(cur.lt, cur.lb);
+    if (len + c.b + GAP > maxLen && cur.top.length + cur.bot.length > 0) open();
+    if (cur.lt <= cur.lb) { cur.top.push(c); cur.lt += c.b + GAP; } else { cur.bot.push(c); cur.lb += c.b + GAP; }
+  }
+  for (const b of blocks) { b.dt = Math.max(B_MIN, ...b.top.map(c => c.b)); b.db = Math.max(B_MIN, ...b.bot.map(c => c.b)); b.w = Math.max(b.lt, b.lb, 16); b.h = EDGE * 4 + b.dt + STREET + b.db; }
+  return blocks;
+}
+function layoutDistrict(d){
+  const subs = {}; for (const c of d.comps) (subs[c.u] ||= []).push(c);
+  d.subs = Object.entries(subs).map(([name, comps]) => ({ name, d, comps: comps.sort((a, b) => b.capv - a.capv), cap: comps.reduce((s, c) => s + c.capv, 0) })).sort((a, b) => b.cap - a.cap);
+  const area = d.comps.reduce((s, c) => s + (c.b + GAP) * (c.b + STREET + EDGE * 2), 0) / 2;
+  let best = null;
+  for (const f of [0.85, 1, 1.2, 1.45, 1.75, 2.1, 2.5]) {
+    const IW = Math.max(40, Math.sqrt(area * 1.4) * f);
+    const blocks = d.subs.flatMap(sub => avenueBlocks(sub, IW));
+    const pk = shelf(blocks, IW, CROSS, BAND_GAP);
+    const used = blocks.reduce((s, b) => s + b.w * b.h, 0);
+    const cost = (pk.w * pk.h - used) + Math.abs(Math.log(pk.w / Math.max(1, pk.h) / 1.3)) * used * 0.9;
+    if (!best || cost < best.cost) best = { cost, pk };
+  }
+  d.pack = best.pk; d.innerW = best.pk.w; d.innerH = best.pk.h;
+}
 
 let C = [], DIST = [], byT = {}, CITY = null, ROADS = null;
 function buildData(city){
   CITY = city;
   C = city.companies.map((r, i) => ({ ...r, i, si: SEC_BY_EN[r.s] ?? 5 }));
-  const caps = C.map(c => c.cap).filter(isNum).sort((a, b) => a - b);
+  const caps = C.map(c => c.cap).filter(v => isNum(v) && v > 0).sort((a, b) => a - b);
   const med = caps.length ? caps[Math.floor(caps.length / 2)] : 40;
-  for (const c of C) c.w = Math.sqrt(isNum(c.cap) && c.cap > 0 ? c.cap : med);
+  CAP_MAX = caps.length ? caps.at(-1) : 1;
+  for (const c of C) { c.capv = isNum(c.cap) && c.cap > 0 ? c.cap : med; c.b = clamp(B_MIN + (B_MAX - B_MIN) * Math.sqrt(capFrac(c)), B_MIN, B_MAX); c.hv = hash(c.t); }
   byT = {}; for (const c of C) { byT[c.t] = c; for (const a of c.alts || []) byT[a] = c; }
   DIST = SECTORS.map((s, si) => ({ si, s, streets: [], comps: C.filter(c => c.si === si) }));
-  const srs = squarify(DIST.filter(d => d.comps.length).map(d => ({ v: d.comps.reduce((a, c) => a + c.w, 0), d })), { x: -WORLD.w / 2, y: -WORLD.d / 2, w: WORLD.w, h: WORLD.d });
-  for (const sr of srs) {
-    const d = sr.it.d; d.outer = { x: sr.x, y: sr.y, w: sr.w, h: sr.h }; d.rect = inset(sr, ROAD);
-    const subs = {}; for (const c of d.comps) (subs[c.u] ||= []).push(c);
-    for (const st of squarify(Object.entries(subs).map(([name, comps]) => ({ v: comps.reduce((a, c) => a + c.w, 0), name, comps })), inset(d.rect, WALK))) {
-      const street = { name: st.it.name, comps: st.it.comps.sort((a, b) => (b.cap || 0) - (a.cap || 0)), rect: inset(st, ALLEY), d };
-      d.streets.push(street);
-      for (const cell of squarify(street.comps.map(c => ({ v: c.w, c })), inset(street.rect, 0.3))) {
-        const m = clamp(Math.min(cell.w, cell.h) * 0.12, 0.16, 0.8); const r = inset(cell, m); const c = cell.it.c;
-        c.x = r.x + r.w / 2; c.z = r.y + r.h / 2; c.fw = r.w; c.fd = r.h; c.street = street; c.dist = d; c.hv = hash(c.t);
-      }
+  const live = DIST.filter(d => d.comps.length);
+  for (const d of live) { d.capSum = d.comps.reduce((a, c) => a + c.capv, 0); layoutDistrict(d); }
+  // districts packed in rows, then stretched so the rows tile the city and the boulevards line up
+  const outers = live.map(d => ({ d, w: d.innerW + 2 * (WALK + ROAD), h: d.innerH + 2 * (WALK + ROAD) })).sort((a, b) => b.d.capSum - a.d.capSum);
+  const total = outers.reduce((s, o) => s + o.w * o.h, 0);
+  let best = null;
+  for (const f of [0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.4]) {
+    const TW = Math.max(...outers.map(o => o.w), Math.sqrt(total * 1.6) * f);
+    const pk = shelf(outers, TW, 0, 0);
+    const cost = (TW * pk.h - total) + Math.abs(Math.log(TW / pk.h / 1.6)) * total * 0.7;
+    if (!best || cost < best.cost) best = { cost, pk, TW };
+  }
+  WORLD.w = best.TW; WORLD.d = best.pk.h; SPAN = Math.max(WORLD.w, WORLD.d);
+  for (const row of best.pk.rows) {
+    const sumW = row.items.reduce((s, r) => s + r.it.w, 0); const extra = WORLD.w - sumW; let x = -WORLD.w / 2;
+    for (const { it } of row.items) { const w = it.w + extra * it.w / sumW; it.d.outer = { x, y: -WORLD.d / 2 + row.y, w, h: row.h }; it.d.rect = inset(it.d.outer, ROAD); x += w; }
+  }
+  for (const d of live) {
+    const ox = d.rect.x + (d.rect.w - d.innerW) / 2, oz = d.rect.y + (d.rect.h - d.innerH) / 2;
+    for (const row of d.pack.rows) for (const { it: b, x } of row.items) {
+      const bx = ox + x, bz = oz + row.y, zs = bz + EDGE * 2 + b.dt + STREET / 2;
+      const block = { name: b.name, sub: b.sub, d, rect: { x: bx, y: bz, w: b.w, h: b.h }, zs, top: b.top, bot: b.bot };
+      d.streets.push(block);
+      let xt = bx + GAP, xb = bx + GAP;
+      for (const c of b.top) { c.fw = c.fd = c.b; c.x = xt + c.b / 2; c.z = zs - STREET / 2 - EDGE - c.b / 2; xt += c.b + GAP; c.street = b.sub; c.dist = d; c.block = block; }
+      for (const c of b.bot) { c.fw = c.fd = c.b; c.x = xb + c.b / 2; c.z = zs + STREET / 2 + EDGE + c.b / 2; xb += c.b + GAP; c.street = b.sub; c.dist = d; c.block = block; }
     }
     d.cx = d.rect.x + d.rect.w / 2; d.cz = d.rect.y + d.rect.h / 2;
-    d.capSum = d.comps.reduce((a, c) => a + (c.cap || 0), 0);
   }
-  ROADS = buildRoads(srs.map(s => ({ x: s.x, y: s.y, w: s.w, h: s.h })));
+  ROADS = buildRoads(live.map(d => d.outer));
 }
 function buildRoads(rects){
   const key = (x, z) => x.toFixed(1) + ',' + z.toFixed(1);
@@ -668,21 +717,13 @@ function roadPath(ka, kb){
 
 /* ================= modes ================= */
 const MODES = [
-  { k: 'market', he: 'שוק היום', sub: 'נפח וחריגות' },
+  { k: 'market', he: 'שוק היום', sub: 'מי זז חריג' },
   { k: 'hunt', he: 'ציד הזדמנויות', sub: 'איכות במחיר מוזל' },
   { k: 'earnings', he: 'עונת דוחות', sub: 'מי דיווח ומי בדרך' },
   { k: 'portfolio', he: 'התיק שלי', sub: 'פוזיציות ותזות' },
 ];
 let mode = store.get(LS_PREFIX + 'mode', 'market'); if (!MODES.some(m => m.k === mode)) mode = 'market';
-function heightFor(c, m){
-  switch (m) {
-    case 'market': return 0.9 + Math.pow(clamp((c.rvol ?? 1) / 4, 0, 1), 0.85) * 15.5;
-    case 'hunt': return 0.9 + Math.pow(clamp((c.sc?.q ?? 12) / 25, 0, 1), 1.7) * 15.5;
-    case 'earnings': return c.rep?.st === 'done' ? 1.4 + Math.pow(Math.abs(c.rep.react ?? 0) / 18, 0.75) * 13.5 : c.rep?.st === 'soon' ? 1.1 : 0.45;
-    case 'portfolio': return c.hold ? 2.4 + (c.hold.w || 0) * 0.88 : 0.32;
-  }
-  return 1;
-}
+function heightFor(c){ return capHeight(c); } // every mode: height is market cap, colour carries the mode
 function signalFor(c, m){
   switch (m) {
     case 'market': { const s = c.sig ?? 0; const a = Math.max(0, Math.abs(s) - 0.8) / 1.6; return { div: Math.sign(s) * clamp(a, 0, 1) }; }
@@ -706,11 +747,14 @@ renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.N
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(22, 1, 2, 6000);
 const controls = new MapControls(camera, renderer.domElement);
-Object.assign(controls, { enableDamping: true, dampingFactor: 0.085, screenSpacePanning: false, maxPolarAngle: 1.2, minDistance: 40, maxDistance: 1500, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.6 });
+Object.assign(controls, { enableDamping: true, dampingFactor: 0.085, screenSpacePanning: false, maxPolarAngle: 1.2, minDistance: 40, maxDistance: 3400, zoomToCursor: true, zoomSpeed: 1.1, rotateSpeed: 0.6 });
 const hemi = new THREE.HemisphereLight(0xffffff, 0xd0d4dc, 1.3); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, 2.0);
-sun.position.set(-150, 230, 90); sun.castShadow = true; sun.shadow.mapSize.set(isPhone() ? 1024 : 2048, isPhone() ? 1024 : 2048);
-Object.assign(sun.shadow.camera, { left: -180, right: 180, top: 180, bottom: -180, near: 30, far: 700 });
+sun.position.set(-150, 230, 90); sun.castShadow = true; sun.shadow.mapSize.set(isPhone() ? 2048 : 4096, isPhone() ? 2048 : 4096);
+function fitSun(){
+  const r = SPAN * 0.64; sun.position.set(-0.42 * SPAN, 0.78 * SPAN, 0.26 * SPAN); sun.target.position.set(0, 0, 0);
+  Object.assign(sun.shadow.camera, { left: -r, right: r, top: r, bottom: -r, near: 10, far: SPAN * 2.4 }); sun.shadow.camera.updateProjectionMatrix();
+}
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.4; sun.shadow.radius = 5;
 scene.add(sun, sun.target);
 const fill = new THREE.DirectionalLight(0xffffff, 0.4); fill.position.set(160, 110, -140); scene.add(fill);
@@ -737,7 +781,7 @@ const unitPlane = new THREE.PlaneGeometry(1, 1); unitPlane.rotateX(-Math.PI / 2)
 const unitCyl = new THREE.CylinderGeometry(1, 1, 1, 20); unitCyl.translate(0, 0.5, 0);
 const dummy = new THREE.Object3D();
 // shared by every building material, so a theme change reaches shaders compiled before or after it
-const SU = { uFloor: { value: 0.62 }, uBand: { value: 0.93 }, uBase: { value: BASE_Y }, uAO: { value: 0.8 }, uWin: { value: 0 }, uGlass: { value: 0.06 }, uWinCol: { value: new THREE.Color(1, 0.86, 0.6) } };
+const SU = { uFloor: { value: 0.9 }, uBand: { value: 0.93 }, uBase: { value: BASE_Y }, uAO: { value: 0.8 }, uWin: { value: 0 }, uGlass: { value: 0.06 }, uWinCol: { value: new THREE.Color(1, 0.86, 0.6) } };
 function buildingMaterial(){
   const m = new THREE.MeshStandardMaterial({ roughness: 0.86, metalness: 0 });
   m.onBeforeCompile = sh => {
@@ -773,7 +817,7 @@ function buildingMaterial(){
   return m;
 }
 
-let tier = [], roofMesh, tankMesh, chimMesh, treeMesh, trunkMesh, laneMesh, zebraMesh, carBody, carCab, beams, halo, beamMat, haloMat;
+let lotMesh, lotDist = [], tier = [], roofMesh, tankMesh, chimMesh, treeMesh, trunkMesh, laneMesh, zebraMesh, carBody, carCab, beams, halo, beamMat, haloMat;
 let hoverEdges, selEdges, frameMesh = null, routeGroup = new THREE.Group();
 const frameMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85, depthWrite: false });
 const routeMat = new THREE.ShaderMaterial({ uniforms: { uColor: { value: new THREE.Color() }, uTime: { value: 0 } }, transparent: true, depthWrite: false, side: THREE.DoubleSide,
@@ -786,46 +830,55 @@ let NB = 0;
 function buildScene(){
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), MAT.ground); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.06; ground.receiveShadow = true; scene.add(ground);
   const base = new THREE.Mesh(slab(WORLD.w + ROAD * 2 + 0.2, WORLD.d + ROAD * 2 + 0.2, 0.06, 7), MAT.asphalt); base.position.y = -0.06; base.receiveShadow = true; scene.add(base);
+  const lots = [], streets = [], dashes = [], inner = [], zebras = [], trees = [];
   for (const d of DIST) {
     if (!d.rect) continue;
     d.mat = new THREE.MeshStandardMaterial({ roughness: 0.92 });
-    d.mesh = new THREE.Mesh(slab(d.rect.w, d.rect.h, PLATE_H, 1.8), d.mat); d.mesh.position.set(d.cx, 0, d.cz);
+    d.mesh = new THREE.Mesh(slab(d.rect.w, d.rect.h, PLATE_H, 2.4), d.mat); d.mesh.position.set(d.cx, 0, d.cz);
     d.mesh.receiveShadow = true; d.mesh.castShadow = true; d.mesh.userData.d = d; scene.add(d.mesh); plateMeshes.push(d.mesh);
+    const rng = mulberry32(hash(d.s.en));
     for (const st of d.streets) {
-      st.mesh = new THREE.Mesh(slab(st.rect.w, st.rect.h, LOT_H, 0.6), MAT.lot);
-      st.mesh.position.set(st.rect.x + st.rect.w / 2, PLATE_H, st.rect.y + st.rect.h / 2); st.mesh.receiveShadow = true; st.mesh.userData.d = d; scene.add(st.mesh); plateMeshes.push(st.mesh);
+      const r = st.rect, s0 = st.zs - STREET / 2, s1 = st.zs + STREET / 2;
+      lots.push([r.x + r.w / 2, (r.y + s0) / 2, r.w, s0 - r.y, d], [r.x + r.w / 2, (s1 + r.y + r.h) / 2, r.w, r.y + r.h - s1, d]);
+      streets.push([r.x + r.w / 2, st.zs, r.w, STREET]);
+      for (let x = r.x + 2.2; x < r.x + r.w - 2.2; x += 3.4) inner.push([x, st.zs, 1, 0, 1.6, 0.16]);
+      // street trees in the gaps between buildings, on both sides
+      for (const [row, z] of [[st.top, s0 - 0.5], [st.bot, s1 + 0.5]]) for (let k = 0; k < row.length - 1; k++) {
+        const a = row[k], b = row.at(k + 1); if (rng() < 0.15) continue; trees.push([(a.x + a.b / 2 + b.x - b.b / 2) / 2, z, 0.5 + rng() * 0.18, BASE_Y]);
+      }
+    }
+    const r = d.rect;
+    const sides = [[r.x, r.y, 1, 0, r.w], [r.x + r.w, r.y, 0, 1, r.h], [r.x + r.w, r.y + r.h, -1, 0, r.w], [r.x, r.y + r.h, 0, -1, r.h]];
+    for (const [x0, z0, dx, dz, len] of sides) {
+      const nx = -dz, nz = dx;
+      for (let t = 3; t < len - 3; t += 3.6) { if (rng() < 0.25) continue; trees.push([x0 + dx * t + nx * 0.9, z0 + dz * t + nz * 0.9, 0.48 + rng() * 0.18, PLATE_H]); }
     }
   }
-  // lane dashes + zebra crossings along the road graph
-  const dashes = [], zebras = [];
+  lotMesh = new THREE.InstancedMesh(unitBox, MAT.lot, lots.length); lotDist = lots.map(l => l[4]);
+  lots.forEach(([x, z, w, dd], i) => setInst(lotMesh, i, x, PLATE_H, z, w, LOT_H, Math.max(0.1, dd)));
+  lotMesh.receiveShadow = true; scene.add(lotMesh);
+  const streetMesh = new THREE.InstancedMesh(unitPlane, MAT.asphalt, streets.length);
+  streets.forEach(([x, z, w, dd], i) => setInst(streetMesh, i, x, PLATE_H + 0.01, z, w, 1, dd));
+  streetMesh.receiveShadow = true; scene.add(streetMesh);
+  // lane dashes + zebra crossings along the boulevards
   for (const e of ROADS.edges) {
     const dx = (e.b[0] - e.a[0]) / e.len, dz = (e.b[1] - e.a[1]) / e.len;
-    for (let s = 5; s < e.len - 5; s += 3.6) dashes.push([e.a[0] + dx * s, e.a[1] + dz * s, dx, dz, 1.8, 0.2]);
+    for (let t = ROAD + 2.4; t < e.len - ROAD - 2.4; t += 3.6) dashes.push([e.a[0] + dx * t, e.a[1] + dz * t, dx, dz, 1.8, 0.22]);
   }
   for (const n of ROADS.nodes.values()) {
     if (n.edges.length < 3) continue;
     for (const ei of n.edges) {
-      const e = ROADS.edges[ei]; if (e.len < 14) continue;
+      const e = ROADS.edges[ei]; if (e.len < 20) continue;
       const far = e.ka === n.k ? e.b : e.a; const dx = (far[0] - n.p[0]) / e.len, dz = (far[1] - n.p[1]) / e.len;
-      const cx = n.p[0] + dx * 4.4, cz = n.p[1] + dz * 4.4; const px = -dz, pz = dx;
-      for (let o = -1.95; o <= 1.96; o += 0.65) zebras.push([cx + px * o, cz + pz * o, dx, dz, 1.5, 0.34]);
+      const cx = n.p[0] + dx * (ROAD + 2), cz = n.p[1] + dz * (ROAD + 2); const px = -dz, pz = dx;
+      for (let o = -(ROAD - 0.8); o <= ROAD - 0.79; o += 0.7) zebras.push([cx + px * o, cz + pz * o, dx, dz, 1.6, 0.36]);
     }
   }
   const mkFlat = (list, y) => { const m = new THREE.InstancedMesh(unitPlane, MAT.lane, list.length); list.forEach(([x, z, dx, dz, len, wid], i) => { dummy.position.set(x, y, z); dummy.rotation.set(0, Math.atan2(dx, dz), 0); dummy.scale.set(wid, 1, len); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); }); m.receiveShadow = true; scene.add(m); return m; };
-  laneMesh = mkFlat(dashes, 0.012); zebraMesh = mkFlat(zebras, 0.014); dummy.rotation.set(0, 0, 0);
-  // trees on the sidewalk ring of every district
-  const trees = [];
-  for (const d of DIST) {
-    if (!d.rect) continue; const r = d.rect; const rng = mulberry32(hash(d.s.en));
-    const sides = [[r.x, r.y, 1, 0, r.w], [r.x + r.w, r.y, 0, 1, r.h], [r.x + r.w, r.y + r.h, -1, 0, r.w], [r.x, r.y + r.h, 0, -1, r.h]];
-    for (const [x0, z0, dx, dz, len] of sides) {
-      const nx = -dz, nz = dx;
-      for (let s = 2.6; s < len - 2.6; s += 3.3) { if (rng() < 0.28) continue; trees.push([x0 + dx * s + nx * 0.64, z0 + dz * s + nz * 0.64, 0.42 + rng() * 0.16]); }
-    }
-  }
+  laneMesh = mkFlat(dashes, 0.012); zebraMesh = mkFlat(zebras, 0.014); mkFlat(inner, PLATE_H + 0.02); dummy.rotation.set(0, 0, 0);
   const crown = new THREE.IcosahedronGeometry(1, 0);
   treeMesh = new THREE.InstancedMesh(crown, MAT.tree, trees.length); trunkMesh = new THREE.InstancedMesh(unitCyl, MAT.trunk, trees.length);
-  trees.forEach(([x, z, s], i) => { dummy.position.set(x, PLATE_H + 0.62 + s, z); dummy.scale.set(s, s * 1.12, s); dummy.updateMatrix(); treeMesh.setMatrixAt(i, dummy.matrix); dummy.position.set(x, PLATE_H, z); dummy.scale.set(0.07, 0.75, 0.07); dummy.updateMatrix(); trunkMesh.setMatrixAt(i, dummy.matrix); });
+  trees.forEach(([x, z, s, y0], i) => { dummy.position.set(x, y0 + 0.62 + s, z); dummy.scale.set(s, s * 1.12, s); dummy.updateMatrix(); treeMesh.setMatrixAt(i, dummy.matrix); dummy.position.set(x, y0, z); dummy.scale.set(0.07, 0.75, 0.07); dummy.updateMatrix(); trunkMesh.setMatrixAt(i, dummy.matrix); });
   treeMesh.castShadow = true; treeMesh.receiveShadow = true; scene.add(treeMesh, trunkMesh);
   // buildings: up to three stacked tiers, rooftop units, tanks and flues for industrial districts
   NB = C.length;
@@ -868,7 +921,7 @@ function readTheme(){
   for (const k of ['sky', 'asphalt', 'lane', 'walk', 'lot', 'clay', 'tree', 'trunk', 'car', 'up', 'down', 'cheap', 'beacon', 'accent', 'ink', 'warn']) COL[k] = new THREE.Color(tok('--' + k) || '#888');
   dark = (COL.sky.r * 0.2126 + COL.sky.g * 0.7152 + COL.sky.b * 0.0722) < 0.2;
   scene.background = COL.sky.clone();
-  scene.fog = new THREE.Fog(COL.sky.clone(), dark ? 900 : 1100, dark ? 2200 : 2600);
+  scene.fog = new THREE.Fog(COL.sky.clone(), Math.max(HOME_DIST, SPAN) * (dark ? 1.7 : 2.1), Math.max(HOME_DIST, SPAN) * (dark ? 3.6 : 4.4));
   MAT.ground.color.copy(COL.sky).lerp(COL.asphalt, dark ? 0.25 : 0.18);
   MAT.asphalt.color.copy(COL.asphalt); MAT.walk.color.copy(COL.walk); MAT.lot.color.copy(COL.lot); MAT.lane.color.copy(COL.lane);
   MAT.tree.color.copy(COL.tree); MAT.trunk.color.copy(COL.trunk); MAT.car.color.copy(COL.car);
@@ -902,7 +955,7 @@ function colorFor(c, m, out){
 }
 function retarget(instant = false){
   pinCache = null;
-  for (const c of C) { tgt[c.i].h = heightFor(c, mode); colorFor(c, mode, tgt[c.i].col); }
+  for (const c of C) { tgt[c.i].h = heightFor(c); colorFor(c, mode, tgt[c.i].col); }
   for (const d of DIST) d.topH = d.comps.length ? Math.max(...d.comps.map(c => tgt[c.i].h)) : 4;
   if (instant || reduceMotion) { for (const c of C) { if (!intro) cur[c.i].h = tgt[c.i].h; cur[c.i].col.copy(tgt[c.i].col); } writeAll(); anim = null; return; }
   for (const c of C) { from[c.i].h = cur[c.i].h; from[c.i].col.copy(cur[c.i].col); }
@@ -989,7 +1042,7 @@ function stepCars(dt){
       }
     }
     const e = car.e; const a = car.fwd ? e.a : e.b, b = car.fwd ? e.b : e.a;
-    const dx = (b[0] - a[0]) / e.len, dz = (b[1] - a[1]) / e.len; const lane = 1.2;
+    const dx = (b[0] - a[0]) / e.len, dz = (b[1] - a[1]) / e.len; const lane = ROAD * 0.42;
     const x = a[0] + dx * car.s - dz * lane, z = a[1] + dz * car.s + dx * lane; const ry = Math.atan2(dx, dz);
     const sc = car.bus ? 1.9 : 1; const y = flat ? -2 : 0;
     setInst(carBody, i, x, y, z, 1, 1, sc, ry); setInst(carCab, i, x, y, z, 1, 1, car.bus ? 2.6 : 1, ry);
@@ -1012,9 +1065,10 @@ const HOME = () => {
   // phones look along the long side of the city so it fills the portrait screen
   const polar = ph ? 0.64 : 0.9, az = ph ? Math.PI / 2 : -Math.PI / 4;
   const spanW = ph ? WORLD.d + 12 : (WORLD.w + WORLD.d) / Math.SQRT2 + 8;
-  const spanH = (ph ? WORLD.w + 12 : (WORLD.w + WORLD.d) / Math.SQRT2) * Math.cos(polar) + 16 * Math.sin(polar);
-  const dist = Math.max(spanW * ppu1 / availW, spanH * ppu1 / availH) * (ph ? 1.04 : 0.98);
-  return { t: new THREE.Vector3(0, 0, 0), dist: clamp(dist, 300, 1450), polar, az };
+  const tall = H_SCALE === 'real' ? H_MAX : 47; // the skyline adds height above the far edge of the city
+  const spanH = (ph ? WORLD.w + 12 : (WORLD.w + WORLD.d) / Math.SQRT2) * Math.cos(polar) + tall * 0.55 * Math.sin(polar);
+  const dist = Math.max(spanW * ppu1 / availW, spanH * ppu1 / availH) * (ph ? 1.08 : 1.1);
+  return { t: new THREE.Vector3(0, 0, 0), dist: clamp(dist, 300, 3000), polar, az };
 };
 let fly = null;
 function setCam(t, dist, polar, az){ controls.target.copy(t); camera.position.setFromSphericalCoords(dist, polar, az).add(t); camera.lookAt(t); }
@@ -1035,7 +1089,7 @@ function applyView(){
   const F = w + r.left + r.right, Fh = h + r.top + r.bottom;
   camera.aspect = F / Fh; camera.setViewOffset(F, Fh, r.right, r.bottom, w, h); camera.updateProjectionMatrix();
 }
-function resize(){ const r = renderer.domElement.getBoundingClientRect(); VIEW.w = Math.max(1, r.width); VIEW.h = Math.max(1, r.height); renderer.setSize(VIEW.w, VIEW.h, false); applyView(); dirty = true; }
+function resize(){ const r = renderer.domElement.getBoundingClientRect(); VIEW.w = Math.max(1, r.width); VIEW.h = Math.max(1, r.height); renderer.setSize(VIEW.w, VIEW.h, false); applyView(); if (C.length) HOME_DIST = HOME().dist; dirty = true; }
 addEventListener('resize', resize);
 
 /* ================= labels & callouts ================= */
@@ -1053,7 +1107,7 @@ function buildLabels(){
     d.lead = svgEl('line'); d.dot = svgEl('circle'); d.dot.setAttribute('r', '3.5');
   }
   TK_POOL = Array.from({ length: 90 }, () => mk('tk'));
-  ST_POOL = Array.from({ length: 22 }, () => mk('st'));
+  ST_POOL = Array.from({ length: 40 }, () => mk('st'));
   PIN_POOL = Array.from({ length: 48 }, () => mk('pin'));
   CO_POOL = Array.from({ length: 12 }, () => { const e = mk('co'); e.innerHTML = '<div class="card"><div class="tile"></div><div style="min-width:0"><b></b><div class="chips"></div></div></div><div class="stem"></div><div class="dot"></div>'; e.addEventListener('click', () => { if (e._t) select(byT[e._t].i); }); return e; });
 }
@@ -1107,7 +1161,7 @@ function calloutItems(){
 }
 function updateLabels(){
   const camDist = camera.position.distanceTo(controls.target); const flat2D = HS.v < 0.5;
-  const showD = (camDist > 330 || flat2D) && selI < 0;
+  const showD = (camDist > HOME_DIST * 0.62 || flat2D) && selI < 0;
   const boxes = [];
   const hit = box => boxes.some(b => b.x < box.x + box.w && box.x < b.x + b.w && b.y < box.y + box.h && box.y < b.y + b.h);
   // callouts first: they carry the news (alerts, beacons, upcoming reports), then district names around them
@@ -1129,7 +1183,7 @@ function updateLabels(){
   }
   for (; ci < CO_POOL.length; ci++) CO_POOL[ci].style.display = 'none';
   for (const d of DIST.filter(d => d.lab).sort((a, b) => b.capSum - a.capSum)) {
-    const topY = BASE_Y + d.topH * HS.v + (flat2D ? 1 : 6);
+    const topY = BASE_Y + Math.min(d.topH, 22) * HS.v + (flat2D ? 1 : 8);
     const a = proj(d.cx, PLATE_H, d.cz), b = proj(d.cx, topY, d.cz);
     let vis = showD && a.ok && b.ok && b.y > 90;
     const lw = d.lab._w || 130; const box = { x: b.x - lw / 2 - 4, y: b.y - 38, w: lw + 8, h: 36 };
@@ -1146,7 +1200,7 @@ function updateLabels(){
   // tickers by on-screen footprint
   const cand = [];
   for (const c of C) {
-    const size = Math.min(c.fw, c.fd) * pxPerUnit(c.x, c.topY, c.z); if (size < (flat2D ? 30 : 40)) continue;
+    const size = Math.max(Math.min(c.fw, c.fd), flat2D ? 0 : c.h * 0.32) * pxPerUnit(c.x, c.topY, c.z); if (size < (flat2D ? 30 : 40)) continue;
     const p = proj(c.x, c.topY + 0.2, c.z); if (!p.ok || p.y < 70 || p.y > VIEW.h - 20) continue;
     if (mode === 'portfolio' && !c.hold && size < 70) continue;
     cand.push({ c, p, size });
@@ -1161,11 +1215,18 @@ function updateLabels(){
   }
   for (; n < TK_POOL.length; n++) TK_POOL[n].style.display = 'none';
   let sn = 0;
-  if (camDist < 260 && !flat2D) {
+  if (camDist < HOME_DIST * 0.72 || flat2D) {
+    // avenue names sit on their street, the longest avenues first
     const sts = [];
-    for (const d of DIST) for (const st of d.streets) { const r = st.rect; const p = proj(r.x + r.w / 2, BASE_Y, r.y + r.h - 0.1); if (!p.ok) continue; const size = Math.min(r.w, r.h) * pxPerUnit(r.x + r.w / 2, BASE_Y, r.y + r.h); if (size < 120) continue; sts.push({ st, p, size }); }
+    for (const d of DIST) for (const st of d.streets) {
+      const r = st.rect, lx = r.x + Math.min(r.w / 2, 14); const p = proj(lx, BASE_Y, st.zs); if (!p.ok || p.y < 80 || p.y > VIEW.h - 40) continue;
+      const size = r.w * pxPerUnit(r.x + r.w / 2, BASE_Y, st.zs); if (size < 150) continue; sts.push({ st, p, size });
+    }
     sts.sort((a, b) => b.size - a.size);
-    for (const { st, p } of sts.slice(0, ST_POOL.length)) { const e = ST_POOL[sn++]; if (e._h !== st.name) { e.textContent = st.name; e._h = st.name; } e.style.display = ''; e.style.transform = `translate(${p.x.toFixed(1)}px,${(p.y + 14).toFixed(1)}px) translate(-50%,-100%)`; }
+    for (const { st, p } of sts) {
+      if (sn >= ST_POOL.length) break; if (boxes.some(b => p.x > b.x && p.x < b.x + b.w && p.y > b.y && p.y < b.y + b.h + 10)) continue;
+      const e = ST_POOL[sn++]; if (e._h !== st.name) { e.textContent = st.name; e._h = st.name; } e.style.display = ''; e.style.transform = `translate(${p.x.toFixed(1)}px,${p.y.toFixed(1)}px) translate(-50%,-50%)`;
+    }
   }
   for (; sn < ST_POOL.length; sn++) ST_POOL[sn].style.display = 'none';
   let pn = 0;
@@ -1183,8 +1244,8 @@ const ray = new THREE.Raycaster(); const ndc = new THREE.Vector2();
 let hoverI = -1, selI = -1, focusD = null, pointer = null, needPick = false, downAt = null, dragging = false, dirty = true;
 function pick(cx, cy){
   const r = renderer.domElement.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera);
-  const hits = ray.intersectObjects([...tier, roofMesh, tankMesh, ...plateMeshes], false);
-  for (const h of hits) { if (h.object.isInstancedMesh) { const id = h.object === roofMesh || h.object === tankMesh ? Math.floor(h.instanceId / 2) : h.instanceId; return { b: id }; } if (h.object.userData.d) return { d: h.object.userData.d }; }
+  const hits = ray.intersectObjects([...tier, roofMesh, tankMesh, lotMesh, ...plateMeshes], false);
+  for (const h of hits) { if (h.object === lotMesh) return { d: lotDist[h.instanceId] }; if (h.object.isInstancedMesh) { const id = h.object === roofMesh || h.object === tankMesh ? Math.floor(h.instanceId / 2) : h.instanceId; return { b: id }; } if (h.object.userData.d) return { d: h.object.userData.d }; }
   return {};
 }
 const hcard = $('#hcard'); let hcardHold = false, hideTimer = 0;
@@ -1205,7 +1266,7 @@ function setHover(i){
   clearTimeout(hideTimer); renderer.domElement.style.cursor = 'pointer';
   const c = C[i];
   hcard.innerHTML = `<div class="h1"><span class="tkr">${esc(c.t)}</span><span class="num ${sg(c.chg)}">${fmtUsd(c.px)}</span></div>
-    <div class="nm">${esc(c.n)} · ${esc(SECTORS[c.si].he)}</div><div class="kv3">${hoverRows(c).map(([k, v]) => `<div><span>${k}</span>${v}</div>`).join('')}</div>
+    <div class="nm">${esc(c.n)} · שווי ${N(fmtCapB(c.capv))}</div><div class="kv3">${hoverRows(c).map(([k, v]) => `<div><span>${k}</span>${v}</div>`).join('')}</div>
     <button class="cta" type="button">פתח כרטיס חברה</button>`;
   hcard.querySelector('.cta').onclick = () => select(i);
   hcard.hidden = isPhone(); dirty = true;
@@ -1256,7 +1317,7 @@ function select(i, opt = {}){
   const g = new THREE.ShapeGeometry(sh, 6); g.rotateX(-Math.PI / 2); frameMesh = new THREE.Mesh(g, frameMat); frameMesh.position.set(c.x, BASE_Y + 0.03, c.z); frameMesh.renderOrder = 2; scene.add(frameMesh);
   drawRoutes(c); placeSelection(); setHover(-1); hcard.hidden = true; focusD = c.dist; paintPlates(); renderRail();
   openPanel(c);
-  if (opt.fly !== false) { const size = Math.max(c.fw, c.fd); const far = isPhone() ? 1.7 : selRelations.length ? 1.9 : 1; flyTo(new THREE.Vector3(c.x, c.h * 0.35 + BASE_Y, c.z), clamp(size * 7 + c.h * 4.5 + 110, 140, 360) * far, { polar: HS.v < 0.5 ? 0.02 : isPhone() ? 0.7 : 0.86 }); }
+  if (opt.fly !== false) { const size = Math.max(c.fw, c.fd); const far = isPhone() ? 1.7 : selRelations.length ? 1.9 : 1; flyTo(new THREE.Vector3(c.x, c.h * 0.35 + BASE_Y, c.z), clamp(size * 7 + c.h * 3.2 + 110, 150, 540) * far, { polar: HS.v < 0.5 ? 0.02 : isPhone() ? 0.7 : 0.86 }); }
   dirty = true;
 }
 function clearSelection(){
@@ -1265,7 +1326,7 @@ function clearSelection(){
 }
 function focusDistrict(d){
   focusD = d; paintPlates(); renderRail();
-  const size = Math.max(d.rect.w, d.rect.h); flyTo(new THREE.Vector3(d.cx, 2, d.cz), clamp(size * 3.2 + 60, 200, 700), { polar: HS.v < 0.5 ? 0.02 : 0.86 });
+  const size = Math.max(d.rect.w, d.rect.h); flyTo(new THREE.Vector3(d.cx, 2, d.cz), clamp(size * 3.4 + 80, 220, 1100), { polar: HS.v < 0.5 ? 0.02 : 0.86 });
   if (isPhone()) toggleRail(false); dirty = true;
 }
 function goHome(){ focusD = null; paintPlates(); renderRail(); const H = HOME(); flyTo(H.t, H.dist, { polar: HS.v < 0.5 ? 0.02 : H.polar, az: H.az }); }
@@ -1501,12 +1562,16 @@ function buildModes(){
 function legendHTML(){
   const div = (l, r) => `<div class="ramp" style="background:linear-gradient(to right, var(--down), var(--clay) 50%, var(--up))"></div><div class="rampl"><span>${l}</span><span>${r}</span></div>`;
   const cb = `<label><input type="checkbox" id="cbToggle" ${document.documentElement.classList.contains('cb') ? 'checked' : ''}> צבעים נגישים לעיוורי צבעים</label>`;
-  if (mode === 'market') return `<h3>שוק היום · ${dLabel(CITY.session.last_session)}</h3><div class="lrow"><span class="ico">▮</span>גובה = נפח מסחר יחסי</div><div class="lrow"><span class="ico">■</span>צבע = שינוי מול התנודתיות הרגילה; לבן = יום רגיל</div>${div(N(MINUS + '2.4σ'), N('+2.4σ'))}${cb}`;
-  if (mode === 'hunt') return `<h3>ציד הזדמנויות</h3><div class="lrow"><span class="ico">▮</span>גובה = ציון איכות</div><div class="lrow"><span class="ico" style="color:var(--beacon)">✦</span>אלומה = ציון גבוה, ירידה מהשיא, תמחור נמוך</div><div class="ramp" style="background:linear-gradient(to right, var(--clay), var(--cheap))"></div><div class="rampl"><span>יקרה מול עצמה</span><span>זולה מול עצמה</span></div>${cb}`;
-  if (mode === 'earnings') return `<h3>עונת דוחות</h3><div class="lrow"><span class="ico">▮</span>גובה = עוצמת התגובה לדוח</div><div class="lrow"><span class="ico"><span class="pin" style="display:inline-grid;width:16px;height:16px;font-size:9px;border-width:1px">3</span></span>מספר = ימי מסחר לדוח</div>${div('פספוס / הורדת תחזית', 'הכאה / העלאת תחזית')}${cb}`;
-  return `<h3>התיק שלי</h3><div class="lrow"><span class="ico">▮</span>גובה = משקל בתיק; שאר העיר מושטחת</div><div class="lrow"><span class="ico">■</span>צבע = רווח או הפסד על הפוזיציה</div>${div(N(MINUS + '25%'), N('+25%'))}${cb}`;
+  const top = C.reduce((a, c) => (c.capv > (a?.capv || 0) ? c : a), null);
+  const hl = `<div class="lrow"><span class="ico">▮</span>גובה = שווי שוק${top ? ` · הגבוה: ${esc(top.t)} ${N(fmtCapB(top.capv))}` : ''}</div>
+    <div class="hsc" role="group" aria-label="קנה מידה לגובה"><button type="button" data-h="real" aria-pressed="${H_SCALE === 'real'}" title="גובה ביחס ישר לשווי">יחס אמיתי</button><button type="button" data-h="compressed" aria-pressed="${H_SCALE === 'compressed'}" title="שורש השווי: גם חברות קטנות נראות">דחוס</button></div>`;
+  if (mode === 'market') return `<h3>שוק היום · ${dLabel(CITY.session.last_session)}</h3>${hl}<div class="lrow"><span class="ico">■</span>צבע = שינוי מול התנודתיות הרגילה; לבן = יום רגיל</div>${div(N(MINUS + '2.4σ'), N('+2.4σ'))}${cb}`;
+  if (mode === 'hunt') return `<h3>ציד הזדמנויות</h3>${hl}<div class="lrow"><span class="ico" style="color:var(--beacon)">✦</span>אלומה = ציון גבוה, ירידה מהשיא, תמחור נמוך</div><div class="ramp" style="background:linear-gradient(to right, var(--clay), var(--cheap))"></div><div class="rampl"><span>יקרה מול עצמה</span><span>זולה מול עצמה</span></div>${cb}`;
+  if (mode === 'earnings') return `<h3>עונת דוחות</h3>${hl}<div class="lrow"><span class="ico">■</span>צבע = הפתעה ותחזית בדוח האחרון</div><div class="lrow"><span class="ico"><span class="pin" style="display:inline-grid;width:16px;height:16px;font-size:9px;border-width:1px">3</span></span>מספר = ימי מסחר לדוח</div>${div('פספוס / הורדת תחזית', 'הכאה / העלאת תחזית')}${cb}`;
+  return `<h3>התיק שלי</h3>${hl}<div class="lrow"><span class="ico">■</span>רק הפוזיציות צבועות; שאר העיר דהויה</div><div class="lrow"><span class="ico">■</span>צבע = רווח או הפסד על הפוזיציה</div>${div(N(MINUS + '25%'), N('+25%'))}${cb}`;
 }
-function renderLegend(){ $('#legend').innerHTML = legendHTML(); const t = $('#cbToggle'); if (t) t.onchange = () => { document.documentElement.classList.toggle('cb', t.checked); store.set(LS_PREFIX + 'cb', t.checked); readTheme(); renderRail(); }; }
+function setHScale(v){ if (v === H_SCALE) return; H_SCALE = v; store.set(LS_PREFIX + 'hscale', v); HOME_DIST = HOME().dist; renderLegend(); retarget(); dirty = true; }
+function renderLegend(){ $('#legend').innerHTML = legendHTML(); $('#legend').querySelectorAll('.hsc button').forEach(b => b.onclick = () => setHScale(b.dataset.h)); const t = $('#cbToggle'); if (t) t.onchange = () => { document.documentElement.classList.toggle('cb', t.checked); store.set(LS_PREFIX + 'cb', t.checked); readTheme(); renderRail(); }; }
 function setMode(m){
   if (m === mode) return; mode = m; store.set(LS_PREFIX + 'mode', m);
   $('#modes').querySelectorAll('.mode').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
@@ -1704,7 +1769,7 @@ async function boot(){
   let city;
   try { city = await api('/api/city'); }
   catch (e) { $('#app').insertAdjacentHTML('beforeend', `<div id="fail"><div><b>השרת לא זמין</b><br>${esc(e.message)}<br><br>הפעל אותו עם: metro run</div></div>`); return; }
-  buildData(city);
+  buildData(city); fitSun();
   cur = C.map(() => ({ h: 0, col: new THREE.Color() })); from = C.map(() => ({ h: 0, col: new THREE.Color() })); tgt = C.map(() => ({ h: 1, col: new THREE.Color() }));
   buildScene(); buildLabels(); wirePointer();
   buildModes(); renderLegend(); renderStrip(); renderRail(); loadStatus();
@@ -1716,7 +1781,7 @@ async function boot(){
   if (!DEMO) { setInterval(pollQuotes, 20000); setInterval(refreshCity, 120000); setInterval(loadStatus, 60000); }
   setInterval(() => { if (!DEMO) return; renderStrip(); }, 30000);
   const hashT = decodeURIComponent(location.hash.slice(1)).toUpperCase(); if (hashT && byT[hashT]) setTimeout(() => select(byT[hashT].i), 2300);
-  window.__metro = { get C(){ return C; }, where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); } };
+  window.__metro = { get C(){ return C; }, setHScale, where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); } };
 }
 boot();
 </script>
