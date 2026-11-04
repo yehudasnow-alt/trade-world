@@ -212,6 +212,15 @@ def backtest(start: str = "2021-01-01") -> None:
 
 
 @app.command()
+def backup(to: Optional[str] = typer.Option(None, help="תיקייה נוספת לעותק (ברירת מחדל: BACKUP_DIR)")) -> None:
+    """גיבוי של מסד הנתונים עכשיו: data/backups/ ועותק ב-BACKUP_DIR."""
+    from pathlib import Path
+    from . import backup as B
+    for f in B.backup(Path(to) if to else None):
+        typer.echo(f"{f}  ({f.stat().st_size / 1e6:.1f} MB)")
+
+
+@app.command()
 def status() -> None:
     """מצב המקורות והמשימות."""
     from .api import status as st_

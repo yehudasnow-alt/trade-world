@@ -108,6 +108,11 @@ class Runner:
                 syms = list(s.scalars(select(Holding.ticker))) + list(s.scalars(select(Watch.ticker)))
             self.live.set_symbols(list(dict.fromkeys(syms)))
 
+    def backup_tick(self) -> str:
+        from . import backup
+        files = backup.backup()
+        return " ".join(f.name for f in files[:1]) + (f" (+{len(files) - 1} copy)" if len(files) > 1 else "")
+
     # --- wiring ---
     def start(self) -> list[str]:
         st = get_settings()
@@ -143,6 +148,7 @@ class Runner:
         hh, mm = (int(x) for x in st.brief_time.split(":"))
         add(safe("brief", self.brief_tick), "cron", hour=hh, minute=mm, timezone=clock.IL)
         add(safe("alerts", self.alerts_tick), "cron", minute="*/5")
+        add(safe("backup", self.backup_tick), "cron", hour=3, minute=15)
         if st.ibkr_live:
             from .sources.ibkr import IbkrLive
             self.live = IbkrLive(lambda rows: pipeline.update_quotes(rows, "ibkr"), on_portfolio=self.live_portfolio)

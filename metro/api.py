@@ -476,6 +476,7 @@ def status() -> dict:
         "scores": src("scores", True, 3600 if open_ else 86400 * 3),
         "ai": {"configured": bool(st.anthropic_api_key), "queued": queued, "spend_month_usd": round(spend, 2),
                "budget_usd": st.ai_monthly_budget_usd, "state": "ok" if st.anthropic_api_key else "off"},
+        "backup": src("backup", True, 86400 * 2),
         "telegram": {"configured": st.telegram_ready, "state": "ok" if st.telegram_ready else "off"},
     }}
 

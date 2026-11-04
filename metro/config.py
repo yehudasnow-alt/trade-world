@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,6 +16,9 @@ class Settings(BaseSettings):
     # storage
     database_url: str = f"sqlite:///{ROOT / 'data' / 'metropolin.db'}"
     data_dir: Path = ROOT / "data"
+    # nightly database backups: data/backups/ always, plus this folder when set (cloud-synced folder, external drive)
+    backup_dir: Optional[Path] = None
+    backup_keep: int = 7
 
     # SEC: required. "Your Name your@email.com" per SEC fair-access policy.
     sec_user_agent: str = ""

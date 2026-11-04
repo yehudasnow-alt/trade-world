@@ -5,6 +5,7 @@ data/*.db-*
 data/docs/
 data/cache/
 data/transcripts/
+data/backups/
 
 # generated
 web/index.html

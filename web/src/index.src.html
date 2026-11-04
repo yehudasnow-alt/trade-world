@@ -56,7 +56,9 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .up{color:var(--up)} .down{color:var(--down)} .muted{color:var(--ink-3)} .warn{color:var(--warn)}
 .glass{background:var(--glass); -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); border:1px solid var(--line); box-shadow:var(--shadow)}
 
-#app{position:fixed; inset:0; overflow:hidden}
+#app{position:fixed; inset:0; overflow:hidden; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none}
+#panel .p-body,.sheet .body,.drawer,input,textarea{-webkit-user-select:text; user-select:text}
+#scene{cursor:grab} #scene.grabbing{cursor:grabbing !important}
 #scene{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; outline:none}
 #leaders{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; z-index:1}
 #leaders line{stroke:var(--ink-2); stroke-width:1.2; opacity:.55}
@@ -911,6 +913,7 @@ class CityControls extends THREE.EventDispatcher {
   /* ---- pointer ---- */
   down(e){
     if (e.pointerType === 'mouse' && e.button > 2) return;
+    if (e.pointerType === 'mouse') e.preventDefault();  // no text selection, no native drag
     try { this.el.setPointerCapture(e.pointerId); } catch {}
     this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, button: e.button, mods: e.shiftKey || e.ctrlKey || e.metaKey || e.altKey, type: e.pointerType });
     this.start(); this.begin();
@@ -1640,12 +1643,12 @@ const setT = (e, x, y) => { e.style.transform = `translate(${x.toFixed(1)}px,${y
 let TK_POOL = [], ST_POOL = [], PIN_POOL = [], CO_POOL = [];
 function buildLabels(){
   for (const d of DIST) if (d.rect) {
-    d.lab = mk('isl'); d.lab.addEventListener('click', () => focusDistrict(d));
+    d.lab = mk('isl'); d.lab._act = () => focusDistrict(d);
   }
   TK_POOL = Array.from({ length: 90 }, () => mk('tk'));
   ST_POOL = Array.from({ length: 40 }, () => mk('st'));
   PIN_POOL = Array.from({ length: 48 }, () => mk('pin'));
-  CO_POOL = Array.from({ length: 12 }, () => { const e = mk('co'); e.innerHTML = '<div class="card"><div class="tile"></div><div style="min-width:0"><b></b><div class="chips"></div></div></div><div class="stem"></div><div class="dot"></div>'; e.addEventListener('click', () => { if (e._t) select(byT[e._t].i); }); return e; });
+  CO_POOL = Array.from({ length: 12 }, () => { const e = mk('co'); e.innerHTML = '<div class="card"><div class="tile"></div><div style="min-width:0"><b></b><div class="chips"></div></div></div><div class="stem"></div><div class="dot"></div>'; e._act = () => { if (e._t) select(byT[e._t].i); }; return e; });
 }
 function districtMetric(d){
   const cs = d.comps; const capW = cs.reduce((a, c) => a + (c.cap || 0), 0) || 1;
@@ -1830,7 +1833,7 @@ function setHover(i){
   hcard.innerHTML = `<div class="h1"><span class="tkr">${esc(c.t)}</span><span class="num ${sg(c.chg)}">${fmtUsd(c.px)}</span></div>
     <div class="nm">${esc(c.n)} · שווי ${N(fmtCapB(c.capv))}</div><div class="kv3">${hoverRows(c).map(([k, v]) => `<div><span>${k}</span>${v}</div>`).join('')}</div>
     <button class="cta" type="button">פתח כרטיס חברה</button>`;
-  hcard.querySelector('.cta').onclick = () => select(i);
+  hcard.querySelector('.cta').onclick = () => select(i); hcard._i = i;
   hcard.hidden = isPhone(); dirty = true;
 }
 function positionHover(){
@@ -2270,7 +2273,7 @@ function renderDrawer(){
 $('#bellBtn').onclick = () => { const d = $('#drawer'); d.hidden = !d.hidden; $('#statusPop').hidden = true; if (!d.hidden) renderDrawer(); };
 
 /* status */
-const SRC_HE = { sec: ['דוחות SEC', 'SEC_USER_AGENT'], prices: ['מחירים (Alpaca)', 'ALPACA_KEY_ID'], ibkr_live: ['מחירים חיים (IBKR)', 'IBKR_LIVE'], ibkr_portfolio: ['תיק חי (IB Gateway)', 'IBKR_LIVE'], ibkr_flex: ['תיק יומי (IBKR Flex)', 'IBKR_FLEX_TOKEN'], earnings: ['יומן דוחות (Finnhub)', 'FINNHUB_API_KEY'], scores: ['ציונים', ''], ai: ['כרטיסיות (Claude)', 'ANTHROPIC_API_KEY'], telegram: ['התראות לטלגרם', 'TELEGRAM_BOT_TOKEN'] };
+const SRC_HE = { sec: ['דוחות SEC', 'SEC_USER_AGENT'], prices: ['מחירים (Alpaca)', 'ALPACA_KEY_ID'], ibkr_live: ['מחירים חיים (IBKR)', 'IBKR_LIVE'], ibkr_portfolio: ['תיק חי (IB Gateway)', 'IBKR_LIVE'], ibkr_flex: ['תיק יומי (IBKR Flex)', 'IBKR_FLEX_TOKEN'], earnings: ['יומן דוחות (Finnhub)', 'FINNHUB_API_KEY'], scores: ['ציונים', ''], ai: ['כרטיסיות (Claude)', 'ANTHROPIC_API_KEY'], telegram: ['התראות לטלגרם', 'TELEGRAM_BOT_TOKEN'], backup: ['גיבוי לילי', 'BACKUP_DIR'] };
 let STATUS = null;
 async function loadStatus(){
   try { STATUS = await api('/api/status'); } catch { STATUS = null; }
@@ -2459,13 +2462,31 @@ async function refreshCity(){
 /* ================= picking events ================= */
 function wirePointer(){
   const cv = renderer.domElement;
-  // a click selects; a drag, a second finger or a long press does not
-  let downs = 0, multi = false;
-  cv.addEventListener('pointermove', e => { pointer = { x: e.clientX, y: e.clientY }; needPick = true; if (downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) dragging = true; });
-  cv.addEventListener('pointerdown', e => { downs++; if (downs > 1) multi = true; else { downAt = { x: e.clientX, y: e.clientY, t: performance.now() }; dragging = false; multi = false; } fly = null; hideHint(); $('#drawer').hidden = true; $('#statusPop').hidden = true; $('#camHelp').hidden = true; $('#helpBtn').setAttribute('aria-expanded', false); });
-  const lift = e => { downs = Math.max(0, downs - 1); if (e.type === 'pointerup' && downAt && !dragging && !multi && downs === 0 && e.button === 0 && performance.now() - downAt.t < 600) { const h = pick(e.clientX, e.clientY); if (h.b !== undefined) select(h.b); else if (h.d) focusDistrict(h.d); } if (!downs) { downAt = null; dragging = false; } };
+  // Every press belongs to the map: a drag moves it wherever it starts (on the ground, a building, a sign, a callout or the hover card);
+  // a click without a drag acts on what is under the pointer. A second finger or a long press never clicks.
+  let downs = 0, multi = false, downAct = null;
+  const press = (e, act) => {
+    downs++; if (downs > 1) multi = true; else { downAt = { x: e.clientX, y: e.clientY, t: performance.now() }; dragging = false; multi = false; downAct = act; }
+    fly = null; hideHint(); $('#drawer').hidden = true; $('#statusPop').hidden = true; $('#camHelp').hidden = true; $('#helpBtn').setAttribute('aria-expanded', false);
+    const a = document.activeElement; if (a && a !== document.body && a !== cv && !$('#search').contains(a)) a.blur();
+  };
+  cv.addEventListener('pointerdown', e => press(e, null));
+  const forward = (e, act) => { if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return; e.preventDefault(); e.stopPropagation(); press(e, act); controls.down(e); };
+  labelsEl.addEventListener('pointerdown', e => { const el = e.target.closest('.isl, .co'); if (el && el._act) forward(e, el._act); });
+  hcard.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; const i = hcard._i; forward(e, i >= 0 ? () => select(i) : null); });
+  cv.addEventListener('pointermove', e => {
+    pointer = { x: e.clientX, y: e.clientY }; needPick = true;
+    if (downAt && !dragging && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) { dragging = true; cv.classList.add('grabbing'); setHover(-1); }
+  });
+  const lift = e => {
+    downs = Math.max(0, downs - 1);
+    if (e.type === 'pointerup' && downAt && !dragging && !multi && downs === 0 && e.button === 0 && performance.now() - downAt.t < 600) {
+      if (downAct) downAct(); else { const h = pick(e.clientX, e.clientY); if (h.b !== undefined) select(h.b); else if (h.d) focusDistrict(h.d); }
+    }
+    if (!downs) { downAt = null; dragging = false; downAct = null; cv.classList.remove('grabbing'); }
+  };
   cv.addEventListener('pointerup', lift); cv.addEventListener('pointercancel', lift);
-  cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { pointer = null; setHover(-1); } });
+  cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !downs) { pointer = null; setHover(-1); } });
   controls.addEventListener('change', () => { dirty = true; });
   controls.addEventListener('start', () => { fly = null; hideHint(); });
   // pinching the page anywhere would zoom the whole browser page instead of the map
