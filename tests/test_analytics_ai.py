@@ -141,7 +141,7 @@ def _card():
     cov = [{"key": k, "status": "not_reported", "severity": "neutral", "finding_he": "לא דווח", "citations": []} for k in COVERAGE]
     return {
         "headline_he": "x", "what_happened_he": "x", "what_next_he": "x", "guidance_direction": "raised", "where_going_he": "x",
-        "growth_drivers_he": [], "risks_he": [], "qa": [], "promises_new": [], "promises_check": [], "risk_changes": [], "flags": [],
+        "growth_drivers_he": [], "risks_he": [], "qa": [], "promises_new": [], "promises_check": [], "risk_changes": [], "flags": [], "catalysts": [],
         "coverage": cov,
         "metrics": [
             {"key": "revenue", "label": "Revenue", "value": 35.1, "scale": "billions", "unit": "USD", "period": "Q3", "yoy_pct": 94,

@@ -3,8 +3,9 @@
 * Flex Web Service: positions and trades as a daily statement. No running software needed.
   Create a token (Account Management > Reporting > Flex Web Service) and an Activity Flex
   Query with the Open Positions and Trades sections.
-* Live quotes (optional): IB Gateway running with "Read-Only API" enabled (the default), via ib_async.
-  The free Cboe One + IEX stream covers US stocks; about 100 symbols at once.
+* Live (optional): IB Gateway running with "Read-Only API" enabled (the default), via ib_async.
+  Streams quotes for holdings + watchlist (about 100 symbols at once) and reads the open positions
+  every 30 seconds, so the portfolio in the city follows the account during the day.
 """
 from __future__ import annotations
 
@@ -82,6 +83,35 @@ def parse_flex(xml_text: str) -> dict[str, Any]:
     return {"positions": positions, "trades": trades, "nav": nav}
 
 
+def parse_portfolio(items: list[Any], account_values: list[Any]) -> dict[str, Any]:
+    """Open stock positions from ib_async PortfolioItem objects, in the same shape as parse_flex.
+
+    nav is None until the account values have arrived; callers skip the update then, so an empty
+    list during connection never wipes the holdings."""
+    nav = cash = None
+    for v in account_values:
+        if v.tag in ("NetLiquidation", "TotalCashValue") and v.currency in ("USD", "BASE"):
+            val = _num(str(v.value))
+            if v.tag == "NetLiquidation" and (nav is None or v.currency == "USD"):
+                nav = val
+            elif v.tag == "TotalCashValue" and (cash is None or v.currency == "USD"):
+                cash = val
+    positions = []
+    for it in items:
+        c = it.contract
+        if getattr(c, "secType", "STK") != "STK" or not it.position:
+            continue
+        cost, mark = float(it.averageCost or 0) or None, float(it.marketPrice or 0) or None
+        value = float(it.marketValue) if it.marketValue is not None else (mark * it.position if mark else None)
+        positions.append({
+            "ticker": from_ibkr_symbol(c.symbol), "quantity": float(it.position), "avg_cost": cost, "mark": mark,
+            "market_value": value, "pnl_unrealized": float(it.unrealizedPNL) if it.unrealizedPNL is not None else None,
+            "weight_pct": value / nav * 100 if value is not None and nav else None, "currency": getattr(c, "currency", "USD"),
+            "pnl_pct": (mark / cost - 1) * 100 * (1 if it.position >= 0 else -1) if cost and mark else None,
+        })
+    return {"positions": positions, "trades": [], "nav": nav, "cash": cash}
+
+
 def _flex_date(s: str) -> date | None:
     s = s.split(";")[0].strip()
     for fmt in ("%Y%m%d", "%Y-%m-%d", "%m/%d/%Y"):
@@ -122,10 +152,13 @@ def fetch_flex(token: str | None = None, query_id: str | None = None, max_wait: 
 
 
 class IbkrLive:
-    """Streams quotes for holdings + watchlist into a callback. Never places orders: readonly=True."""
+    """Streams quotes for holdings + watchlist and reads the open positions. Never places orders: readonly=True."""
 
-    def __init__(self, on_quotes: Callable[[dict[str, dict[str, Any]]], None]):
+    def __init__(self, on_quotes: Callable[[dict[str, dict[str, Any]]], None],
+                 on_portfolio: Callable[[dict[str, Any]], None] | None = None, portfolio_every: float = 30):
         self.on_quotes = on_quotes
+        self.on_portfolio = on_portfolio
+        self.portfolio_every = portfolio_every
         self.symbols: list[str] = []
         self.status = "stopped"
         self._stop = threading.Event()
@@ -168,6 +201,7 @@ class IbkrLive:
         self.status = "connected"
         ib.reqMarketDataType(1)  # live where permitted; IB falls back to delayed otherwise
         subscribed: dict[str, Any] = {}
+        last_pf = 0.0
         try:
             while not self._stop.is_set() and ib.isConnected():
                 want = set(self.symbols)
@@ -186,5 +220,10 @@ class IbkrLive:
                                   "ts": datetime.now(timezone.utc).replace(tzinfo=None)}
                 if out:
                     self.on_quotes(out)
+                if self.on_portfolio and time.monotonic() - last_pf >= self.portfolio_every:
+                    last_pf = time.monotonic()
+                    pf = parse_portfolio(ib.portfolio(), ib.accountValues())
+                    if pf["nav"] is not None:  # account values loaded: an empty list now means no positions
+                        self.on_portfolio(pf)
         finally:
             ib.disconnect()

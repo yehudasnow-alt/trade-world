@@ -106,3 +106,14 @@ def test_alert_rules_run_outside_the_session():
         s.query(Alert).delete()
     out = Runner().alerts_tick()  # no Telegram configured: rules raise alerts, nothing is sent
     assert out.startswith("alerts=") and int(out.split()[0].split("=")[1]) >= 1
+
+
+def test_timeline_endpoint_and_catalysts(client):
+    tl = client.get("/api/timeline").json()
+    assert tl["season"]["total"] == 500 and 0 < tl["season"]["reported"] <= 500
+    assert any(e["kind"] == "catalyst" and e["day"] >= tl["today"] for e in tl["events"])
+    assert any(e["held"] for e in tl["earnings"])
+    from metro.ai.runner import catalyst_date
+    assert str(catalyst_date({"month": "2027-02"})) == "2027-02-28" and catalyst_date({"when_text": "later this year"}) is None
+    co = client.get("/api/company/NVDA").json()
+    assert any(e["kind"] == "catalyst" for e in co["events"])

@@ -94,6 +94,14 @@ class Runner:
             kv_set(s, "brief.last", b)
         return f"sent={sent}"
 
+    def live_portfolio(self, pf: dict) -> None:
+        """Called from the IB Gateway thread about every 30 seconds with the open positions."""
+        try:
+            pipeline.apply_flex(pf, source="ibkr_live")
+            self.refresh_live_symbols()
+        except Exception as e:  # noqa: BLE001
+            log.warning("live portfolio: %s", e)
+
     def refresh_live_symbols(self) -> None:
         if self.live:
             with session() as s:
@@ -122,6 +130,7 @@ class Runner:
             from .sources.finnhub import FinnhubClient
             self.finnhub = FinnhubClient()
             add(safe("earnings", self.earnings_tick), "cron", hour=17, minute=35)
+            add(safe("news", lambda: f"added={pipeline.update_news(self.finnhub)}"), "cron", day_of_week="mon-fri", hour="7-19/2", minute=10)
             on.append("Finnhub")
         if st.flex_ready:
             add(safe("flex", self.flex_tick), "cron", day_of_week="mon-sat", hour=6, minute=40)
@@ -136,7 +145,7 @@ class Runner:
         add(safe("alerts", self.alerts_tick), "cron", minute="*/5")
         if st.ibkr_live:
             from .sources.ibkr import IbkrLive
-            self.live = IbkrLive(lambda rows: pipeline.update_quotes(rows, "ibkr"))
+            self.live = IbkrLive(lambda rows: pipeline.update_quotes(rows, "ibkr"), on_portfolio=self.live_portfolio)
             self.refresh_live_symbols()
             self.live.start()
             add(self.refresh_live_symbols, "interval", minutes=10)

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from .schema import COVERAGE
 
-PROMPT_VERSION = "2026-11-a"
+PROMPT_VERSION = "2026-11-b"
 
 SYSTEM_CARD = """You are a meticulous equity research analyst preparing a quarterly report card for one private investor.
 
@@ -17,6 +17,8 @@ Rules:
 7. Write every *_he field in clear Hebrew. Keep financial terms in English in parentheses the first time, e.g. "תזרים חופשי (FCF)".
 8. In the Q&A section, prefer the hardest questions. Mark numeric_answer only when management gave a specific figure, and evasive when they avoided the question.
 9. You describe what the documents say. You do not give investment advice or price targets.
+10. In catalysts, list every forward-looking, time-bound event the sources name: product launches, investor or developer days,
+    regulatory decisions, deal closings, capacity or plants coming online. Only what the sources state, with the timing as printed.
 """
 
 SYSTEM_LIGHT = """You summarize a company's earnings press release for an investor dashboard.

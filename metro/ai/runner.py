@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import func, select
 
@@ -40,6 +40,19 @@ def _quarter_for(s, ticker: str, report_date: date | None) -> Quarter | None:
         before = [r for r in rows if r.period_end <= report_date]
         return before[0] if before else (rows[0] if rows else None)
     return rows[0] if rows else None
+
+
+def catalyst_date(c: dict) -> date | None:
+    """Exact day when given, else the last day of the stated month; None when the timing is vague."""
+    try:
+        if c.get("date"):
+            return date.fromisoformat(c["date"])
+        if c.get("month"):
+            y, m = (int(x) for x in c["month"].split("-")[:2])
+            return date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)
+    except (ValueError, TypeError):
+        return None
+    return None
 
 
 def build(s, job: AiJob) -> tuple[E.Context, E.Sources, str, str, dict]:
@@ -103,6 +116,14 @@ def store(s, job: AiJob, kind: str, model: str, data: dict, cost: float, src: E.
             if pc["status"] != "not_mentioned":
                 p.status = pc["status"]
             p.evidence = pc["evidence_he"]
+    for c in data.get("catalysts", []):
+        when = catalyst_date(c)
+        if when:
+            from ..pipeline import add_event
+            add_event(s, job.ticker, datetime.combine(when, datetime.min.time()), "catalyst", c.get("kind", "other"),
+                      "watch" if c.get("importance") == "high" else "info", c.get("title_he", ""),
+                      data={"when": c.get("when_text", ""), "importance": c.get("importance"), "quote": (c.get("citation") or {}).get("quote", "")},
+                      dedupe=f"cat:{job.accession}:{c.get('title_he', '')[:40]}")
     g = data.get("guidance_direction")
     if g in ("lowered", "raised", "withdrawn"):
         sev, title = {"lowered": ("high", "ההנהלה הורידה את התחזית"), "raised": ("good", "ההנהלה העלתה את התחזית"),

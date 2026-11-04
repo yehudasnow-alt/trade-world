@@ -101,7 +101,7 @@ def demo_payload() -> dict:
                 "w": js.get("watch"), "h": js.get("holding"), "j": js.get("journal") or [], "tpl": js["company"].get("template"),
             }
             co[t] = {k: v for k, v in entry.items() if v not in (None, [], {}, "standard")}
-        return {"city": city, "days": days, "co": co, "status": get("/api/status"), "brief": get("/api/brief"),
+        return {"city": city, "days": days, "co": co, "status": get("/api/status"), "brief": get("/api/brief"), "timeline": get("/api/timeline"),
                 "portfolio": get("/api/portfolio"), "thesis_options": get("/api/thesis-options"), "journal": [],
                 "built": time.strftime("%Y-%m-%d")}
 

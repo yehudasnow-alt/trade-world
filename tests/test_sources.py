@@ -233,3 +233,27 @@ def test_transcript_split_and_local_file(isolated_env):
     text = transcripts.get_transcript("MSFT", 2026, 1)
     prepared, qa = transcripts.split_qa(text)
     assert qa.startswith("first question") or "first question" in qa[:40]
+
+
+def test_live_portfolio_from_ib_gateway():
+    from types import SimpleNamespace as NS
+
+    from metro import pipeline
+    from metro.db import Holding, kv_get, session
+    from metro.sources.ibkr import parse_portfolio
+    item = lambda sym, pos, px, cost, typ="STK": NS(contract=NS(symbol=sym, secType=typ, currency="USD"), position=pos, marketPrice=px,
+                                                 marketValue=pos * px, averageCost=cost, unrealizedPNL=(px - cost) * pos)
+    vals = [NS(tag="NetLiquidation", value="100000", currency="USD"), NS(tag="TotalCashValue", value="25000", currency="USD")]
+    pf = parse_portfolio([item("BRK B", 10, 500.0, 400.0), item("MSFT", 50, 400.0, 420.0), item("SPX", 1, 10.0, 9.0, "OPT")], vals)
+    assert [p["ticker"] for p in pf["positions"]] == ["BRK.B", "MSFT"] and pf["nav"] == 100000 and pf["cash"] == 25000
+    brk = pf["positions"][0]
+    assert abs(brk["weight_pct"] - 5.0) < 1e-9 and abs(brk["pnl_pct"] - 25.0) < 1e-9
+    assert parse_portfolio([], [])["nav"] is None  # not loaded yet: the caller must not wipe the holdings
+    pipeline.apply_flex(pf, source="ibkr_live")
+    with session() as s:
+        assert {h.ticker for h in s.query(Holding)} == {"BRK.B", "MSFT"} and kv_get(s, "portfolio.last")["source"] == "ibkr_live"
+    # the morning statement does not overwrite a fresher live portfolio
+    pipeline.apply_flex({"positions": [{"ticker": "AAPL", "quantity": 1, "avg_cost": 1, "market_value": 1, "weight_pct": 1,
+                                        "pnl_pct": 0, "currency": "USD"}], "nav": 1}, source="flex")
+    with session() as s:
+        assert {h.ticker for h in s.query(Holding)} == {"BRK.B", "MSFT"}

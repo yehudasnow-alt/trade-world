@@ -9,7 +9,7 @@
    The company card docks left on desktop and rises as a sheet on phones; the camera view offset
    keeps the chosen building centred in the part of the city that stays visible. */
 :root{
-  --sky:#EDEFF8; --asphalt:#C6CDE4; --lane:#FFFFFF; --walk:#FAFBFE; --lot:#F1F3FA; --clay:#FFFFFF;
+  --sky:#EDEFF8; --asphalt:#C6CDE4; --lane:#FFFFFF; --walk:#FAFBFE; --lot:#F1F3FA; --clay:#FFFFFF; --water:#B9D4F0; --shallow:#CFE2F6; --sand:#F5F0E6;
   --tree:#F4F5FB; --trunk:#CDD2E2; --car:#FFFFFF;
   --ink:#18203A; --ink-2:#4E5875; --ink-3:#8790A9;
   --glass:rgba(252,252,255,.84); --glass-strong:rgba(255,255,255,.97);
@@ -25,7 +25,7 @@
   --pw:452px;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --sky:#13122B; --asphalt:#1E1C43; --lane:#57539C; --walk:#26244F; --lot:#211F49; --clay:#7471B4;
+  --sky:#13122B; --asphalt:#1E1C43; --lane:#57539C; --walk:#26244F; --lot:#211F49; --clay:#7471B4; --water:#0C1433; --shallow:#142050; --sand:#2B2A55;
   --tree:#2E2B63; --trunk:#3B3878; --car:#CFCBFF;
   --ink:#EEEDFF; --ink-2:#AFACD8; --ink-3:#7B78AE;
   --glass:rgba(30,28,64,.82); --glass-strong:rgba(34,32,72,.97);
@@ -35,7 +35,7 @@
   --up-soft:rgba(65,219,156,.14); --down-soft:rgba(255,96,114,.15); --warn-soft:rgba(240,164,58,.15);
   --shadow:0 18px 44px -14px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.25); color-scheme:dark; } }
 :root[data-theme="dark"]{
-  --sky:#13122B; --asphalt:#1E1C43; --lane:#57539C; --walk:#26244F; --lot:#211F49; --clay:#7471B4;
+  --sky:#13122B; --asphalt:#1E1C43; --lane:#57539C; --walk:#26244F; --lot:#211F49; --clay:#7471B4; --water:#0C1433; --shallow:#142050; --sand:#2B2A55;
   --tree:#2E2B63; --trunk:#3B3878; --car:#CFCBFF;
   --ink:#EEEDFF; --ink-2:#AFACD8; --ink-3:#7B78AE;
   --glass:rgba(30,28,64,.82); --glass-strong:rgba(34,32,72,.97);
@@ -66,6 +66,13 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .lab{position:absolute; left:0; top:0; will-change:transform; white-space:nowrap}
 
 /* ---------- scene labels ---------- */
+.isl{z-index:3; pointer-events:auto; cursor:pointer; display:flex; align-items:center; gap:9px; padding:6px 12px 6px 6px; border-radius:15px; background:var(--glass-strong); border:1px solid var(--line); box-shadow:var(--shadow); transition:opacity .25s; white-space:nowrap}
+.isl .em{flex:none; width:34px; height:34px; border-radius:10px; display:grid; place-items:center; color:#fff}
+.isl b{display:block; font-size:14.5px; font-weight:700; line-height:1.15}
+.isl small{display:block; font-size:11px; color:var(--ink-3); line-height:1.2}
+.isl .v{font-size:12.5px; font-weight:600; margin-inline-start:6px}
+.isl.on{outline:2px solid var(--accent)}
+.isl.sm{padding:4px 10px 4px 4px; gap:7px} .isl.sm small,.isl.sm .v{display:none} .isl.sm .em{width:26px; height:26px; border-radius:8px} .isl.sm b{font-size:13px}
 .dlab{z-index:3; pointer-events:auto; cursor:pointer; display:flex; align-items:center; gap:8px; padding:5px 10px 5px 8px; border-radius:11px; font-size:13px; font-weight:600; background:var(--glass-strong); border:1px solid var(--line); box-shadow:0 8px 20px -10px rgba(40,48,92,.45); transition:opacity .25s}
 .dlab i{width:10px; height:10px; border-radius:3px; flex:none}
 .dlab .num{font-size:12px; font-weight:600}
@@ -122,7 +129,9 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .dot.ok,.dot.open{background:var(--up); box-shadow:0 0 0 3px var(--up-soft)} .dot.pre,.dot.post,.dot.stale,.dot.never{background:var(--warn)} .dot.error{background:var(--down)}
 .top .spacer{flex:1}
 .actions{display:flex; gap:8px; align-items:center}
-.btn{display:inline-flex; align-items:center; gap:8px; height:40px; padding:0 13px; border-radius:13px; font-size:13.5px; font-weight:500; transition:background .15s; position:relative}
+.btn{display:inline-flex; align-items:center; gap:8px; height:40px; padding:0 13px; border-radius:13px; font-size:13.5px; font-weight:500; transition:background .15s; position:relative; white-space:nowrap}
+@media (max-width: 1400px){ .btn kbd{display:none} .stat:nth-child(5){display:none} }
+@media (max-width: 1240px){ #briefBtn .lbl,#tlBtn .lbl{display:none} #briefBtn,#tlBtn{width:40px; padding:0; justify-content:center} .brand small{display:none} }
 .btn:hover{background:var(--accent-soft)}
 .btn.icon{width:40px; padding:0; justify-content:center}
 .btn kbd{font-family:var(--font-data); font-size:11px; color:var(--ink-3); border:1px solid var(--line-2); border-radius:5px; padding:0 5px; line-height:17px}
@@ -137,7 +146,8 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .rail header small{font-size:11.5px; color:var(--ink-3)}
 .rail ol{list-style:none; margin:0; padding:0 6px 6px; overflow:auto; min-height:0}
 .rail footer{padding:8px 16px 12px; font-size:11px; color:var(--ink-3); border-top:1px solid var(--line)}
-.drow{display:grid; grid-template-columns:10px minmax(0,1fr) auto; grid-template-rows:auto auto; column-gap:10px; row-gap:5px; align-items:center; width:100%; padding:8px 10px; border-radius:11px; text-align:start}
+.drow .swi{width:22px; height:22px; border-radius:7px; display:grid; place-items:center; color:#fff}
+.drow{display:grid; grid-template-columns:22px minmax(0,1fr) auto; grid-template-rows:auto auto; column-gap:10px; row-gap:5px; align-items:center; width:100%; padding:8px 10px; border-radius:11px; text-align:start}
 .drow:hover,.drow.on{background:var(--accent-soft)}
 .drow .sw{width:10px; height:10px; border-radius:3px}
 .drow .nm{font-weight:500; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
@@ -150,7 +160,10 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .hrow .t{font-family:var(--font-data); font-weight:700; font-size:14px}
 .hrow .w{height:5px; border-radius:3px; background:var(--line); position:relative; overflow:hidden}
 .hrow .w i{position:absolute; inset-block:0; inset-inline-start:0; background:var(--accent); border-radius:3px}
-.hrow .meta{grid-column:2 / 4; display:flex; gap:6px; align-items:center; font-size:11.5px; color:var(--ink-3)}
+.hrow .meta{grid-column:1 / 4; display:flex; flex-wrap:wrap; gap:4px 6px; align-items:center; font-size:11.5px; color:var(--ink-3)}
+.pfsum{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:0 12px 8px}
+.pfsum div{display:flex; flex-direction:column; padding:7px 9px; border-radius:10px; background:color-mix(in srgb, var(--ink) 4%, transparent); min-width:0}
+.pfsum span{font-size:11px; color:var(--ink-3)} .pfsum b{font-size:13.5px; font-weight:600; white-space:nowrap}
 .expo{padding:4px 16px 12px}
 .expo .bar{display:flex; height:10px; border-radius:5px; overflow:hidden; margin:6px 0}
 .expo .bar i{display:block; height:100%}
@@ -314,6 +327,11 @@ ul.clean li{margin:2px 0}
 .tli i{width:10px; height:10px; border-radius:50%; margin-top:4px; background:var(--ink-3)}
 .tli i.veto,.tli i.high{background:var(--down)} .tli i.watch{background:var(--warn)} .tli i.good{background:var(--up)} .tli i.info{background:var(--line-2)}
 .tli a{color:inherit}
+.tlkey{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:11px; color:var(--ink-3); margin:4px 0 2px}
+.tlkey span{display:inline-flex; align-items:center; gap:5px}
+.tlkey i{display:inline-block; width:9px; height:9px; border-radius:50%}
+.tlkey .k-rep{background:var(--up)} .tlkey .k-next{background:var(--accent); border-radius:2px; transform:rotate(45deg)} .tlkey .k-cat{background:var(--beacon); border-radius:1px} .tlkey .k-ev{background:var(--warn); border-radius:1px; transform:rotate(45deg); width:7px; height:7px}
+.tlh{font-size:12px; font-weight:600; color:var(--ink-2); margin:10px 0 2px}
 .krow{display:grid; grid-template-columns:minmax(0,1.6fr) 72px minmax(0,1fr) 30px; gap:6px; align-items:end; margin-bottom:6px}
 .krow .x{height:34px; border-radius:10px; color:var(--ink-3)}
 .krow .x:hover{background:var(--line)}
@@ -354,6 +372,17 @@ ul.clean li{margin:2px 0}
 .sheet header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px 20px 12px; border-bottom:1px solid var(--line)}
 .sheet h2{margin:0; font-size:18px}
 .sheet .body{overflow:auto; padding:6px 20px 20px}
+.sheet.wide{width:min(820px, 100%)}
+.tlwhere{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.tlwhere > div{display:flex; flex-direction:column; gap:3px; padding:10px 12px; border-radius:12px; background:color-mix(in srgb, var(--ink) 4%, transparent)}
+.tlwhere span{font-size:11.5px; color:var(--ink-3)} .tlwhere b{font-size:14px} .tlwhere small{font-size:11px; color:var(--ink-3)}
+.yr{position:relative; height:8px; border-radius:4px; background:var(--line); overflow:hidden; margin:4px 0 2px; direction:ltr}
+.yr i{position:absolute; inset-block:0; left:0; background:var(--accent); border-radius:4px}
+.yr s{position:absolute; top:0; bottom:0; width:1px; background:var(--glass-strong); z-index:1}
+.tlchart{overflow-x:auto} .tlchart svg{min-width:600px}
+.tlm{cursor:pointer}
+.tkb{font-family:var(--font-data); font-weight:700; font-size:12.5px; padding:0 6px; border-radius:6px; background:var(--line); direction:ltr}
+.tkb:hover{background:var(--accent-soft); color:var(--accent)}
 .bgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px}
 .bcard{padding:10px 12px; border-radius:13px; border:1px solid var(--line); text-align:start; display:flex; flex-direction:column; gap:2px}
 .bcard:hover{background:var(--accent-soft)}
@@ -380,7 +409,8 @@ ul.clean li{margin:2px 0}
   .rail.show{display:flex}
   .strip{display:none}
   .brand{padding:7px 11px}
-  .brand small,.brand div,.btn .lbl,.btn kbd,.modechip .full,#statusBtn{display:none}
+  .brand small,.brand div,.btn .lbl,.btn kbd,.modechip .full,#statusBtn,#themeBtn{display:none}
+  .tlwhere{grid-template-columns:1fr}
   .cam #zIn,.cam #zOut,.cam #rotate,.cam hr{display:none}
   .actions{gap:6px}
   .btn.icon,.btn{width:38px; height:38px; padding:0; justify-content:center}
@@ -399,6 +429,7 @@ ul.clean li{margin:2px 0}
   .rings{grid-template-columns:repeat(5,1fr)}
   .res{grid-template-columns:repeat(2,minmax(0,1fr))}
   .co .card{min-width:0; max-width:200px; padding:6px 10px 6px 8px}
+  .isl{gap:6px; padding:4px 9px 4px 4px; border-radius:12px} .isl .em{width:26px; height:26px; border-radius:8px} .isl b{font-size:12.5px} .isl small{display:none} .isl .v{font-size:11px}
   .co .tile{width:28px; height:28px}
   .co .chips span:nth-child(n+3){display:none}
 }
@@ -417,13 +448,14 @@ ul.clean li{margin:2px 0}
     <div class="top">
       <div class="brand glass">
         <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M3 24V13l6-2.4V24z" fill="var(--accent)" opacity=".42"/><path d="M10 24V6.5l7-3.5v21z" fill="var(--accent)"/><path d="M18 24V10.5l7 2.2V24z" fill="var(--accent)" opacity=".68"/></svg>
-        <div><b>מטרופולין</b><small>S&amp;P 500 · 11 רובעים</small></div>
+        <div><b>מטרופולין</b><small>S&amp;P 500 · 11 איים</small></div>
       </div>
       <div class="strip glass" id="strip"></div>
       <div class="spacer"></div>
       <div class="actions">
         <button class="modechip" type="button" id="modeChip"></button>
-        <button class="btn glass only-phone" type="button" id="railBtn" aria-label="רובעים" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 2h6v6H2zM10 2h6v4h-6zM10 8h6v8h-6zM2 10h6v6H2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+        <button class="btn glass only-phone" type="button" id="railBtn" aria-label="איים" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 2h6v6H2zM10 2h6v4h-6zM10 8h6v8h-6zM2 10h6v6H2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+        <button class="btn glass" type="button" id="tlBtn" aria-label="ציר זמן"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 9h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="5" cy="9" r="1.8" fill="currentColor"/><path d="M10.5 5.5l2 3.5-2 3.5-2-3.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M15 4v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/></svg><span class="lbl">ציר זמן</span></button>
         <button class="btn glass" type="button" id="briefBtn" aria-label="תדריך בוקר"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5h7l3 3V15.5H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.5 8h5M6.5 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="lbl">תדריך</span></button>
         <button class="btn glass" type="button" id="searchBtn" aria-label="חיפוש מניה"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 12l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="lbl">חיפוש מניה</span><kbd>Ctrl K</kbd></button>
         <button class="btn glass icon" type="button" id="bellBtn" aria-label="התראות"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4.5 12.5V8a4.5 4.5 0 0 1 9 0v4.5l1.5 1.5H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7.3 15.5a1.8 1.8 0 0 0 3.4 0" stroke="currentColor" stroke-width="1.5" fill="none"/></svg><span class="badge" id="bellBadge" hidden></span></button>
@@ -432,7 +464,7 @@ ul.clean li{margin:2px 0}
       </div>
     </div>
 
-    <section class="rail glass" id="rail" aria-label="רובעים"></section>
+    <section class="rail glass" id="rail" aria-label="איים"></section>
 
     <div class="side">
       <div class="cam glass" role="group" aria-label="מצלמה">
@@ -456,13 +488,14 @@ ul.clean li{margin:2px 0}
   <div id="search" class="overlay" hidden>
     <div class="sbox glass" role="dialog" aria-modal="true" aria-label="חיפוש מניה">
       <div class="in"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 12l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-        <input id="q" type="text" autocomplete="off" spellcheck="false" placeholder="סימול, שם חברה, רובע או תת-ענף" aria-label="חיפוש" aria-controls="qres"></div>
+        <input id="q" type="text" autocomplete="off" spellcheck="false" placeholder="סימול, שם חברה, אי (סקטור) או תת-ענף" aria-label="חיפוש" aria-controls="qres"></div>
       <ul id="qres" role="listbox"></ul>
       <footer><span>↑↓ ניווט</span><span>Enter פתיחה</span><span>Esc סגירה</span></footer>
     </div>
   </div>
   <div id="drawer" class="drawer glass" hidden role="dialog" aria-label="התראות"></div>
   <div id="statusPop" class="status glass" hidden role="dialog" aria-label="מצב החיבורים"></div>
+  <div id="tline" class="overlay" hidden><div class="sheet wide glass" role="dialog" aria-modal="true" aria-label="ציר זמן" id="tlineBody"></div></div>
   <div id="brief" class="overlay" hidden><div class="sheet glass" role="dialog" aria-modal="true" aria-label="תדריך בוקר" id="briefBody"></div></div>
   <div id="toast" class="toast" hidden role="status"></div>
 </div>
@@ -526,6 +559,7 @@ async function demoApi(path, opts){
   if (p === '/api/city') { const c = structuredClone(DEMO.city); for (const r of c.companies) { if (L.watch[r.t]) r.watch = true; if (L.unwatch.includes(r.t)) r.watch = false; } return c; }
   if (p === '/api/status') return DEMO.status;
   if (p === '/api/brief') return DEMO.brief;
+  if (p === '/api/timeline') return DEMO.timeline;
   if (p === '/api/portfolio') return DEMO.portfolio;
   if (p === '/api/alerts') return DEMO.city.alerts;
   if (p === '/api/thesis-options') return DEMO.thesis_options;
@@ -572,34 +606,37 @@ function demoCompany(t, L){
 
 /* ================= sectors ================= */
 const SECTORS = [
-  { en: 'Information Technology', he: 'טכנולוגיה', etf: 'XLK', hue: '#4F6BF5' },
-  { en: 'Communication Services', he: 'תקשורת', etf: 'XLC', hue: '#8A63E8' },
-  { en: 'Consumer Discretionary', he: 'צריכה מחזורית', etf: 'XLY', hue: '#DD6CA2' },
-  { en: 'Financials', he: 'פיננסים', etf: 'XLF', hue: '#2C9C93' },
-  { en: 'Health Care', he: 'בריאות', etf: 'XLV', hue: '#D98A4A' },
-  { en: 'Industrials', he: 'תעשייה', etf: 'XLI', hue: '#6E8199' },
-  { en: 'Consumer Staples', he: 'צריכה בסיסית', etf: 'XLP', hue: '#8FA34B' },
-  { en: 'Energy', he: 'אנרגיה', etf: 'XLE', hue: '#C9A227' },
-  { en: 'Utilities', he: 'תשתיות', etf: 'XLU', hue: '#3D9BD6' },
-  { en: 'Real Estate', he: 'נדל״ן', etf: 'XLRE', hue: '#B07A5C' },
-  { en: 'Materials', he: 'חומרי גלם', etf: 'XLB', hue: '#7C8C6E' },
+  { en: 'Information Technology', he: 'טכנולוגיה', etf: 'XLK', hue: '#4F6BF5', desc: 'שבבים, תוכנה וחומרה', icon: '<rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/>' },
+  { en: 'Communication Services', he: 'תקשורת', etf: 'XLC', hue: '#8A63E8', desc: 'אינטרנט, מדיה וסלולר', icon: '<circle cx="12" cy="11" r="1.8"/><path d="M12 13v8M8.2 14.8a5.4 5.4 0 0 1 0-7.6M15.8 7.2a5.4 5.4 0 0 1 0 7.6M5.4 17.6a9.4 9.4 0 0 1 0-13.2M18.6 4.4a9.4 9.4 0 0 1 0 13.2"/>' },
+  { en: 'Consumer Discretionary', he: 'צריכה מחזורית', etf: 'XLY', hue: '#DD6CA2', desc: 'קמעונאות, רכב ופנאי', icon: '<path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>' },
+  { en: 'Financials', he: 'פיננסים', etf: 'XLF', hue: '#2C9C93', desc: 'בנקים, ביטוח ותשלומים', icon: '<path d="M3 9l9-5 9 5"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>' },
+  { en: 'Health Care', he: 'בריאות', etf: 'XLV', hue: '#D98A4A', desc: 'תרופות, ציוד וביטוח בריאות', icon: '<path d="M3 12h4l2-5 3 10 2-5h7"/>' },
+  { en: 'Industrials', he: 'תעשייה', etf: 'XLI', hue: '#6E8199', desc: 'תעופה, הובלה ומכונות', icon: '<path d="M3 20V10l5 3V10l5 3V7l8 4v9z"/><path d="M3 20h18"/>' },
+  { en: 'Consumer Staples', he: 'צריכה בסיסית', etf: 'XLP', hue: '#8FA34B', desc: 'מזון, משקאות וצרכי בית', icon: '<path d="M3 4h2l2.2 10.5h10.6L20 7H6.3"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>' },
+  { en: 'Energy', he: 'אנרגיה', etf: 'XLE', hue: '#C9A227', desc: 'נפט, גז וזיקוק', icon: '<path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 0-8z"/>' },
+  { en: 'Utilities', he: 'תשתיות', etf: 'XLU', hue: '#3D9BD6', desc: 'חשמל, מים וגז', icon: '<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>' },
+  { en: 'Real Estate', he: 'נדל״ן', etf: 'XLRE', hue: '#B07A5C', desc: 'קרנות ריט ונכסים', icon: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>' },
+  { en: 'Materials', he: 'חומרי גלם', etf: 'XLB', hue: '#7C8C6E', desc: 'כימיקלים, מתכות ואריזה', icon: '<path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18M9 4l-1.5 5L12 20M15 4l1.5 5L12 20"/>' },
 ];
 const SEC_BY_EN = Object.fromEntries(SECTORS.map((s, i) => [s.en, i]));
+const secIcon = (s, n = 20) => `<svg width="${n}" height="${n}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${s.icon}</svg>`;
 const INDUSTRIAL = new Set(['Energy', 'Utilities', 'Materials']);
 const THESIS = { ok: ['התזה תקפה', 'up'], watch: ['במעקב', 'wr'], broken: ['התזה נשברה', 'down'] };
 const GUIDE = { raised: ['הועלתה', 'up'], maintained: ['נשמרה', ''], lowered: ['הורדה', 'down'], initiated: ['ניתנה לראשונה', 'ac'], withdrawn: ['נמשכה', 'down'], none: ['לא ניתנה', ''], unknown: ['לא ברור', ''] };
 
 /* ================= layout ================= */
 const inset = (r, p) => ({ x: r.x + p, y: r.y + p, w: Math.max(0.2, r.w - 2 * p), h: Math.max(0.2, r.h - 2 * p) });
-/* The city is a grid of districts (sectors) with boulevards between them. Inside a district every sub-industry is an
+/* The city is an archipelago: every sector is an island with a ring road, bridges cross the water to its neighbours. Inside a district every sub-industry is an
    avenue: a street with buildings on both sides, the biggest companies at its head. Building height = market cap. */
 const WORLD = { w: 268, d: 178 };
-const ROAD = 4.2, WALK = 2.4, PLATE_H = 0.42, LOT_H = 0.12, BASE_Y = PLATE_H + LOT_H;
+const ROAD = 3.6, WALK = 2.4, CH = 26, WATER_Y = -0.7, LAND_Y = 0.06, PLATE_H = 0.42, LOT_H = 0.12, BASE_Y = PLATE_H + LOT_H;
 const GAP = 2.6, STREET = 3.6, EDGE = 0.8, CROSS = 6, BAND_GAP = 2.6, B_MIN = 2.6, B_MAX = 9, H_MAX = 110;
 let H_SCALE = store.get(LS_PREFIX + 'hscale', 'real') === 'compressed' ? 'compressed' : 'real';
 let CAP_MAX = 1, SPAN = 300, HOME_DIST = 800;
 const capFrac = c => clamp((c.capv || 0) / CAP_MAX, 0, 1);
-function capHeight(c){ const k = capFrac(c); return H_SCALE === 'real' ? Math.max(0.6, k * H_MAX) : 0.9 + 46 * Math.sqrt(k); }
+// a floor of a few storeys keeps every company visible; above it height grows in a straight line with market cap
+const H_FLOOR = 2.2;
+function capHeight(c){ const k = capFrac(c); return H_SCALE === 'real' ? H_FLOOR + k * (H_MAX - H_FLOOR) : H_FLOOR + 44 * Math.sqrt(k); }
 function shelf(items, width, gapX, gapY){
   const rows = []; let row = null;
   for (const it of items) {
@@ -637,7 +674,7 @@ function layoutDistrict(d){
   d.pack = best.pk; d.innerW = best.pk.w; d.innerH = best.pk.h;
 }
 
-let C = [], DIST = [], byT = {}, CITY = null, ROADS = null;
+let C = [], DIST = [], byT = {}, CITY = null, ROADS = null, BRIDGES = [];
 function buildData(city){
   CITY = city;
   C = city.companies.map((r, i) => ({ ...r, i, si: SEC_BY_EN[r.s] ?? 5 }));
@@ -649,21 +686,39 @@ function buildData(city){
   DIST = SECTORS.map((s, si) => ({ si, s, streets: [], comps: C.filter(c => c.si === si) }));
   const live = DIST.filter(d => d.comps.length);
   for (const d of live) { d.capSum = d.comps.reduce((a, c) => a + c.capv, 0); layoutDistrict(d); }
-  // districts packed in rows, then stretched so the rows tile the city and the boulevards line up
-  const outers = live.map(d => ({ d, w: d.innerW + 2 * (WALK + ROAD), h: d.innerH + 2 * (WALK + ROAD) })).sort((a, b) => b.d.capSum - a.d.capSum);
-  const total = outers.reduce((s, o) => s + o.w * o.h, 0);
+  // islands packed in rows and spread evenly across the row; water fills the rest
+  const items = live.map(d => { const lw = d.innerW + 2 * (WALK + 2 * ROAD), lh = d.innerH + 2 * (WALK + 2 * ROAD); return { d, lw, lh, w: lw + CH, h: lh + CH }; }).sort((a, b) => b.d.capSum - a.d.capSum);
+  const total = items.reduce((s, o) => s + o.w * o.h, 0);
   let best = null;
   for (const f of [0.7, 0.8, 0.9, 1, 1.1, 1.25, 1.4]) {
-    const TW = Math.max(...outers.map(o => o.w), Math.sqrt(total * 1.6) * f);
-    const pk = shelf(outers, TW, 0, 0);
+    const TW = Math.max(...items.map(o => o.w), Math.sqrt(total * 1.6) * f);
+    const pk = shelf(items, TW, 0, 0);
     const cost = (TW * pk.h - total) + Math.abs(Math.log(TW / pk.h / 1.6)) * total * 0.7;
     if (!best || cost < best.cost) best = { cost, pk, TW };
   }
   WORLD.w = best.TW; WORLD.d = best.pk.h; SPAN = Math.max(WORLD.w, WORLD.d);
-  for (const row of best.pk.rows) {
-    const sumW = row.items.reduce((s, r) => s + r.it.w, 0); const extra = WORLD.w - sumW; let x = -WORLD.w / 2;
-    for (const { it } of row.items) { const w = it.w + extra * it.w / sumW; it.d.outer = { x, y: -WORLD.d / 2 + row.y, w, h: row.h }; it.d.rect = inset(it.d.outer, ROAD); x += w; }
-  }
+  const rows = best.pk.rows.map(row => row.items.map(r => r.it.d));
+  best.pk.rows.forEach(row => {
+    const gap = (WORLD.w - row.items.reduce((s, r) => s + r.it.lw, 0)) / row.items.length; let x = -WORLD.w / 2 + gap / 2;
+    for (const { it } of row.items) {
+      const L = { x, y: -WORLD.d / 2 + row.y + (row.h - it.lh) / 2, w: it.lw, h: it.lh }; x += it.lw + gap;
+      it.d.land = L; it.d.outer = L; it.d.ring = inset(L, ROAD); it.d.rect = inset(L, 2 * ROAD);
+    }
+  });
+  BRIDGES = [];
+  const span = (a0, a1, b0, b1) => [Math.max(a0, b0), Math.min(a1, b1)];
+  rows.forEach((row, ri) => {
+    for (let k = 0; k < row.length - 1; k++) {  // across the channel to the right-hand neighbour
+      const A = row[k].ring, B = row.at(k + 1).ring; const [z0, z1] = span(A.y, A.y + A.h, B.y, B.y + B.h);
+      if (z1 - z0 > 6) { const z = (z0 + z1) / 2; BRIDGES.push({ A: row[k], B: row.at(k + 1), p: [A.x + A.w, z], q: [B.x, z] }); }
+    }
+    if (ri === 0) return;
+    for (const d of row) {  // to the island above with the widest overlap
+      let top = null, ov = 0;
+      for (const u of rows.at(ri - 1)) { const [x0, x1] = span(u.ring.x, u.ring.x + u.ring.w, d.ring.x, d.ring.x + d.ring.w); if (x1 - x0 > ov) { ov = x1 - x0; top = { u, x: (x0 + x1) / 2 }; } }
+      if (top && ov > 6) BRIDGES.push({ A: top.u, B: d, p: [top.x, top.u.ring.y + top.u.ring.h], q: [top.x, d.ring.y] });
+    }
+  });
   for (const d of live) {
     const ox = d.rect.x + (d.rect.w - d.innerW) / 2, oz = d.rect.y + (d.rect.h - d.innerH) / 2;
     for (const row of d.pack.rows) for (const { it: b, x } of row.items) {
@@ -676,28 +731,23 @@ function buildData(city){
     }
     d.cx = d.rect.x + d.rect.w / 2; d.cz = d.rect.y + d.rect.h / 2;
   }
-  ROADS = buildRoads(live.map(d => d.outer));
+  ROADS = buildRoads(live, BRIDGES);
 }
-function buildRoads(rects){
-  const key = (x, z) => x.toFixed(1) + ',' + z.toFixed(1);
-  const V = new Map(); const segs = [];
-  for (const r of rects) {
-    const pts = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
-    for (const p of pts) V.set(key(...p), p);
-    for (let i = 0; i < 4; i++) segs.push([pts[i], pts[(i + 1) % 4]]);
-  }
-  const verts = [...V.values()]; const edges = new Map(); const tol = 0.05;
-  for (const [a, b] of segs) {
-    const horiz = Math.abs(a[1] - b[1]) < tol;
-    const lo = horiz ? Math.min(a[0], b[0]) : Math.min(a[1], b[1]), hi = horiz ? Math.max(a[0], b[0]) : Math.max(a[1], b[1]);
-    const on = verts.filter(p => horiz ? Math.abs(p[1] - a[1]) < tol && p[0] > lo - tol && p[0] < hi + tol : Math.abs(p[0] - a[0]) < tol && p[1] > lo - tol && p[1] < hi + tol)
-      .sort((p, q) => horiz ? p[0] - q[0] : p[1] - q[1]);
-    for (let i = 0; i < on.length - 1; i++) {
-      const p = on[i], q = on[i + 1]; const len = Math.hypot(q[0] - p[0], q[1] - p[1]); if (len < 0.6) continue;
-      const ka = key(...p), kb = key(...q); const k = [ka, kb].sort().join('|');
-      if (!edges.has(k)) edges.set(k, { a: p, b: q, ka, kb, len });
+function buildRoads(islands, bridges){
+  const key = (x, z) => x.toFixed(2) + ',' + z.toFixed(2); const tol = 0.05;
+  const edges = new Map();
+  const add = (p, q, bridge) => { const len = Math.hypot(q[0] - p[0], q[1] - p[1]); if (len < 0.5) return; const ka = key(...p), kb = key(...q); const k = [ka, kb].sort().join('|'); if (!edges.has(k)) edges.set(k, { a: p, b: q, ka, kb, len, bridge }); };
+  for (const d of islands) {
+    const r = d.ring, x0 = r.x, x1 = r.x + r.w, z0 = r.y, z1 = r.y + r.h;
+    const ends = bridges.flatMap(b => (b.A === d ? [b.p] : []).concat(b.B === d ? [b.q] : []));
+    const sides = [[[x0, z0], [x1, z0], 'h'], [[x1, z0], [x1, z1], 'v'], [[x0, z1], [x1, z1], 'h'], [[x0, z0], [x0, z1], 'v']];
+    for (const [a, b, o] of sides) {
+      const pts = [a, b, ...ends.filter(p => o === 'h' ? Math.abs(p[1] - a[1]) < tol && p[0] > a[0] && p[0] < b[0] : Math.abs(p[0] - a[0]) < tol && p[1] > a[1] && p[1] < b[1])]
+        .sort((p, q) => o === 'h' ? p[0] - q[0] : p[1] - q[1]);
+      for (let k = 0; k < pts.length - 1; k++) add(pts[k], pts.at(k + 1), false);
     }
   }
+  for (const b of bridges) add(b.p, b.q, true);
   const nodes = new Map(); const E = [...edges.values()];
   E.forEach((e, i) => { e.i = i; for (const [k, p] of [[e.ka, e.a], [e.kb, e.b]]) { if (!nodes.has(k)) nodes.set(k, { k, p, edges: [] }); nodes.get(k).edges.push(i); } });
   return { edges: E, nodes };
@@ -767,6 +817,8 @@ function slab(w, d, h, r){ const g = new THREE.ExtrudeGeometry(rrShape(w, d, r),
 const MAT = {
   ground: new THREE.MeshStandardMaterial({ roughness: 1 }),
   asphalt: new THREE.MeshStandardMaterial({ roughness: 0.96 }),
+  shallow: new THREE.MeshStandardMaterial({ roughness: 0.6 }),
+  sand: new THREE.MeshStandardMaterial({ roughness: 1 }),
   walk: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
   lot: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
   lane: new THREE.MeshBasicMaterial({ polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
@@ -828,8 +880,30 @@ const plateMeshes = [];
 let NB = 0;
 
 function buildScene(){
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), MAT.ground); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.06; ground.receiveShadow = true; scene.add(ground);
-  const base = new THREE.Mesh(slab(WORLD.w + ROAD * 2 + 0.2, WORLD.d + ROAD * 2 + 0.2, 0.06, 7), MAT.asphalt); base.position.y = -0.06; base.receiveShadow = true; scene.add(base);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(9000, 9000), MAT.ground); ground.rotation.x = -Math.PI / 2; ground.position.y = WATER_Y; ground.receiveShadow = true; scene.add(ground);
+  // islands: shallow water, a beach, the ring road on top, then the district plate
+  for (const d of DIST) {
+    if (!d.land) continue; const L = d.land, cx = L.x + L.w / 2, cz = L.y + L.h / 2;
+    const shallow = new THREE.Mesh(slab(L.w + 14, L.h + 14, 0.04, 14), MAT.shallow); shallow.position.set(cx, WATER_Y, cz); shallow.receiveShadow = true; scene.add(shallow);
+    const beach = new THREE.Mesh(slab(L.w + 3.6, L.h + 3.6, -WATER_Y, 8), MAT.sand); beach.position.set(cx, WATER_Y, cz); beach.receiveShadow = true; beach.userData.d = d; scene.add(beach); plateMeshes.push(beach);
+    const land = new THREE.Mesh(slab(L.w, L.h, LAND_Y, 6), MAT.asphalt); land.position.set(cx, 0, cz); land.receiveShadow = true; land.userData.d = d; scene.add(land); plateMeshes.push(land);
+  }
+  // bridges over the channels: deck, railings, pillars
+  const decks = [], rails = [], piers = [];
+  for (const b of BRIDGES) {
+    const horiz = Math.abs(b.p[1] - b.q[1]) < 0.01, len = Math.hypot(b.q[0] - b.p[0], b.q[1] - b.p[1]) - 2 * ROAD + 1.2;
+    const mx = (b.p[0] + b.q[0]) / 2, mz = (b.p[1] + b.q[1]) / 2, wide = 2 * ROAD * 0.92;
+    decks.push(horiz ? [mx, mz, len, wide] : [mx, mz, wide, len]);
+    for (const o of [-1, 1]) rails.push(horiz ? [mx, mz + o * wide / 2, len, 0.16] : [mx + o * wide / 2, mz, 0.16, len]);
+    for (let t = -len / 2 + 3; t <= len / 2 - 3; t += 6.5) for (const o of [-1, 1]) piers.push(horiz ? [mx + t, mz + o * wide * 0.32] : [mx + o * wide * 0.32, mz + t]);
+  }
+  const deckMesh = new THREE.InstancedMesh(unitBox, MAT.asphalt, Math.max(1, decks.length)); deckMesh.count = decks.length;
+  decks.forEach(([x, z, w, dd], i) => setInst(deckMesh, i, x, LAND_Y - 0.42, z, w, 0.42, dd));
+  const railMesh = new THREE.InstancedMesh(unitBox, MAT.detail, Math.max(1, rails.length)); railMesh.count = rails.length;
+  rails.forEach(([x, z, w, dd], i) => setInst(railMesh, i, x, LAND_Y, z, w, 0.5, dd));
+  const pierMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, Math.max(1, piers.length)); pierMesh.count = piers.length;
+  piers.forEach(([x, z], i) => setInst(pierMesh, i, x, WATER_Y, z, 0.32, LAND_Y - 0.42 - WATER_Y, 0.32));
+  for (const m of [deckMesh, railMesh, pierMesh]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); }
   const lots = [], streets = [], dashes = [], inner = [], zebras = [], trees = [];
   for (const d of DIST) {
     if (!d.rect) continue;
@@ -875,7 +949,7 @@ function buildScene(){
     }
   }
   const mkFlat = (list, y) => { const m = new THREE.InstancedMesh(unitPlane, MAT.lane, list.length); list.forEach(([x, z, dx, dz, len, wid], i) => { dummy.position.set(x, y, z); dummy.rotation.set(0, Math.atan2(dx, dz), 0); dummy.scale.set(wid, 1, len); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); }); m.receiveShadow = true; scene.add(m); return m; };
-  laneMesh = mkFlat(dashes, 0.012); zebraMesh = mkFlat(zebras, 0.014); mkFlat(inner, PLATE_H + 0.02); dummy.rotation.set(0, 0, 0);
+  laneMesh = mkFlat(dashes, LAND_Y + 0.012); zebraMesh = mkFlat(zebras, LAND_Y + 0.014); mkFlat(inner, PLATE_H + 0.02); dummy.rotation.set(0, 0, 0);
   const crown = new THREE.IcosahedronGeometry(1, 0);
   treeMesh = new THREE.InstancedMesh(crown, MAT.tree, trees.length); trunkMesh = new THREE.InstancedMesh(unitCyl, MAT.trunk, trees.length);
   trees.forEach(([x, z, s, y0], i) => { dummy.position.set(x, y0 + 0.62 + s, z); dummy.scale.set(s, s * 1.12, s); dummy.updateMatrix(); treeMesh.setMatrixAt(i, dummy.matrix); dummy.position.set(x, y0, z); dummy.scale.set(0.07, 0.75, 0.07); dummy.updateMatrix(); trunkMesh.setMatrixAt(i, dummy.matrix); });
@@ -918,11 +992,11 @@ const CARS = [];
 /* ================= theme ================= */
 const COL = {}; let dark = false;
 function readTheme(){
-  for (const k of ['sky', 'asphalt', 'lane', 'walk', 'lot', 'clay', 'tree', 'trunk', 'car', 'up', 'down', 'cheap', 'beacon', 'accent', 'ink', 'warn']) COL[k] = new THREE.Color(tok('--' + k) || '#888');
+  for (const k of ['sky', 'asphalt', 'lane', 'walk', 'lot', 'clay', 'tree', 'trunk', 'car', 'up', 'down', 'cheap', 'beacon', 'accent', 'ink', 'warn', 'water', 'shallow', 'sand']) COL[k] = new THREE.Color(tok('--' + k) || '#888');
   dark = (COL.sky.r * 0.2126 + COL.sky.g * 0.7152 + COL.sky.b * 0.0722) < 0.2;
   scene.background = COL.sky.clone();
   scene.fog = new THREE.Fog(COL.sky.clone(), Math.max(HOME_DIST, SPAN) * (dark ? 1.7 : 2.1), Math.max(HOME_DIST, SPAN) * (dark ? 3.6 : 4.4));
-  MAT.ground.color.copy(COL.sky).lerp(COL.asphalt, dark ? 0.25 : 0.18);
+  MAT.ground.color.copy(COL.water); MAT.shallow.color.copy(COL.shallow); MAT.sand.color.copy(COL.sand);
   MAT.asphalt.color.copy(COL.asphalt); MAT.walk.color.copy(COL.walk); MAT.lot.color.copy(COL.lot); MAT.lane.color.copy(COL.lane);
   MAT.tree.color.copy(COL.tree); MAT.trunk.color.copy(COL.trunk); MAT.car.color.copy(COL.car);
   MAT.glass.color.copy(dark ? new THREE.Color('#FFE6A8') : COL.asphalt.clone().lerp(COL.ink, 0.2)); MAT.glass.emissive.set(dark ? '#7A6A40' : '#000000');
@@ -1044,7 +1118,7 @@ function stepCars(dt){
     const e = car.e; const a = car.fwd ? e.a : e.b, b = car.fwd ? e.b : e.a;
     const dx = (b[0] - a[0]) / e.len, dz = (b[1] - a[1]) / e.len; const lane = ROAD * 0.42;
     const x = a[0] + dx * car.s - dz * lane, z = a[1] + dz * car.s + dx * lane; const ry = Math.atan2(dx, dz);
-    const sc = car.bus ? 1.9 : 1; const y = flat ? -2 : 0;
+    const sc = car.bus ? 1.9 : 1; const y = flat ? -2 : LAND_Y;
     setInst(carBody, i, x, y, z, 1, 1, sc, ry); setInst(carCab, i, x, y, z, 1, 1, car.bus ? 2.6 : 1, ry);
   });
   carBody.instanceMatrix.needsUpdate = carCab.instanceMatrix.needsUpdate = true;
@@ -1103,8 +1177,7 @@ const setT = (e, x, y) => { e.style.transform = `translate(${x.toFixed(1)}px,${y
 let TK_POOL = [], ST_POOL = [], PIN_POOL = [], CO_POOL = [];
 function buildLabels(){
   for (const d of DIST) if (d.rect) {
-    d.lab = mk('dlab'); d.lab.addEventListener('click', () => focusDistrict(d));
-    d.lead = svgEl('line'); d.dot = svgEl('circle'); d.dot.setAttribute('r', '3.5');
+    d.lab = mk('isl'); d.lab.addEventListener('click', () => focusDistrict(d));
   }
   TK_POOL = Array.from({ length: 90 }, () => mk('tk'));
   ST_POOL = Array.from({ length: 40 }, () => mk('st'));
@@ -1161,10 +1234,31 @@ function calloutItems(){
 }
 function updateLabels(){
   const camDist = camera.position.distanceTo(controls.target); const flat2D = HS.v < 0.5;
-  const showD = (camDist > HOME_DIST * 0.62 || flat2D) && selI < 0;
   const boxes = [];
   const hit = box => boxes.some(b => b.x < box.x + box.w && box.x < b.x + b.w && b.y < box.y + box.h && box.y < b.y + b.h);
   // callouts first: they carry the news (alerts, beacons, upcoming reports), then district names around them
+  // island signs first: they name every island, so nothing may cover them
+  for (const d of DIST.filter(d => d.lab).sort((a, b) => b.capSum - a.capSum)) {
+    const L = d.land, e = d.lab;
+    const html = `<span class="em" style="background:${d.s.hue}">${secIcon(d.s, isPhone() ? 15 : 19)}</span><span class="tx"><b>${esc(d.s.he)}</b><small>${esc(d.s.desc)}</small></span><span class="v num">${districtMetric(d)}</span>`;
+    if (e._h !== html) { e.innerHTML = html; e._h = html; e.classList.remove('sm'); e._w = e.offsetWidth; e._hh = e.offsetHeight; e.classList.add('sm'); e._ws = e.offsetWidth; e._hs = e.offsetHeight; }
+    // every island keeps a sign: in front of its shore, else on the island, else behind it; full size, else symbol and name
+    let placed = null;
+    if (!(camDist < HOME_DIST * 0.32 && selI >= 0)) {
+      outer: for (const [x, z] of [[L.x + L.w / 2, L.y + L.h + 7], [L.x + L.w / 2, L.y + L.h / 2], [L.x - 8, L.y + L.h / 2], [L.x + L.w + 8, L.y + L.h / 2], [L.x + L.w / 2, L.y - 7]]) {
+        const p = proj(x, LAND_Y, z); if (!p.ok || p.y < 84 || p.y > VIEW.h - 24 || p.x < 0 || p.x > VIEW.w) continue;
+        for (const small of [false, true]) {
+          const w = (small ? e._ws : e._w) || 160, h = (small ? e._hs : e._hh) || 40; const box = { x: p.x - w / 2 - 5, y: p.y - h / 2 - 5, w: w + 10, h: h + 10 };
+          if (!hit(box)) { placed = { p, box, small }; break outer; }
+        }
+      }
+    }
+    e.style.opacity = placed ? 1 : 0; e.style.pointerEvents = placed ? 'auto' : 'none';
+    if (!placed) continue;
+    e.classList.toggle('sm', placed.small); e.classList.toggle('on', d === focusD);
+    e.style.transform = `translate(${placed.p.x.toFixed(1)}px,${placed.p.y.toFixed(1)}px) translate(-50%,-50%)`;
+    boxes.push(placed.box);
+  }
   const items = calloutItems(); let ci = 0;
   const R = reserves();
   for (const it of items) {
@@ -1182,21 +1276,6 @@ function updateLabels(){
     e._t = c.t; e.style.display = ''; setT(e, p.x, p.y + 4); e.style.setProperty('--dx', dx.toFixed(1) + 'px');
   }
   for (; ci < CO_POOL.length; ci++) CO_POOL[ci].style.display = 'none';
-  for (const d of DIST.filter(d => d.lab).sort((a, b) => b.capSum - a.capSum)) {
-    const topY = BASE_Y + Math.min(d.topH, 22) * HS.v + (flat2D ? 1 : 8);
-    const a = proj(d.cx, PLATE_H, d.cz), b = proj(d.cx, topY, d.cz);
-    let vis = showD && a.ok && b.ok && b.y > 90;
-    const lw = d.lab._w || 130; const box = { x: b.x - lw / 2 - 4, y: b.y - 38, w: lw + 8, h: 36 };
-    if (vis && hit(box)) vis = false;
-    d.lab.style.opacity = vis ? 1 : 0; d.lab.style.pointerEvents = vis ? 'auto' : 'none';
-    d.lead.style.display = d.dot.style.display = vis && !flat2D ? '' : 'none';
-    if (!vis) continue;
-    const html = `<i style="background:${d.s.hue}"></i>${esc(d.s.he)} ${N(districtMetric(d))}`; if (d.lab._h !== html) { d.lab.innerHTML = html; d.lab._h = html; d.lab._w = d.lab.offsetWidth; }
-    d.lab.classList.toggle('on', d === focusD); setT(d.lab, b.x, b.y - 4);
-    d.lead.setAttribute('x1', a.x); d.lead.setAttribute('y1', a.y); d.lead.setAttribute('x2', b.x); d.lead.setAttribute('y2', b.y - 4);
-    d.dot.setAttribute('cx', a.x); d.dot.setAttribute('cy', a.y);
-    boxes.push(box);
-  }
   // tickers by on-screen footprint
   const cand = [];
   for (const c of C) {
@@ -1306,7 +1385,7 @@ function drawRoutes(c){
   const na = nearestNode(c.x, c.z);
   for (const r of selRelations) {
     const o = byT[r.other]; const nb = nearestNode(o.x, o.z); const path = roadPath(na.k, nb.k); if (!path) continue;
-    routeGroup.add(ribbon(densify(path), 0.95, 0.03));
+    routeGroup.add(ribbon(densify(path), 0.95, LAND_Y + 0.03));
     routeGroup.add(ribbon(densify([[c.x, c.z], na.p]), 0.6, BASE_Y + 0.04)); routeGroup.add(ribbon(densify([nb.p, [o.x, o.z]]), 0.6, BASE_Y + 0.04));
   }
 }
@@ -1401,6 +1480,69 @@ function decompHTML(js, c){
   return `<div class="decomp">${parts.map(([k, v]) => { const w = Math.abs(v) / mx * 50; return `<span>${k}</span><div class="bar"><i style="${v >= 0 ? 'left:50%' : 'right:50%'};width:${w.toFixed(1)}%;background:var(--${v >= 0 ? 'up' : 'down'})"></i></div><span class="val num ${sg(v)}">${fmtPct(v)}</span>`; }).join('')}</div>
     <p class="note">${N(share + '%')} מהתנועה ייחודי לחברה.${avg !== null ? ` שאר הרחוב (${others.length} חברות) ${N(fmtPct(avg))} בממוצע.` : ''}</p>`;
 }
+/* ---------- timelines ---------- */
+const HE_MON = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
+const DAY = 864e5;
+const isoDay = d => d.toISOString().slice(0, 10);
+const parseDay = iso => new Date(iso.slice(0, 10) + 'T00:00:00Z');
+const todayNY = () => parseDay(DEMO ? (CITY.session.last_session || isoDay(new Date())) : new Date(Date.now() - 5 * 3600e3).toISOString());
+const dShort = d => `${d.getUTCDate()}.${d.getUTCMonth() + 1}`;
+const daysBetween = (a, b) => Math.round((b - a) / DAY);
+const EV_COL = { veto: 'var(--down)', high: 'var(--down)', watch: 'var(--warn)', good: 'var(--up)', info: 'var(--ink-3)' };
+const CAT_HE = { product: 'השקה', event: 'אירוע', regulatory: 'רגולציה', deal: 'עסקה', capacity: 'קיבולת', other: 'צפוי' };
+function fiscalYear(fye, today){
+  const mm = +(fye || '1231').slice(0, 2) || 12, dd = +(fye || '1231').slice(2, 4) || 31;
+  let end = new Date(Date.UTC(today.getUTCFullYear(), mm - 1, dd));
+  if (end < today) end = new Date(Date.UTC(today.getUTCFullYear() + 1, mm - 1, dd));
+  const start = new Date(Date.UTC(end.getUTCFullYear() - 1, mm - 1, dd + 1));
+  const qs = [1, 2, 3, 4].map(k => { const qe = k === 4 ? end : new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 3 * k, start.getUTCDate() - 1)); return qe; });
+  return { start, end, qs, fy: end.getUTCFullYear() % 100 };
+}
+function companyTimeline(js, c){
+  const today = todayNY(); const F = fiscalYear(js.company.fye, today);
+  const next = js.next_earnings ? parseDay(js.next_earnings) : null;
+  const t1 = new Date(Math.max(F.end, next ? +next + 12 * DAY : 0)), t0 = F.start;
+  const W = 420, X = d => 10 + (d - t0) / (t1 - t0) * (W - 20);
+  const inR = d => d >= t0 && d <= t1;
+  const pct = Math.round((today - F.start) / (F.end - F.start) * 100);
+  const qStarts = [F.start, ...F.qs.slice(0, 3).map(d => new Date(+d + DAY))];
+  const band = F.qs.map((qe, i) => { const qs0 = qStarts[i]; const a = X(qs0), b = X(qe); const now = today >= qs0 && today <= qe;
+    return `<rect x="${a.toFixed(1)}" y="16" width="${(b - a).toFixed(1)}" height="30" rx="5" fill="${now ? 'var(--accent-soft)' : i % 2 ? 'var(--line)' : 'transparent'}" stroke="var(--line)"/>
+      <text x="${((a + b) / 2).toFixed(1)}" y="29" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--ink-2)" direction="ltr">FQ${i + 1} FY${F.fy}</text>
+      <text x="${((a + b) / 2).toFixed(1)}" y="41" text-anchor="middle" font-size="9.5" fill="var(--ink-3)" direction="rtl">${HE_MON[qs0.getUTCMonth()]}–${HE_MON[qe.getUTCMonth()]}</text>`; }).join('');
+  const past = (js.earnings || []).filter(e => e.day && parseDay(e.day) < today && inR(parseDay(e.day)));
+  const evs = (js.events || []).filter(e => inR(parseDay(e.ts)) && (e.kind === 'catalyst' || e.kind === 'news' || ['veto', 'high', 'good', 'watch'].includes(e.severity)));
+  const tip = t => `<title>${esc(t)}</title>`;
+  const marks = [
+    ...past.map(e => { const d = parseDay(e.day); const col = (e.react ?? 0) >= 0 ? 'var(--up)' : 'var(--down)';
+      return `<circle cx="${X(d).toFixed(1)}" cy="64" r="6" fill="${col}" stroke="var(--glass-strong)" stroke-width="2">${tip(`דוח · ${dShort(d)}${isNum(e.react) ? ` · תגובה ${fmtPct(e.react, 1)}` : ''}${isNum(e.surp) ? ` · הפתעה ${fmtPct(e.surp, 1)}` : ''}`)}</circle>`; }),
+    ...evs.map(e => { const d = parseDay(e.ts); const x = X(d).toFixed(1);
+      if (e.kind === 'catalyst') return `<g>${tip(`${dShort(d)} · ${e.title}${e.data?.when ? ` (${e.data.when})` : ''}`)}<path d="M${x} 74v20" stroke="var(--beacon)" stroke-width="1.6"/><path d="M${x} 82l9 4-9 4z" fill="var(--beacon)"/></g>`;
+      return `<rect x="${(+x - 3.5).toFixed(1)}" y="77" width="7" height="7" rx="1.5" transform="rotate(45 ${x} 80.5)" fill="${e.kind === 'news' ? 'var(--accent)' : EV_COL[e.severity] || 'var(--ink-3)'}">${tip(`${dShort(d)} · ${e.title}`)}</rect>`; }),
+  ];
+  const nx = next && inR(next) ? X(next) : null;
+  const tx = X(today);
+  const svg = `<svg viewBox="0 0 ${W} 112" role="img" aria-label="ציר זמן של השנה הפיסקלית">
+    ${band}<line x1="10" x2="${W - 10}" y1="64" y2="64" stroke="var(--line-2)" stroke-width="1.5"/>
+    ${nx !== null ? `<g>${tip(`הדוח הבא · ${dShort(next)}`)}<path d="M${nx.toFixed(1)} 55l9 9-9 9-9-9z" fill="var(--accent)" stroke="var(--glass-strong)" stroke-width="2"/></g>` : ''}
+    ${marks.join('')}
+    <line x1="${tx.toFixed(1)}" x2="${tx.toFixed(1)}" y1="12" y2="100" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <text x="${tx.toFixed(1)}" y="110" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--ink)">היום</text>
+  </svg>`;
+  const nDays = next ? daysBetween(today, next) : null;
+  const ahead = [
+    ...(next ? [{ d: next, k: 'report', t: `דוח ${(js.earnings || []).find(e => e.day === js.next_earnings)?.hour === 'amc' ? 'אחרי הסגירה' : (js.earnings || []).find(e => e.day === js.next_earnings)?.hour === 'bmo' ? 'לפני הפתיחה' : 'רבעוני'}` }] : []),
+    ...(js.events || []).filter(e => e.kind === 'catalyst' && parseDay(e.ts) >= today).map(e => ({ d: parseDay(e.ts), k: 'cat', t: e.title, w: e.data?.when, c: e.code })),
+  ].sort((a, b) => a.d - b.d);
+  const recent = (js.events || []).filter(e => e.kind !== 'catalyst' && parseDay(e.ts) <= today && (e.kind === 'news' || ['veto', 'high', 'good', 'watch'].includes(e.severity))).slice(0, 5);
+  const row = (d, dot, text, sub) => `<div class="tli"><time>${dShort(d)}</time><i style="background:${dot}"></i><span>${text}${sub ? ` <small class="muted">${sub}</small>` : ''}</span></div>`;
+  return `<div class="sec tlsec"><h4>ציר זמן <small>שנה פיסקלית FY${F.fy} · ${N(pct + '%')} עברו${nDays !== null ? ` · הדוח הבא בעוד ${N(nDays)} ימים` : ''}</small></h4>
+    <div class="chart">${svg}</div>
+    <div class="tlkey"><span><i class="k-rep"></i>דוח שעבר</span><span><i class="k-next"></i>הדוח הבא</span><span><i class="k-cat"></i>צפוי</span><span><i class="k-ev"></i>אירוע או חדשה</span></div>
+    ${ahead.length ? `<div class="tlh">מה צפוי</div><div class="tl">${ahead.slice(0, 6).map(a => row(a.d, a.k === 'report' ? 'var(--accent)' : 'var(--beacon)', a.k === 'report' ? `<b>${a.t}</b>` : `${esc(a.t)} <span class="chip wr" style="height:18px">${CAT_HE[a.c] || 'צפוי'}</span>`, a.w ? `ההנהלה: "${esc(a.w)}"` : a.k === 'report' ? `בעוד ${daysBetween(today, a.d)} ימים` : '')).join('')}</div>` : ''}
+    ${recent.length ? `<div class="tlh">אירועים גדולים לאחרונה</div><div class="tl">${recent.map(e => row(parseDay(e.ts), e.kind === 'news' ? 'var(--accent)' : EV_COL[e.severity] || 'var(--ink-3)', e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title)}</a>` : esc(e.title), e.kind === 'news' ? (e.data?.source && e.data.source !== 'demo' ? esc(e.data.source) : 'חדשות') : '')).join('')}</div>` : ''}
+  </div>`;
+}
 function tabOverview(js, c){
   const m = js.metrics || {}; const s = js.score;
   const hi = m.high52, lo = m.low52, px = js.quote?.px ?? c.px; const rpos = isNum(hi) && isNum(lo) && hi > lo ? clamp((px - lo) / (hi - lo), 0, 1) * 100 : 50;
@@ -1409,7 +1551,7 @@ function tabOverview(js, c){
   const pos = v => isNum(v) && pmin ? clamp((v - pmin) / (pmax - pmin), 0, 1) * 100 : null;
   const atrUsd = isNum(m.atr_pct) ? px * m.atr_pct / 100 : px * 0.02; const stop = px - 2 * atrUsd; const tgtPx = fr?.base && fr.base > px ? fr.base : px * 1.15;
   const st = js.street || {};
-  return `
+  return `${companyTimeline(js, c)}
   <div class="sec"><h4>חצי שנה <small>קו מקווקו: ממוצע 50 · E: דוח · פס כתום: אזור נפח</small></h4>${chartSVG(js, c)}
     <div class="range"><div class="trl"><span>שפל שנתי ${N(fmtUsd(lo, 0))}</span><span>שיא ${N(fmtUsd(hi, 0))}</span></div><div class="track"><i style="left:${rpos.toFixed(1)}%"></i></div><span>${N(fmtPct(m.dd_pct, 1))} מהשיא${isNum(m.dist_ma200) ? ` · ${N(fmtPct(m.dist_ma200, 1))} מממוצע 200` : ''}${isNum(m.rsi) ? ` · RSI ${N(Math.round(m.rsi))}` : ''}</span></div></div>
   <div class="sec"><h4>למה זזה היום <small>פירוק לשוק, סקטור וחברה</small></h4>${decompHTML(js, c)}</div>
@@ -1461,6 +1603,7 @@ function tabReport(js){
   <div class="sec"><h4>רשימת כיסוי <small>${(k.coverage || []).filter(x => x.status === 'reported').length} מתוך 15 דווחו</small></h4><div class="cov">${(k.coverage || []).map(x => `<details class="covi"><summary><span class="sv ${x.severity}"></span><span>${COV_HE[x.key] || x.key}</span><span class="chip ${x.status === 'reported' ? '' : 'wr'}">${x.status === 'reported' ? 'דווח' : x.status === 'not_applicable' ? 'לא רלוונטי' : 'לא דווח'}</span></summary><div class="body">${esc(x.finding_he)}${(x.citations || []).map(cite).join('')}</div></details>`).join('')}</div></div>
   ${(k.qa || []).length ? `<div class="sec"><h4>שאלות ותשובות <small>השאלות הקשות בשיחה</small></h4>${k.qa.map(q => `<div class="qa"><div class="q">${esc(q.question_he)}${q.analyst ? ` <small class="muted">· ${esc(q.analyst)}</small>` : ''}</div><div class="a">${esc(q.answer_he)}</div><div class="row" style="margin-top:5px">${q.numeric_answer ? '<span class="chip up">נענה במספר</span>' : ''}${q.evasive ? '<span class="chip down">התחמקות</span>' : ''}</div>${cite(q.citation)}</div>`).join('')}</div>` : ''}
   <div class="sec"><h4>ספר ההבטחות <small>מעקב בין רבעונים</small></h4>${(js.promises || []).length ? `<div class="tw"><table class="mt"><thead><tr><th>מדד</th><th>יעד</th><th>סטטוס</th></tr></thead><tbody>${js.promises.map(p => `<tr><td>${esc(p.metric)}<br><small class="muted">${esc(p.deadline)}</small></td><td>${esc(p.target)}${p.evidence ? `<br><small class="muted">${esc(p.evidence)}</small>` : ''}</td><td><span class="chip ${({ kept: 'up', on_track: 'up', missed: 'down', dropped: 'down', revised: 'wr' })[p.status] || ''}">${({ open: 'פתוח', on_track: 'בדרך', kept: 'עמדו', missed: 'פספסו', dropped: 'נעלם', revised: 'עודכן' })[p.status] || p.status}</span></td></tr>`).join('')}</tbody></table></div>` : '<p class="note">אין עדיין הבטחות שנרשמו.</p>'}</div>
+  ${(k.catalysts || []).length ? `<div class="sec"><h4>אירועים צפויים שההנהלה הזכירה</h4>${k.catalysts.map(x => `<div class="qa"><span class="chip ${x.importance === 'high' ? 'wr' : ''}">${CAT_HE[x.kind] || 'צפוי'}</span> <b>${esc(x.title_he)}</b> <small class="muted">· ${esc(x.when_text)}</small>${cite(x.citation)}</div>`).join('')}</div>` : ''}
   ${(k.risk_changes || []).length ? `<div class="sec"><h4>מה השתנה בניסוח</h4>${k.risk_changes.map(r => `<div class="qa"><span class="chip ${r.kind === 'added' ? 'wr' : r.kind === 'removed' ? 'up' : ''}">${({ added: 'נוסף', removed: 'הוסר', modified: 'שונה' })[r.kind]}</span> ${esc(r.summary_he)}${cite(r.citation)}</div>`).join('')}</div>` : ''}
   ${(k.flags || []).length ? `<div class="sec"><h4>דגלים</h4>${k.flags.map(f => `<p class="note"><span class="chip ${f.severity === 'red_flag' ? 'down' : f.severity === 'positive' ? 'up' : 'wr'}">${({ red_flag: 'דגל אדום', watch: 'לבדיקה', positive: 'חיובי' })[f.severity]}</span> ${esc(f.text_he)}</p>`).join('')}</div>` : ''}
   <div class="sec"><a class="link" href="${js.links.edgar}" target="_blank" rel="noopener">כל הדיווחים של ${esc(js.company.t)} ב-SEC EDGAR</a></div>`;
@@ -1529,7 +1672,7 @@ function wireBody(js, c){
       const per = en - sp, shares = Math.floor(port * risk / 100 / per), pos = shares * en, pct = pos / port * 100, rr = (tg - en) / per;
       res.innerHTML = `<div><span>מניות</span><b class="num">${shares.toLocaleString('en-US')}</b></div><div><span>סכום</span><b class="num">${fmtUsd(pos, 0)}</b></div><div><span>מהתיק</span><b class="num">${pct.toFixed(1)}%</b></div><div><span>סיכוי/סיכון</span><b class="num ${rr >= 2 ? 'up' : rr < 1 ? 'down' : ''}">1:${Math.max(0, rr).toFixed(1)}</b></div>`;
       const sectorW = C.filter(o => o.si === c.si && o.hold).reduce((a, o) => a + (o.hold.w || 0), 0);
-      warn.textContent = pct > 20 ? `הפוזיציה תהיה ${pct.toFixed(0)}% מהתיק. מעל 20% זה ריכוז גבוה.` : sectorW + pct > 35 ? `יחד עם ההחזקות הקיימות, החשיפה לרובע ${SECTORS[c.si].he} תגיע ל-${(sectorW + pct).toFixed(0)}%.` : '';
+      warn.textContent = pct > 20 ? `הפוזיציה תהיה ${pct.toFixed(0)}% מהתיק. מעל 20% זה ריכוז גבוה.` : sectorW + pct > 35 ? `יחד עם ההחזקות הקיימות, החשיפה לאי ${SECTORS[c.si].he} תגיע ל-${(sectorW + pct).toFixed(0)}%.` : '';
     };
     panel.querySelectorAll('.calc input').forEach(inp => inp.addEventListener('input', calc)); calc();
   }
@@ -1585,20 +1728,28 @@ function renderRail(){
     const hs = C.filter(c => c.hold).sort((a, b) => (b.hold.w || 0) - (a.hold.w || 0));
     const total = hs.reduce((a, c) => a + (c.hold.w || 0), 0);
     const bySec = {}; for (const c of hs) bySec[c.si] = (bySec[c.si] || 0) + (c.hold.w || 0);
+    const pf = CITY.portfolio || {}; const q = c => c.hold.q || 0;
+    const value = hs.reduce((a, c) => a + q(c) * (c.px || 0), 0);
+    const day = hs.reduce((a, c) => a + q(c) * (c.px || 0) * (c.chg || 0) / (100 + (c.chg || 0)), 0);
+    const unrl = hs.reduce((a, c) => a + (isNum(c.hold.cost) ? (c.px - c.hold.cost) * q(c) : 0), 0);
+    const age = isNum(pf.age_s) ? (pf.age_s < 90 ? 'עכשיו' : pf.age_s < 3600 ? `לפני ${Math.round(pf.age_s / 60)} דק׳` : `לפני ${Math.round(pf.age_s / 3600)} שע׳`) : '';
+    const srcTxt = pf.source === 'ibkr_live' ? `חי מ-IB Gateway · ${age}` : pf.source === 'flex' ? `מדוח ה-Flex${age ? ' · ' + age : ''}` : 'תיק הדגמה';
     rail.innerHTML = `<header><h2>התיק שלי</h2><small>${hs.length} פוזיציות · ${N(total.toFixed(0) + '%')} מושקע</small></header>
+      <div class="pfsum"><div><span>שווי התיק</span><b class="num">${fmtUsd(pf.nav ?? value, 0)}</b></div><div><span>היום</span><b class="num ${sg(day)}">${fmtUsd(day, 0)} · ${fmtPct(value - day ? day / (value - day) * 100 : 0)}</b></div>
+        <div><span>רווח לא ממומש</span><b class="num ${sg(unrl)}">${fmtUsd(unrl, 0)}</b></div><div><span>מזומן</span><b class="num">${isNum(pf.cash) ? fmtUsd(pf.cash, 0) : '–'}</b></div></div>
       <div class="expo"><div class="bar">${Object.entries(bySec).map(([si, w]) => `<i style="width:${(w / Math.max(total, 1) * 100).toFixed(1)}%;background:${SECTORS[si].hue}" title="${SECTORS[si].he}"></i>`).join('')}</div>
       <div class="keys">${Object.entries(bySec).sort((a, b) => b[1] - a[1]).map(([si, w]) => `<span style="--c:${SECTORS[si].hue}">${SECTORS[si].he} ${N(w.toFixed(0) + '%')}</span>`).join('')}</div></div>
       <ol>${hs.map(c => `<li><button type="button" class="hrow" data-t="${c.t}"><span class="t">${esc(c.t)}</span><span class="w" title="משקל"><i style="width:${clamp((c.hold.w || 0) * 4, 2, 100)}%"></i></span><span class="num ${sg(c.hold.pnl)}">${fmtPct(c.hold.pnl, 1)}</span>
-        <span class="meta"><span class="num">${c.hold.w}%</span>·<span class="chip ${THESIS[c.hold.th]?.[1] || ''}" style="height:19px">${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>${c.rep?.st === 'soon' && c.rep.days <= 10 ? `<span class="chip ac" style="height:19px">דוח בעוד ${c.rep.days}</span>` : ''}</span></button></li>`).join('') || '<li class="note" style="padding:12px">אין פוזיציות. חבר את IBKR Flex כדי למשוך את התיק.</li>'}</ol>
-      <footer>משקלים ותשואות מדוח ה-Flex האחרון</footer>`;
+        <span class="meta"><span class="num">${c.hold.w}%</span>·<span class="num">${fmtUsd((c.hold.q || 0) * (c.px || 0), 0)}</span>·<span class="num ${sg(c.chg)}" title="היום">${fmtPct(c.chg, 1)}</span>·<span class="chip ${THESIS[c.hold.th]?.[1] || ''}" style="height:19px">${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>${c.rep?.st === 'soon' && c.rep.days <= 10 ? `<span class="chip ac" style="height:19px">דוח בעוד ${c.rep.days}</span>` : ''}</span></button></li>`).join('') || '<li class="note" style="padding:12px">אין פוזיציות. חבר את IBKR Flex כדי למשוך את התיק.</li>'}</ol>
+      <footer><i class="dot ${pf.source === 'ibkr_live' ? 'ok' : ''}"></i>${srcTxt}</footer>`;
     rail.querySelectorAll('.hrow').forEach(b => b.onclick = () => select(byT[b.dataset.t].i));
     return;
   }
   const rows = DIST.filter(d => d.rect).sort((a, b) => b.capSum - a.capSum);
-  rail.innerHTML = `<header><h2>רובעים</h2><small>${C.length} חברות</small></header><ol>${rows.map(d => { const up = d.comps.filter(c => (c.chg || 0) > 0).length / d.comps.length * 100; const v = districtMetric(d); const etf = CITY.sector_etf?.[d.s.en];
+  rail.innerHTML = `<header><h2>איים</h2><small>${C.length} חברות</small></header><ol>${rows.map(d => { const up = d.comps.filter(c => (c.chg || 0) > 0).length / d.comps.length * 100; const v = districtMetric(d); const etf = CITY.sector_etf?.[d.s.en];
     const cls = mode === 'market' ? sg(parseFloat(v.replace(MINUS, '-'))) : '';
-    return `<li><button type="button" class="drow ${d === focusD ? 'on' : ''}" data-si="${d.si}"><span class="sw" style="background:${d.s.hue}"></span><span class="nm">${esc(d.s.he)}<em>${d.s.etf}${isNum(etf) && mode === 'market' ? ' ' + fmtPct(etf, 1) : ''}</em></span><span class="v num ${cls}">${v}</span><span class="br" title="${Math.round(up)}% מהחברות עלו"><i style="width:${up.toFixed(0)}%"></i></span></button></li>`; }).join('')}</ol>
-    <footer>רובע = סקטור GICS · רחוב = תת-ענף · בניין = חברה</footer>`;
+    return `<li><button type="button" class="drow ${d === focusD ? 'on' : ''}" data-si="${d.si}"><span class="swi" style="background:${d.s.hue}">${secIcon(d.s, 13)}</span><span class="nm">${esc(d.s.he)}<em>${d.s.etf}${isNum(etf) && mode === 'market' ? ' ' + fmtPct(etf, 1) : ''}</em></span><span class="v num ${cls}">${v}</span><span class="br" title="${Math.round(up)}% מהחברות עלו"><i style="width:${up.toFixed(0)}%"></i></span></button></li>`; }).join('')}</ol>
+    <footer>אי = סקטור · שדרה = תת-ענף · בניין = חברה, גובה = שווי</footer>`;
   rail.querySelectorAll('.drow').forEach(b => b.onclick = () => focusDistrict(DIST[+b.dataset.si]));
 }
 function toggleRail(force){ const el = $('#rail'); const on = force ?? !el.classList.contains('show'); el.classList.toggle('show', on); $('#railBtn').setAttribute('aria-expanded', on); }
@@ -1636,7 +1787,7 @@ function renderDrawer(){
 $('#bellBtn').onclick = () => { const d = $('#drawer'); d.hidden = !d.hidden; $('#statusPop').hidden = true; if (!d.hidden) renderDrawer(); };
 
 /* status */
-const SRC_HE = { sec: ['דוחות SEC', 'SEC_USER_AGENT'], prices: ['מחירים (Alpaca)', 'ALPACA_KEY_ID'], ibkr_live: ['מחירים חיים (IBKR)', 'IBKR_LIVE'], ibkr_flex: ['תיק (IBKR Flex)', 'IBKR_FLEX_TOKEN'], earnings: ['יומן דוחות (Finnhub)', 'FINNHUB_API_KEY'], scores: ['ציונים', ''], ai: ['כרטיסיות (Claude)', 'ANTHROPIC_API_KEY'], telegram: ['התראות לטלגרם', 'TELEGRAM_BOT_TOKEN'] };
+const SRC_HE = { sec: ['דוחות SEC', 'SEC_USER_AGENT'], prices: ['מחירים (Alpaca)', 'ALPACA_KEY_ID'], ibkr_live: ['מחירים חיים (IBKR)', 'IBKR_LIVE'], ibkr_portfolio: ['תיק חי (IB Gateway)', 'IBKR_LIVE'], ibkr_flex: ['תיק יומי (IBKR Flex)', 'IBKR_FLEX_TOKEN'], earnings: ['יומן דוחות (Finnhub)', 'FINNHUB_API_KEY'], scores: ['ציונים', ''], ai: ['כרטיסיות (Claude)', 'ANTHROPIC_API_KEY'], telegram: ['התראות לטלגרם', 'TELEGRAM_BOT_TOKEN'] };
 let STATUS = null;
 async function loadStatus(){
   try { STATUS = await api('/api/status'); } catch { STATUS = null; }
@@ -1669,6 +1820,69 @@ async function openBrief(){
   } catch (e) { body.innerHTML = `<header><h2>תדריך בוקר</h2></header><div class="body"><div class="empty">${esc(e.message)}</div></div>`; }
 }
 $('#briefBtn').onclick = openBrief;
+/* city timeline: where the year and the season stand, and the next eight weeks */
+async function openTimeline(){
+  const o = $('#tline'); o.hidden = false; const body = $('#tlineBody');
+  body.innerHTML = '<header><h2>ציר זמן</h2></header><div class="body"><p class="note">טוען…</p></div>';
+  let tl; try { tl = await api('/api/timeline'); } catch (e) { body.innerHTML = `<header><h2>ציר זמן</h2></header><div class="body"><div class="empty">${esc(e.message)}</div></div>`; return; }
+  const today = parseDay(tl.today); const y = today.getUTCFullYear();
+  const yPct = tl.year.day / tl.year.days * 100; const sPct = tl.season.total ? tl.season.reported / tl.season.total * 100 : 0;
+  const t0 = new Date(+today - 7 * DAY), t1 = new Date(+today + 56 * DAY);
+  const W = 700, LX = 104, X = d => LX + (d - t0) / (t1 - t0) * (W - LX - 16);
+  const inR = d => d >= t0 && d <= t1;
+  const big = 300; // USD billions: reports of the largest companies get a label
+  const rows = [
+    { k: 'focus', he: 'התיק והמעקב', items: tl.earnings.filter(e => (e.held || e.watch) && inR(parseDay(e.day))).map(e => ({ d: parseDay(e.day), t: e.t, col: e.held ? 'var(--beacon)' : 'var(--accent)', tip: `${e.t} · דוח · ${dShort(parseDay(e.day))}${isNum(e.surp) ? ` · הפתעה ${fmtPct(e.surp, 1)}` : ''}` })) },
+    { k: 'big', he: 'חברות ענק', items: tl.earnings.filter(e => !(e.held || e.watch) && (e.cap || 0) >= big && inR(parseDay(e.day))).map(e => ({ d: parseDay(e.day), t: e.t, col: 'var(--ink-2)', tip: `${e.t} · דוח · ${dShort(parseDay(e.day))}` })) },
+    { k: 'cat', he: 'אירועים צפויים', items: tl.events.filter(e => e.kind === 'catalyst' && inR(parseDay(e.day))).map(e => ({ d: parseDay(e.day), t: e.t, col: 'var(--beacon)', flag: true, tip: `${e.t} · ${e.title}` })) },
+  ];
+  // three label lanes; a label that fits none is left out (the dot stays, with its tooltip)
+  const lanes = (items) => { const last = [-1e9, -1e9, -1e9]; return items.sort((a, b) => a.d - b.d).map(it => { const x = X(it.d), w = it.t.length * 7 + 12; const L = last.findIndex(v => x - v >= w); if (L >= 0) last[L] = x; return { ...it, x, L }; }); };
+  const perDay = {}; for (const e of tl.earnings) if (inR(parseDay(e.day))) perDay[e.day] = (perDay[e.day] || 0) + 1;
+  const maxDay = Math.max(1, ...Object.values(perDay));
+  const weeks = Array.from({ length: 10 }, (_, i) => new Date(+t0 + i * 7 * DAY)).filter(inR);
+  let yRow = 40; const ROWH = 64;
+  const svgRows = rows.map(r => { const y0 = yRow; yRow += ROWH; const items = lanes(r.items);
+    return `<text x="${LX - 10}" y="${y0 + 42}" text-anchor="start" font-size="11" font-weight="600" fill="var(--ink-2)" direction="rtl">${r.he}</text>
+      <line x1="${LX}" x2="${W - 16}" y1="${y0 + 38}" y2="${y0 + 38}" stroke="var(--line)"/>
+      ${items.map(it => { const ly = y0 + 30 - Math.max(0, it.L) * 13; return `<g class="tlm" data-t="${esc(it.t)}"><title>${esc(it.tip)}</title>${it.flag ? `<path d="M${it.x.toFixed(1)} ${y0 + 38}V${ly + 4}" stroke="${it.col}" stroke-width="1.4"/><path d="M${it.x.toFixed(1)} ${ly - 2}l8 3.5-8 3.5z" fill="${it.col}"/>` : `<circle cx="${it.x.toFixed(1)}" cy="${y0 + 38}" r="4.5" fill="${it.col}" stroke="var(--glass-strong)" stroke-width="1.5"/>`}
+        ${it.L >= 0 ? `<text x="${(it.x + (it.flag ? 10 : 0)).toFixed(1)}" y="${ly}" text-anchor="${it.flag ? 'start' : 'middle'}" font-size="10.5" font-weight="600" fill="var(--ink)" direction="ltr">${esc(it.t)}</text>` : ''}</g>`; }).join('')}`; }).join('');
+  const hy = yRow + 6;
+  const hist = Object.entries(perDay).map(([d, n]) => { const x = X(parseDay(d)); const h = n / maxDay * 34; return `<rect x="${(x - 2.5).toFixed(1)}" y="${(hy + 34 - h).toFixed(1)}" width="5" height="${h.toFixed(1)}" rx="1.5" fill="var(--accent)" opacity=".55"><title>${dShort(parseDay(d))}: ${n} דוחות</title></rect>`; }).join('');
+  const H = hy + 62, tx = X(today);
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="שמונת השבועות הבאים">
+    ${weeks.map(d => `<line x1="${X(d).toFixed(1)}" x2="${X(d).toFixed(1)}" y1="30" y2="${hy + 34}" stroke="var(--line)"/><text x="${X(d).toFixed(1)}" y="22" text-anchor="middle" font-size="10" fill="var(--ink-3)" direction="ltr">${dShort(d)}</text>`).join('')}
+    ${svgRows}
+    <text x="${LX - 10}" y="${hy + 30}" text-anchor="start" font-size="11" font-weight="600" fill="var(--ink-2)" direction="rtl">כל הדוחות</text>${hist}
+    <line x1="${LX}" x2="${W - 16}" y1="${hy + 34}" y2="${hy + 34}" stroke="var(--line-2)"/>
+    <line x1="${tx.toFixed(1)}" x2="${tx.toFixed(1)}" y1="28" y2="${hy + 40}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <text x="${tx.toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)">היום</text>
+  </svg>`;
+  // week-by-week list: what matters to you first
+  const items = [
+    ...tl.earnings.filter(e => parseDay(e.day) >= today && (e.held || e.watch || (e.cap || 0) >= big)).map(e => ({ d: parseDay(e.day), t: e.t, txt: `דוח ${e.hour === 'amc' ? 'אחרי הסגירה' : e.hour === 'bmo' ? 'לפני הפתיחה' : ''}`, tag: e.held ? ['בתיק', 'wr'] : e.watch ? ['במעקב', 'ac'] : null, w: e.held ? 3 : e.watch ? 2 : 1 })),
+    ...tl.events.filter(e => e.kind === 'catalyst' && parseDay(e.day) >= today).map(e => ({ d: parseDay(e.day), t: e.t, txt: e.title, tag: [CAT_HE[e.code] || 'צפוי', 'wr'], w: e.focus ? 3 : 1 })),
+  ].sort((a, b) => a.d - b.d || b.w - a.w);
+  const wk = d => Math.floor(daysBetween(today, d) / 7);
+  const groups = {}; for (const it of items) { const k = wk(it.d); if (k > 7) continue; (groups[k] ||= []).push(it); }
+  const wkName = k => k === 0 ? 'השבוע' : k === 1 ? 'שבוע הבא' : `בעוד ${k} שבועות`;
+  const recent = tl.events.filter(e => e.kind !== 'catalyst' && parseDay(e.day) <= today).sort((a, b) => (b.focus - a.focus) || (parseDay(b.day) - parseDay(a.day))).slice(0, 8);
+  const qNow = Math.floor(today.getUTCMonth() / 3) + 1;
+  body.innerHTML = `<header><h2>ציר זמן</h2><button class="btn icon" type="button" id="tlX" aria-label="סגירה"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></header><div class="body">
+    <div class="sec"><div class="tlwhere">
+      <div><span>איפה אנחנו בשנה</span><b>${dLabel(tl.today)} · רבעון ${qNow} של ${y}</b><div class="yr">${[0, 25, 50, 75].map(q => `<s style="left:${q}%"></s>`).join('')}<i style="width:${yPct.toFixed(1)}%"></i></div><small>${N(Math.round(yPct) + '%')} מהשנה עברו</small></div>
+      <div><span>עונת הדוחות</span><b>${N(tl.season.reported)} מתוך ${N(tl.season.total)} דיווחו</b><div class="yr"><i style="width:${sPct.toFixed(1)}%"></i></div><small>ב-45 הימים האחרונים</small></div>
+    </div></div>
+    <div class="sec"><h4>שמונת השבועות הבאים <small>עיגול כתום: בתיק · כחול: במעקב · דגל: אירוע צפוי</small></h4><div class="chart tlchart">${svg}</div></div>
+    <div class="sec"><h4>לפי שבועות</h4>${Object.keys(groups).length ? Object.entries(groups).map(([k, its]) => `<div class="tlh">${wkName(+k)}</div><div class="tl">${its.slice(0, 12).map(it => `<div class="tli"><time>${dShort(it.d)}</time><i style="background:${it.tag?.[0] === 'בתיק' ? 'var(--beacon)' : it.tag?.[0] === 'במעקב' ? 'var(--accent)' : 'var(--line-2)'}"></i><span><button type="button" class="tkb" data-t="${esc(it.t)}">${esc(it.t)}</button> ${esc(it.txt)} ${it.tag ? `<span class="chip ${it.tag[1]}" style="height:18px">${it.tag[0]}</span>` : ''}</span></div>`).join('')}</div>`).join('') : '<p class="note">אין דוחות או אירועים צפויים בשבועות הקרובים.</p>'}</div>
+    ${recent.length ? `<div class="sec"><h4>מה קרה לאחרונה</h4><div class="tl">${recent.map(e => `<div class="tli"><time>${dShort(parseDay(e.day))}</time><i style="background:${e.kind === 'news' ? 'var(--accent)' : EV_COL[e.severity] || 'var(--ink-3)'}"></i><span><button type="button" class="tkb" data-t="${esc(e.t)}">${esc(e.t)}</button> ${esc(e.title)}</span></div>`).join('')}</div></div>` : ''}
+  </div>`;
+  $('#tlX').onclick = () => { o.hidden = true; };
+  body.querySelectorAll('[data-t]').forEach(x => x.onclick = () => { const c = byT[x.dataset.t]; if (c) { o.hidden = true; select(c.i); } });
+}
+$('#tlBtn').onclick = openTimeline;
+$('#tline').addEventListener('pointerdown', e => { if (e.target.id === 'tline') $('#tline').hidden = true; });
+
 $('#brief').addEventListener('pointerdown', e => { if (e.target.id === 'brief') $('#brief').hidden = true; });
 
 /* search */
@@ -1687,7 +1901,7 @@ function runSearch(){
 }
 function paintSearch(){
   if (!sItems.length) { qres.innerHTML = `<li class="none">לא נמצאה מניה כזו ב-S&amp;P 500. נסה סימול (למשל NVDA) או שם חברה באנגלית.</li>`; return; }
-  qres.innerHTML = sItems.map((it, i) => it.d ? `<li><button type="button" class="sres" role="option" aria-selected="${i === sIdx}" data-i="${i}"><span class="t">${it.d.s.etf}</span><span class="n">רובע ${esc(it.d.s.he)}<small>${it.d.comps.length} חברות</small></span><span class="num">${districtMetric(it.d)}</span></button></li>`
+  qres.innerHTML = sItems.map((it, i) => it.d ? `<li><button type="button" class="sres" role="option" aria-selected="${i === sIdx}" data-i="${i}"><span class="t">${it.d.s.etf}</span><span class="n">אי ${esc(it.d.s.he)}<small>${it.d.comps.length} חברות</small></span><span class="num">${districtMetric(it.d)}</span></button></li>`
     : `<li><button type="button" class="sres" role="option" aria-selected="${i === sIdx}" data-i="${i}"><span class="t">${esc(it.c.t)}</span><span class="n">${esc(it.c.n)}<small>${esc(SECTORS[it.c.si].he)} · <span dir="ltr">${esc(it.c.u)}</span></small></span><span class="num ${sg(it.c.chg)}">${fmtPct(it.c.chg)}</span></button></li>`).join('');
   qres.querySelectorAll('.sres').forEach(b => { b.onclick = () => { sIdx = +b.dataset.i; chooseSearch(); }; b.onpointerenter = () => { sIdx = +b.dataset.i; qres.querySelectorAll('.sres').forEach(x => x.setAttribute('aria-selected', +x.dataset.i === sIdx)); }; });
 }
@@ -1700,7 +1914,7 @@ $('#searchBtn').onclick = openSearch;
 addEventListener('keydown', e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); sEl.hidden ? openSearch() : closeSearch(); return; }
-  if (e.key === 'Escape') { if (!sEl.hidden) closeSearch(); else if (!$('#brief').hidden) $('#brief').hidden = true; else if (!$('#drawer').hidden) $('#drawer').hidden = true; else if (!$('#statusPop').hidden) $('#statusPop').hidden = true; else if (selI >= 0) closePanel(); else if (focusD) goHome(); return; }
+  if (e.key === 'Escape') { if (!sEl.hidden) closeSearch(); else if (!$('#brief').hidden) $('#brief').hidden = true; else if (!$('#tline').hidden) $('#tline').hidden = true; else if (!$('#drawer').hidden) $('#drawer').hidden = true; else if (!$('#statusPop').hidden) $('#statusPop').hidden = true; else if (selI >= 0) closePanel(); else if (focusD) goHome(); return; }
   if (typing || !sEl.hidden) return;
   if (e.key === '/') { e.preventDefault(); openSearch(); }
   else if (['1', '2', '3', '4'].includes(e.key)) setMode(MODES[+e.key - 1].k);

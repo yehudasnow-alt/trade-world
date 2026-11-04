@@ -136,7 +136,8 @@ def city() -> dict:
                 "sc": {"q": sc.quality, "d": sc.direction, "v": sc.valuation, "t": sc.timing, "tot": sc.total} if sc else None,
                 "veto": (sc.veto if sc else []), "beacon": bool(sc and sc.beacon), "val": _r(m.get("pe_pct_5y"), 0),
                 "pe": _r(m.get("pe_ttm"), 1), "rep": rep, "watch": c.ticker in watch, "th": c.themes,
-                "hold": {"w": _r(h.weight_pct, 1), "pnl": _r(h.pnl_pct, 1), "th": th.status if th else None} if h else None,
+                "hold": {"w": _r(h.weight_pct, 1), "pnl": _r(h.pnl_pct, 1), "th": th.status if th else None, "q": _r(h.quantity, 4),
+                         "cost": _r(h.avg_cost), "v": _r(h.market_value, 0)} if h else None,
             })
         alerts = [{"id": a.id, "ts": a.ts.isoformat(), "t": a.ticker, "level": a.level, "kind": a.kind, "title": a.title,
                    "body": a.body, "read": a.read}
@@ -146,11 +147,15 @@ def city() -> dict:
             q = quotes.get(etf)
             etfs[name_en] = _r((q.price / q.prev_close - 1) * 100) if q and q.prev_close else None
         mode = kv_get(s, "mode", "live")
+        pf_info = kv_get(s, "portfolio.last", None) or kv_get(s, "ibkr.flex", None) or {}
+        pf_age = kv_age_seconds(s, "portfolio.last")
     caps = [(r["cap"] or 0, r["chg"]) for r in rows if r["chg"] is not None]
     wsum = sum(w for w, _ in caps) or 1
     return {"session": session_info(), "mode": mode, "companies": rows, "alerts": alerts, "sector_etf": etfs,
             "index": {"chg": _r(sum(w * c for w, c in caps) / wsum), "breadth": _r(sum(1 for _, c in caps if c > 0) / max(1, len(caps)) * 100, 0)},
-            "relations": relations(), "generated": utcnow().isoformat()}
+            "relations": relations(), "generated": utcnow().isoformat(),
+            "portfolio": {"source": pf_info.get("source", "demo" if mode == "demo" else "flex"), "nav": pf_info.get("nav"),
+                          "cash": pf_info.get("cash"), "age_s": pf_age}}
 
 
 @app.get("/api/quotes", dependencies=[Depends(guard)])
@@ -241,6 +246,34 @@ def company(ticker: str) -> dict:
             "defaults": {"portfolio": get_settings().portfolio_size_usd, "risk_pct": get_settings().risk_per_trade_pct},
         }
     return json.loads(json.dumps(out, default=str))
+
+
+@app.get("/api/timeline", dependencies=[Depends(guard)])
+def timeline(back: int = 30, ahead: int = 75) -> dict:
+    """Everything dated around today: reports, expected events, major events and news, and where the season stands."""
+    today = clock.now_ny().date()
+    lo, hi = today - timedelta(days=back), today + timedelta(days=ahead)
+    with session() as s:
+        comps = {c.ticker: c for c in s.scalars(select(Company).where(Company.in_universe.is_(True)))}
+        held, watch = set(s.scalars(select(Holding.ticker))), set(s.scalars(select(Watch.ticker)))
+        caps = {x.ticker: (x.metrics or {}).get("market_cap") for x in s.scalars(select(Score))}
+        ers = [e for e in s.scalars(select(Earnings).where(Earnings.day >= lo, Earnings.day <= hi).order_by(Earnings.day)) if e.ticker in comps]
+        evs = [e for e in s.scalars(select(Event).where(Event.ts >= datetime.combine(lo, datetime.min.time()),
+                                                         Event.ts <= datetime.combine(hi, datetime.max.time())).order_by(Event.ts))
+               if e.ticker in comps and (e.kind == "catalyst" or e.severity in ("veto", "high", "good", "watch"))]
+        season_lo = today - timedelta(days=45)
+        reported = {e.ticker for e in s.scalars(select(Earnings).where(Earnings.day >= season_lo, Earnings.day <= today)) if e.eps_act is not None or e.day < today}
+    focus = held | watch
+    cap = lambda t: _r((caps.get(t) or 0) / 1e9, 1)  # noqa: E731
+    return {
+        "today": today.isoformat(), "year": {"day": today.timetuple().tm_yday, "days": 366 if today.year % 4 == 0 else 365},
+        "season": {"reported": len(reported & set(comps)), "total": len(comps)},
+        "earnings": [{"t": e.ticker, "day": e.day.isoformat(), "hour": e.hour, "held": e.ticker in held, "watch": e.ticker in watch,
+                      "cap": cap(e.ticker), "done": e.day < today or e.eps_act is not None,
+                      "surp": _r((e.eps_act / e.eps_est - 1) * 100, 1) if e.eps_act is not None and e.eps_est else None} for e in ers],
+        "events": [{"t": e.ticker, "day": e.ts.date().isoformat(), "kind": e.kind, "code": e.code, "severity": e.severity, "title": e.title,
+                    "url": e.url, "focus": e.ticker in focus, "cap": cap(e.ticker), "when": (e.data or {}).get("when")} for e in evs],
+    }
 
 
 @app.get("/api/search", dependencies=[Depends(guard)])
@@ -438,6 +471,7 @@ def status() -> dict:
         "prices": src("quotes.alpaca", st.alpaca_ready, 300 if open_ else 86400 * 3),
         "ibkr_live": src("quotes.ibkr", st.ibkr_live, 120 if open_ else 86400 * 3),
         "ibkr_flex": src("ibkr.flex", st.flex_ready, 86400 * 2),
+        "ibkr_portfolio": src("ibkr.portfolio", st.ibkr_live, 300 if open_ else 86400 * 3),
         "earnings": src("earnings", bool(st.finnhub_api_key), 86400 * 2),
         "scores": src("scores", True, 3600 if open_ else 86400 * 3),
         "ai": {"configured": bool(st.anthropic_api_key), "queued": queued, "spend_month_usd": round(spend, 2),

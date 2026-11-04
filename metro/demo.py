@@ -231,6 +231,28 @@ def _earnings_and_events(comps, rng, days) -> None:
                                  ("DIS", "5.02", "watch", "שינוי בהנהלה או בדירקטוריון")]:
         evs.append(dict(ticker=t, ts=utcnow() - timedelta(days=3), kind="form4" if code == "P" else "8k", code=code, severity=sev,
                         title=title, url="", data={}, dedupe=f"demo:{code}:{t}"))
+    # demo timeline: expected events and major headlines (generic titles; the app labels the whole demo)
+    today = clock.last_session()
+    for t, days_ahead, kind, imp, title, when in [
+        ("NVDA", 19, "event", "high", "כנס מפתחים שנתי: חשיפת דור השבבים הבא", "במרץ"),
+        ("AAPL", 34, "product", "high", "השקת קו מוצרים חדש", "ברבעון הבא"),
+        ("LLY", 12, "regulatory", "high", "החלטת רגולטור צפויה על תרופה בפיתוח", "עד סוף החודש"),
+        ("MSFT", 46, "event", "medium", "יום משקיעים", "במהלך הרבעון"),
+        ("PANW", 27, "deal", "high", "השלמת רכישה של חברת אבטחה", "עד סוף הרבעון"),
+        ("XOM", 58, "capacity", "medium", "הפעלת פרויקט הפקה חדש", "במחצית השנייה של השנה"),
+        ("COST", 8, "other", "medium", "פרסום מכירות חודשיות", "בתחילת החודש"),
+        ("TSLA", 23, "product", "high", "אירוע השקה של דגם חדש", "בחודש הבא"),
+        ("AMZN", 40, "event", "medium", "כנס ענן שנתי", "ברבעון הרביעי"),
+    ]:
+        evs.append(dict(ticker=t, ts=datetime.combine(clock.add_trading_days(today, days_ahead), datetime.min.time()), kind="catalyst",
+                        code=kind, severity="watch" if imp == "high" else "info", title=title, url="",
+                        data={"when": when, "importance": imp, "quote": ""}, dedupe=f"demo:cat:{t}:{kind}"))
+    for t, days_ago, title in [("NVDA", 4, "Nvidia announces partnership to build AI data centers (demo headline)"),
+                               ("GOOGL", 9, "Regulator opens antitrust probe into ad business (demo headline)"),
+                               ("JPM", 6, "JPMorgan raises net interest income outlook (demo headline)"),
+                               ("PANW", 2, "Palo Alto Networks to acquire security startup (demo headline)")]:
+        evs.append(dict(ticker=t, ts=utcnow() - timedelta(days=days_ago), kind="news", code="news", severity="watch", title=title, url="",
+                        data={"source": "demo"}, dedupe=f"demo:news:{t}"))
     with session() as s:
         s.execute(Earnings.__table__.insert(), rows)
         s.execute(Event.__table__.insert(), evs)
@@ -253,6 +275,7 @@ def _portfolio(levels) -> None:
             s.add(JournalEntry(ticker=t, action=act, price=levels[t] * (0.9 if act != "pass" else 1.06), note=note,
                                ts=utcnow() - timedelta(days=days_ago), snapshot={}))
         kv_set(s, "ibkr.flex", {"positions": len(HOLD), "nav": nav})
+        kv_set(s, "portfolio.last", {"positions": len(HOLD), "nav": nav, "cash": nav * (1 - sum(w for w, _ in HOLD.values()) / 100), "source": "demo"})
 
 
 def _theses() -> None:

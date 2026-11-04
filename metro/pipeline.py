@@ -5,6 +5,8 @@ Failures are isolated per company and recorded, never fatal to the whole run.
 """
 from __future__ import annotations
 
+import re
+
 import json
 import logging
 from datetime import date, datetime, timedelta
@@ -18,7 +20,7 @@ from .analytics import events as EV
 from .analytics import scoring, thesis
 from .config import get_settings
 from .db import (AiJob, Company, Earnings, Event, Fact, Filing, Holding, PriceBar, Quarter, Quote, ReportCard, Score,
-                 Thesis, Watch, kv_set, session, utcnow)
+                 Thesis, Watch, kv_age_seconds, kv_get, kv_set, session, utcnow)
 from .sources import sections as SX
 from .sources import xbrl
 from .universe import MARKET_ETF, SECTORS
@@ -289,16 +291,55 @@ def update_earnings(finnhub, ahead: int = 45, back: int = 14) -> int:
     return n
 
 
-def apply_flex(parsed: dict[str, Any]) -> int:
+def apply_flex(parsed: dict[str, Any], source: str = "flex") -> int:
+    """Replaces the holdings with a full snapshot of the account (Flex each morning, or IB Gateway live)."""
     with session() as s:
+        if source == "flex" and kv_get(s, "ibkr.live_ok") and (kv_age_seconds(s, "ibkr.portfolio") or 1e9) < 900:
+            # the live portfolio is fresher than last night's statement: keep it, only record the statement
+            kv_set(s, "ibkr.flex", {"positions": len(parsed["positions"]), "nav": parsed["nav"], "skipped": True})
+            return len(parsed["positions"])
         s.execute(delete(Holding))
         for p in parsed["positions"]:
             if not p["ticker"] or not p["quantity"]:
                 continue
             s.add(Holding(ticker=p["ticker"], quantity=p["quantity"], avg_cost=p["avg_cost"], market_value=p["market_value"],
                           weight_pct=p["weight_pct"], pnl_pct=p["pnl_pct"], currency=p["currency"], updated=utcnow()))
-        kv_set(s, "ibkr.flex", {"positions": len(parsed["positions"]), "nav": parsed["nav"]})
+        info = {"positions": len(parsed["positions"]), "nav": parsed["nav"], "cash": parsed.get("cash"), "source": source}
+        kv_set(s, "ibkr.flex" if source == "flex" else "ibkr.portfolio", info)
+        kv_set(s, "portfolio.last", info)
+        if source != "flex":
+            kv_set(s, "ibkr.live_ok", True)
     return len(parsed["positions"])
+
+
+# ---------------- news ----------------
+# headlines that can move a stock on their own; everything else stays out of the timeline
+MAJOR_NEWS = re.compile(r"\b(launch|unveil|introduc|acqui|merger|takeover|buyout|spin.?off|FDA|approv|clearance|recall|lawsuit|sues|"
+                        r"settle|investigat|probe|antitrust|guidance|outlook|CEO|CFO|resign|steps? down|appoint|partnership|"
+                        r"contract|layoff|job cuts|stock split|buyback|repurchase|tariff|ban|halt)", re.I)
+
+
+def update_news(client, tickers: list[str] | None = None, days: int = 3) -> int:
+    """Major headlines for holdings and watchlist (Finnhub company news), stored as timeline events."""
+    today = date.today()
+    with session() as s:
+        tickers = tickers or sorted(focus_tickers(s))
+    n = 0
+    for t in tickers:
+        try:
+            rows = client.news(t, today - timedelta(days=days), today)
+        except Exception as e:  # noqa: BLE001
+            log.warning("news %s: %s", t, e)
+            continue
+        with session() as s:
+            for r in rows[:40]:
+                if not r["headline"] or not MAJOR_NEWS.search(r["headline"]):
+                    continue
+                n += add_event(s, t, r["ts"], "news", "news", "watch", r["headline"][:300], r["url"],
+                               data={"source": r["source"], "summary": (r["summary"] or "")[:400]}, dedupe=f"news:{t}:{r['id'] or r['headline'][:40]}")
+    with session() as s:
+        kv_set(s, "news", {"tickers": len(tickers), "added": n})
+    return n
 
 
 # ---------------- scoring ----------------

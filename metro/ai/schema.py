@@ -105,6 +105,16 @@ class RiskChange(BaseModel):
     citation: Optional[Citation]
 
 
+class Catalyst(BaseModel):
+    title_he: str = Field(description="Hebrew, what is expected: a launch, an investor or developer day, a regulatory decision, a deal closing, capacity coming online.")
+    when_text: str = Field(description="The timing exactly as the sources state it, e.g. 'second half of fiscal 2027' or 'March 12'.")
+    date: Optional[str] = Field(description="YYYY-MM-DD only when the sources give an exact day, else null.")
+    month: Optional[str] = Field(description="YYYY-MM when the sources give a month or a quarter (the quarter's last month), else null.")
+    kind: Literal["product", "event", "regulatory", "deal", "capacity", "other"]
+    importance: Literal["high", "medium"]
+    citation: Citation
+
+
 class Flag(BaseModel):
     severity: Literal["red_flag", "watch", "positive"]
     text_he: str
@@ -126,6 +136,7 @@ class ReportCard(BaseModel):
     promises_check: list[PromiseCheck]
     risk_changes: list[RiskChange]
     flags: list[Flag]
+    catalysts: list[Catalyst] = Field(description="Forward-looking, time-bound events named in the sources that could move the stock. Empty if none.")
 
 
 class LightCard(BaseModel):
