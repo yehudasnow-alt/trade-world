@@ -5,6 +5,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -13,12 +14,17 @@ ROOT = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=str(ROOT / ".env"), extra="ignore")
 
-    # storage
-    database_url: str = f"sqlite:///{ROOT / 'data' / 'metropolin.db'}"
+    # storage: the database sits in the data folder unless DATABASE_URL says otherwise (in the cloud, the folder is the mounted disk)
+    database_url: str = ""
     data_dir: Path = ROOT / "data"
     # nightly database backups: data/backups/ always, plus this folder when set (cloud-synced folder, external drive)
     backup_dir: Optional[Path] = None
     backup_keep: int = 7
+    # in the cloud: a private GitHub repository whose releases hold the nightly backups, and a token that can write to it
+    backup_github_repo: Optional[str] = None
+    github_token: Optional[str] = None
+    # the address is reachable from the internet (set automatically on Railway, Render, Fly): an access code is required
+    public: bool = False
 
     # SEC: required. "Your Name your@email.com" per SEC fair-access policy.
     sec_user_agent: str = ""
@@ -69,6 +75,12 @@ class Settings(BaseSettings):
     # trading defaults (used by the trade calculator)
     portfolio_size_usd: float = 100_000
     risk_per_trade_pct: float = 1.0
+
+    @model_validator(mode="after")
+    def _db_in_data_dir(self) -> "Settings":
+        if not self.database_url:
+            self.database_url = f"sqlite:///{self.data_dir / 'metropolin.db'}"
+        return self
 
     @property
     def sec_ready(self) -> bool:

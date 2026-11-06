@@ -11,7 +11,7 @@ import json
 import logging
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy import delete, select
 
@@ -490,3 +490,61 @@ def check_theses(raws: dict[str, dict]) -> list[tuple[str, str, str]]:
                           data={"reasons": res["reasons"]}, dedupe=f"th:{th.ticker}:{res['status']}:{date.today()}")
             th.status, th.reasons, th.checked = res["status"], res["reasons"], utcnow()
     return changes
+
+
+# ---------------- first fill ----------------
+def backfill_all(tickers: Optional[list[str]] = None, years: int = 6, echo=log.info) -> dict:
+    """Everything a new installation needs: filing history and XBRL facts from the SEC, daily prices, the earnings
+    calendar, the portfolio, then scores. Used by `metro backfill` and, in the cloud, on the first start."""
+    from datetime import timedelta
+
+    from .universe import MARKET_ETF, SECTOR_ETFS
+    st = get_settings()
+    out: dict[str, Any] = {}
+    with session() as s:
+        kv_set(s, "mode", "live")
+        comps = [c.ticker for c in s.scalars(select(Company).where(Company.in_universe.is_(True))) if not tickers or c.ticker in tickers]
+    if st.sec_ready:
+        from .sources.sec import SecClient
+        sec = SecClient()
+        echo("SEC: היסטוריית דיווחים...")
+        out["filings"] = sync_filings(sec, comps, days=400)
+        echo(f"  {out['filings']} דיווחים חדשים. עובדות XBRL...")
+        for i, t in enumerate(comps):
+            try:
+                refresh_facts(sec, t)
+            except Exception as e:  # noqa: BLE001
+                echo(f"  {t}: {e}")
+            if i % 50 == 49:
+                echo(f"  companyfacts {i + 1}/{len(comps)}")
+                with session() as s:
+                    kv_set(s, "bootstrap.progress", {"step": "facts", "done": i + 1, "of": len(comps)})
+        with session() as s:  # history is context; only the latest filings get parsed and carded
+            for f in s.scalars(select(Filing).where(Filing.status == "new", Filing.filed < date.today() - timedelta(days=21))):
+                f.status = "skipped"
+        out["processed"] = process_new(sec, limit=1000)
+        echo(f"  מעבד דיווחים אחרונים: {out['processed']}")
+    else:
+        echo("SEC_USER_AGENT לא מוגדר: מדלג על ה-SEC.")
+    if st.alpaca_ready:
+        from .sources.alpaca import AlpacaClient
+        al = AlpacaClient()
+        echo("מחירים יומיים...")
+        with session() as s:
+            kv_set(s, "bootstrap.progress", {"step": "prices"})
+        out["bars"] = update_bars(al, days=365 * years, tickers=comps + [MARKET_ETF] + SECTOR_ETFS)
+        echo(f"  {out['bars']} נרות. ציטוטים: {refresh_snapshots(al)}")
+    else:
+        echo("מפתחות Alpaca לא מוגדרים: מדלג על מחירים.")
+    if st.finnhub_api_key:
+        from .sources.finnhub import FinnhubClient
+        out["earnings"] = update_earnings(FinnhubClient(), ahead=60, back=120)
+        echo(f"יומן דוחות: {out['earnings']} שורות")
+    if st.flex_ready:
+        from .sources import ibkr
+        out["positions"] = apply_flex(ibkr.parse_flex(ibkr.fetch_flex()))
+        echo(f"תיק IBKR: {out['positions']} פוזיציות")
+    out["scores"] = len(compute_scores())
+    echo(f"ציונים חושבו ל-{out['scores']} חברות.")
+    return out
+

@@ -2274,7 +2274,7 @@ function renderDrawer(){
 $('#bellBtn').onclick = () => { const d = $('#drawer'); d.hidden = !d.hidden; $('#statusPop').hidden = true; if (!d.hidden) renderDrawer(); };
 
 /* status */
-const SRC_HE = { sec: ['דוחות SEC', 'SEC_USER_AGENT'], prices: ['מחירים (Alpaca)', 'ALPACA_KEY_ID'], ibkr_live: ['מחירים חיים (IBKR)', 'IBKR_LIVE'], ibkr_portfolio: ['תיק חי (IB Gateway)', 'IBKR_LIVE'], ibkr_flex: ['תיק יומי (IBKR Flex)', 'IBKR_FLEX_TOKEN'], earnings: ['יומן דוחות (Finnhub)', 'FINNHUB_API_KEY'], scores: ['ציונים', ''], ai: ['כרטיסיות (Claude)', 'ANTHROPIC_API_KEY'], telegram: ['התראות לטלגרם', 'TELEGRAM_BOT_TOKEN'], backup: ['גיבוי לילי', 'BACKUP_DIR'] };
+const SRC_HE = { sec: ['דוחות SEC', 'SEC_USER_AGENT'], prices: ['מחירים (Alpaca)', 'ALPACA_KEY_ID'], ibkr_live: ['מחירים חיים (IBKR)', 'IBKR_LIVE'], ibkr_portfolio: ['תיק חי (IB Gateway)', 'IBKR_LIVE'], ibkr_flex: ['תיק יומי (IBKR Flex)', 'IBKR_FLEX_TOKEN'], earnings: ['יומן דוחות (Finnhub)', 'FINNHUB_API_KEY'], scores: ['ציונים', ''], ai: ['כרטיסיות (Claude)', 'ANTHROPIC_API_KEY'], telegram: ['התראות לטלגרם', 'TELEGRAM_BOT_TOKEN'], backup: ['גיבוי לילי', 'BACKUP_GITHUB_REPO'], bootstrap: ['משיכה ראשונית', ''] };
 let STATUS = null;
 async function loadStatus(){
   try { STATUS = await api('/api/status'); } catch { STATUS = null; }
@@ -2284,8 +2284,8 @@ async function loadStatus(){
 function renderStatus(){
   const el = $('#statusPop'); if (!STATUS) { el.innerHTML = '<h2>מצב החיבורים</h2><p class="note">לא ניתן לקרוא את מצב השרת.</p>'; return; }
   el.innerHTML = `<h2>מצב החיבורים</h2>${STATUS.mode === 'demo' ? '<p class="note" style="margin:0 0 6px">מצב הדגמה: הנתונים מומצאים. כדי לעבור לנתונים חיים: metro init ואז metro backfill.</p>' : ''}
-    ${Object.entries(STATUS.sources).map(([k, s]) => { const [he, env] = SRC_HE[k] || [k, '']; const st = !s.configured ? 'לא מוגדר' : s.state === 'ok' ? (s.age_s != null ? 'עודכן ' + Math.round(s.age_s / 60) + ' דק׳' : 'פעיל') : s.state === 'never' ? 'ממתין להרצה ראשונה' : s.state === 'stale' ? 'לא עודכן זמן רב' : s.state;
-      return `<div class="srow"><i class="dot ${!s.configured ? '' : s.state}"></i><span>${he}${!s.configured && env ? `<br><small>הגדר ${env} בקובץ ‎.env</small>` : ''}${k === 'ai' && s.configured ? `<br><small>${s.queued} בתור · ${N('$' + s.spend_month_usd)} החודש מתוך ${N('$' + s.budget_usd)}</small>` : ''}</span><small>${st}</small></div>`; }).join('')}`;
+    ${Object.entries(STATUS.sources).filter(([k, s]) => k !== 'bootstrap' || s.configured).map(([k, s]) => { const [he, env] = SRC_HE[k] || [k, '']; const st = k === 'bootstrap' ? 'רצה עכשיו' + (s.info?.of ? ` · ${s.info.done}/${s.info.of}` : s.info?.step === 'prices' ? ' · מחירים' : '') : !s.configured ? 'לא מוגדר' : s.state === 'ok' ? (s.age_s != null ? 'עודכן ' + Math.round(s.age_s / 60) + ' דק׳' : 'פעיל') : s.state === 'never' ? 'ממתין להרצה ראשונה' : s.state === 'stale' ? 'לא עודכן זמן רב' : s.state;
+      return `<div class="srow"><i class="dot ${!s.configured ? '' : s.state}"></i><span>${he}${!s.configured && env ? `<br><small>הגדר ${env} ${STATUS.cloud ? 'במשתני השירות' : 'בקובץ ‎.env'}</small>` : ''}${k === 'ai' && s.configured ? `<br><small>${s.queued} בתור · ${N('$' + s.spend_month_usd)} החודש מתוך ${N('$' + s.budget_usd)}</small>` : ''}</span><small>${st}</small></div>`; }).join('')}`;
 }
 $('#modeChip').onclick = () => $('#statusBtn').onclick();
 $('#statusBtn').onclick = () => { const d = $('#statusPop'); d.hidden = !d.hidden; $('#drawer').hidden = true; if (!d.hidden) { renderStatus(); loadStatus().then(renderStatus); } };

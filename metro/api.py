@@ -37,6 +37,9 @@ app = FastAPI(title="Metropolin", docs_url="/api/docs", openapi_url="/api/openap
 def guard(request: Request) -> None:
     tok = get_settings().access_token
     if not tok:
+        from .cloud import on_cloud
+        if on_cloud():  # an address on the internet never serves your portfolio without a code
+            raise HTTPException(503, "המערכת רצה בענן בלי קוד גישה. הוסף ACCESS_TOKEN במשתני הסביבה של השירות והפעל מחדש.")
         return
     if request.headers.get("x-metro-token") == tok or request.cookies.get("metro_token") == tok:
         return
@@ -48,7 +51,8 @@ async def token_cookie(request: Request, call_next):  # noqa: ANN001
     tok = get_settings().access_token
     if tok and request.query_params.get("token") == tok:
         resp = RedirectResponse(str(request.url.remove_query_params("token")))
-        resp.set_cookie("metro_token", tok, httponly=True, samesite="lax", max_age=60 * 60 * 24 * 180)
+        https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+        resp.set_cookie("metro_token", tok, httponly=True, samesite="lax", secure=https, max_age=60 * 60 * 24 * 180)
         return resp
     return await call_next(request)
 
@@ -460,13 +464,18 @@ def status() -> dict:
             val = kv_get(s, key)
         state = "off" if not configured else ("never" if age is None else "ok" if age <= max_age else "stale")
         return {"configured": configured, "age_s": age, "state": state, "info": val}
+    def first_fill() -> dict:
+        with session() as s:
+            bs, pr = kv_get(s, "bootstrap") or {}, kv_get(s, "bootstrap.progress")
+        return {"configured": bs.get("state") == "running", "state": "never", "info": pr}
     with session() as s:
         mode = kv_get(s, "mode", "live")
         queued = len(list(s.scalars(select(AiJob.id).where(AiJob.status.in_(("queued", "batched"))))))
         from .ai.runner import month_spend
         spend = month_spend(s)
     open_ = clock.session_state() in ("open", "pre", "post")
-    return {"mode": mode, "session": session_info(), "sources": {
+    from .cloud import on_cloud
+    return {"mode": mode, "cloud": on_cloud(), "session": session_info(), "sources": {
         "sec": src("sec.feed", st.sec_ready, 600 if open_ else 86400),
         "prices": src("quotes.alpaca", st.alpaca_ready, 300 if open_ else 86400 * 3),
         "ibkr_live": src("quotes.ibkr", st.ibkr_live, 120 if open_ else 86400 * 3),
@@ -477,6 +486,7 @@ def status() -> dict:
         "ai": {"configured": bool(st.anthropic_api_key), "queued": queued, "spend_month_usd": round(spend, 2),
                "budget_usd": st.ai_monthly_budget_usd, "state": "ok" if st.anthropic_api_key else "off"},
         "backup": src("backup", True, 86400 * 2),
+        "bootstrap": first_fill(),
         "telegram": {"configured": st.telegram_ready, "state": "ok" if st.telegram_ready else "off"},
     }}
 
@@ -499,6 +509,12 @@ if (WEB / "vendor").exists():
     app.mount("/vendor", StaticFiles(directory=WEB / "vendor"), name="vendor")
 
 
+@app.get("/healthz", include_in_schema=False)
+def healthz() -> dict:
+    """For the hosting service's health check: answers without a code and reveals nothing."""
+    return {"ok": True}
+
+
 @app.get("/", include_in_schema=False)
 def index(request: Request) -> Response:
     p = WEB / "index.html"
@@ -507,6 +523,5 @@ def index(request: Request) -> Response:
         webbuild.build_live()  # generated file, not in git: built on first request and after edits to web/src
     if not p.exists():
         return JSONResponse({"error": "web/index.html חסר. הרץ: metro web"}, 500)
-    if get_settings().access_token:
-        guard(request)
+    guard(request)
     return FileResponse(p, headers={"Cache-Control": "no-cache"})

@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 from . import alerts, brief, clock, pipeline
 from .config import get_settings
-from .db import Holding, Watch, kv_set, session, utcnow
+from .db import Holding, Watch, kv_get, kv_set, session, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -139,7 +139,8 @@ class Runner:
         return f"joined={','.join(joined) or '-'} left={','.join(left) or '-'}"
 
     def backup_tick(self) -> str:
-        from . import backup
+        from . import backup, cloud
+        cloud.prune_disk()
         files = backup.backup()
         return " ".join(f.name for f in files[:1]) + (f" (+{len(files) - 1} copy)" if len(files) > 1 else "")
 
@@ -187,8 +188,31 @@ class Runner:
             self.live.start()
             add(self.refresh_live_symbols, "interval", minutes=10)
             on.append("IBKR live")
+        if self.needs_first_fill():
+            # a fresh installation (in the cloud nobody is there to type `metro backfill`): fill it now, in the background
+            from datetime import timedelta
+            add(safe("bootstrap", self.bootstrap_tick), "date", run_date=datetime.now(clock.NY) + timedelta(seconds=20))
         self.sched.start()
         return on
+
+    def needs_first_fill(self) -> bool:
+        st = get_settings()
+        if not (st.sec_ready or st.alpaca_ready):
+            return False
+        from .db import Company, PriceBar
+        with session() as s:
+            state = (kv_get(s, "bootstrap") or {}).get("state")
+            has_bars = s.scalars(select(PriceBar.ticker).limit(1)).first() is not None
+            has_live = s.scalars(select(Company.ticker).where(Company.in_universe.is_(True)).limit(1)).first() is not None
+        return has_live and state != "done" and (not has_bars or state == "running")
+
+    def bootstrap_tick(self) -> str:
+        with session() as s:
+            kv_set(s, "bootstrap", {"state": "running", "started": utcnow().isoformat()})
+        out = pipeline.backfill_all()
+        with session() as s:
+            kv_set(s, "bootstrap", {"state": "done", "finished": utcnow().isoformat(), **{k: v for k, v in out.items() if isinstance(v, int)}})
+        return " ".join(f"{k}={v}" for k, v in out.items())
 
     def stop(self) -> None:
         self.sched.shutdown(wait=False)

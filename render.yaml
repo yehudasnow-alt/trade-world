@@ -1,0 +1,39 @@
+# Alternative to Railway: Render → New → Blueprint → pick this repository. Render asks for each key below.
+services:
+  - type: web
+    name: metropolin
+    runtime: docker
+    plan: starter
+    autoDeploy: true
+    healthCheckPath: /healthz
+    disk:
+      name: data
+      mountPath: /app/data
+      sizeGB: 5
+    envVars:
+      - key: ACCESS_TOKEN
+        generateValue: true
+      - key: SEC_USER_AGENT
+        sync: false
+      - key: ALPACA_KEY_ID
+        sync: false
+      - key: ALPACA_SECRET_KEY
+        sync: false
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: IBKR_FLEX_TOKEN
+        sync: false
+      - key: IBKR_FLEX_QUERY_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_MONTHLY_BUDGET_USD
+        value: "30"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: BACKUP_GITHUB_REPO
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false

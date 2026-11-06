@@ -61,9 +61,19 @@ def backup(to: Optional[Path] = None, keep: Optional[int] = None) -> list[Path]:
         shutil.copy2(local / name, extra / name)
         out.append(extra / name)
         _prune(extra, keep)
+    gh = None
+    from . import cloud
+    if cloud.github_ready():
+        try:
+            cloud.GitHubBackup().upload(local / name, keep)
+            gh = st.backup_github_repo
+        except Exception as e:  # noqa: BLE001 - the local copy is already safe
+            gh = f"error: {e}"
     with session() as s:  # the status panel shows when the last backup ran
-        kv_set(s, "backup", {"file": name, "mb": round(out[0].stat().st_size / 1e6, 1), "copies": len(out)})
+        kv_set(s, "backup", {"file": name, "mb": round(out[0].stat().st_size / 1e6, 1), "copies": len(out) + (1 if gh and not gh.startswith("error") else 0), "github": gh})
         s.commit()
+    if gh and gh.startswith("error"):
+        raise RuntimeError(f"הגיבוי נשמר מקומית, אבל ההעלאה ל-GitHub נכשלה: {gh[7:]}")
     return out
 
 

@@ -35,7 +35,48 @@ metro run         # פתח http://127.0.0.1:8000
 
 ---
 
-## מעבר לנתונים חיים
+## הפעלה בענן (מומלץ): הכול באוויר, כלום אצלך במחשב
+
+המערכת רצה בשירות ענן שמושך את הקוד מ-GitHub. הקוד עצמו נשאר ב-GitHub, ו-Vercel ממשיך להציג את ההדגמה הציבורית.
+
+| מה | איפה זה יושב |
+|---|---|
+| הקוד | GitHub. כל דחיפה ל-`main` נפרסת מחדש לבד |
+| השרת והמשימות המתוזמנות | Railway, כל הזמן |
+| המפתחות | משתני הסביבה של השירות ב-Railway, לא קובץ |
+| מסד הנתונים | הדיסק (Volume) של השירות |
+| הגיבוי הלילי | ה-Releases של ריפו פרטי ב-GitHub. דיסק ריק משתחזר ממנו לבד |
+| הכניסה | כתובת https קבועה, מוגנת בקוד גישה, מכל מחשב או טלפון |
+
+הקמה, פעם אחת, כחצי שעה:
+1. **ריפו פרטי לגיבויים.** ב-[github.com/new](https://github.com/new) פותחים ריפו בשם `trade-world-data`, מסמנים **Private** ו-Add a README.
+2. **טוקן שיכול לכתוב רק לריפו הזה.** ב-GitHub נכנסים ל-Settings ← Developer settings ← Personal access tokens ← Fine-grained tokens ← Generate new token, ומגדירים:
+   - Repository access: Only select repositories, ובוחרים את `trade-world-data`.
+   - Permissions ← Repository permissions ← Contents: **Read and write**.
+   - מעתיקים את הטוקן.
+3. **Railway.** ב-[railway.com](https://railway.com) נכנסים עם חשבון GitHub ומשם New Project ← Deploy from GitHub repo ← `trade-world`. ‏Railway בונה את ה-Dockerfile לבד (ההגדרות ב-`railway.json`).
+4. **דיסק.** בלוח הפרויקט, קליק ימני על השירות ← Attach volume, ונתיב ההרכבה (Mount path) הוא `/app/data`.
+5. **מפתחות.** בשירות נכנסים ל-Variables ← Raw Editor ומדביקים בפורמט `KEY=VALUE`:
+   - כל המפתחות מהטבלה בסעיף הבא.
+   - `ACCESS_TOKEN`: קוד ארוך ואקראי. בלעדיו השרת מסרב להציג נתונים.
+   - `BACKUP_GITHUB_REPO=<המשתמש שלך>/trade-world-data`.
+   - `GITHUB_TOKEN=<הטוקן משלב 2>`.
+6. **כתובת.** ב-Settings ← Networking ← Generate Domain מקבלים כתובת `https://<שם>.up.railway.app`.
+7. **כניסה.** פותחים פעם אחת `https://<שם>.up.railway.app/?token=<ACCESS_TOKEN>`. הדפדפן זוכר את הקוד חצי שנה, וכך גם בטלפון.
+
+אחרי זה הכול רץ לבד:
+- **משיכה ראשונית:** מתחילה מעצמה ולוקחת כשעה. ההתקדמות מופיעה במצב החיבורים.
+- **משימות קבועות:** המחירים, הדוחות, הכרטיסיות וההתראות רצים לפי לוח הזמנים.
+- **גיבוי:** בכל לילה נשמר עותק ב-GitHub.
+- **שינוי מפתח:** מעדכנים אותו ב-Variables, ו-Railway מפעיל את השירות מחדש.
+
+עלות: מנוי Hobby של Railway עולה 5$ לחודש וכולל 5$ שימוש. שרת כזה צריך בערך את זה, אז בפועל זה 5–8$ לחודש.
+
+חלופה: Render. נכנסים ל-New ← Blueprint ובוחרים את הריפו. ‏`render.yaml` מגדיר דיסק ושואל על כל מפתח. העלות כ-8$ לחודש, עם 512MB זיכרון.
+
+מה לא רץ בענן: IB Gateway צריך התחברות פעילה לחשבון, ולכן התיק החי (כל 30 שניות) נשאר למחשב שלך. בענן התיק מגיע מ-IBKR Flex כל בוקר.
+
+## מעבר לנתונים חיים (במחשב שלך)
 
 ```bash
 cp .env.example .env     # ממלאים מפתחות (פירוט למטה). כל מפתח שחסר פשוט משאיר את המקור כבוי.

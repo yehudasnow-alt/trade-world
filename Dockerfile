@@ -11,7 +11,9 @@ COPY scripts ./scripts
 # editable install keeps the code next to web/ and data/, where the app looks for them
 RUN pip install --no-cache-dir -e ".[ibkr]" && python scripts/build_web.py
 
-# the database, documents and transcripts live in the /app/data volume; seed files are copied in on first start
+# the database, documents and transcripts live in the /app/data volume. `metro boot` copies the seed files in,
+# and on an empty disk restores the latest backup from GitHub (BACKUP_GITHUB_REPO) or starts a new database;
+# with keys set, the first fill then starts by itself in the background.
 ENV DATA_DIR=/app/data HOST=0.0.0.0 PORT=8000
 EXPOSE 8000
-CMD ["sh", "-c", "mkdir -p data && for f in seed/*; do [ -e data/$(basename $f) ] || cp $f data/; done && ([ -e data/metropolin.db ] || metro init) && metro run"]
+CMD ["sh", "-c", "metro boot && metro run"]

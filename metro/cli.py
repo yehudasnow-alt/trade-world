@@ -5,6 +5,7 @@ import json
 import logging
 import time
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -48,48 +49,9 @@ def backfill(tickers: Optional[str] = typer.Option(None, help="רשימה מופ
     """משיכה ראשונית: דוחות ועובדות מה-SEC, מחירים יומיים, יומן דוחות."""
     _log(verbose)
     init_db()
-    st = get_settings()
     from . import pipeline
     want = [t.strip().upper() for t in tickers.split(",")] if tickers else None
-    with session() as s:
-        kv_set(s, "mode", "live")
-        comps = [c.ticker for c in s.scalars(select(Company).where(Company.in_universe.is_(True))) if not want or c.ticker in want]
-    if st.sec_ready:
-        from .sources.sec import SecClient
-        sec = SecClient()
-        typer.echo("SEC: היסטוריית דיווחים...")
-        n = pipeline.sync_filings(sec, comps, days=400)
-        typer.echo(f"  {n} דיווחים חדשים. עובדות XBRL...")
-        with typer.progressbar(comps, label="  companyfacts") as bar:
-            for t in bar:
-                try:
-                    pipeline.refresh_facts(sec, t)
-                except Exception as e:  # noqa: BLE001
-                    typer.echo(f"  {t}: {e}")
-        with session() as s:  # history is context; only the latest filings get parsed and carded
-            for f in s.scalars(select(Filing).where(Filing.status == "new", Filing.filed < date.today() - timedelta(days=21))):
-                f.status = "skipped"
-        typer.echo(f"  מעבד דיווחים אחרונים: {pipeline.process_new(sec, limit=1000)}")
-    else:
-        typer.echo("SEC_USER_AGENT לא מוגדר: מדלג על ה-SEC.")
-    if st.alpaca_ready:
-        from .sources.alpaca import AlpacaClient
-        al = AlpacaClient()
-        typer.echo("מחירים יומיים...")
-        syms = comps + ([] if want else [])
-        from .universe import MARKET_ETF, SECTOR_ETFS
-        n = pipeline.update_bars(al, days=365 * years, tickers=syms + [MARKET_ETF] + SECTOR_ETFS)
-        typer.echo(f"  {n} נרות. ציטוטים: {pipeline.refresh_snapshots(al)}")
-    else:
-        typer.echo("מפתחות Alpaca לא מוגדרים: מדלג על מחירים.")
-    if st.finnhub_api_key:
-        from .sources.finnhub import FinnhubClient
-        typer.echo(f"יומן דוחות: {pipeline.update_earnings(FinnhubClient(), ahead=60, back=120)} שורות")
-    if st.flex_ready:
-        from .sources import ibkr
-        typer.echo(f"תיק IBKR: {pipeline.apply_flex(ibkr.parse_flex(ibkr.fetch_flex()))} פוזיציות")
-    sc = pipeline.compute_scores()
-    typer.echo(f"ציונים חושבו ל-{len(sc)} חברות.")
+    pipeline.backfill_all(want, years=years, echo=typer.echo)
 
 
 @app.command()
@@ -209,6 +171,50 @@ def backtest(start: str = "2021-01-01") -> None:
     from . import backtest as BT
     out = BT.run(date.fromisoformat(start))
     typer.echo(json.dumps(out, ensure_ascii=False, indent=1))
+
+
+@app.command()
+def boot() -> None:
+    """הכנה לפני הפעלה (בענן): קבצי בסיס בתיקיית הנתונים, ואם המסד חסר: שחזור מהגיבוי ב-GitHub, אחרת מסד חדש."""
+    import shutil
+    from . import backup as B, cloud
+    st = get_settings()
+    st.data_dir.mkdir(parents=True, exist_ok=True)
+    root = Path(__file__).resolve().parent.parent
+    for name in ("sp500.csv", "themes.json", "relations.json"):  # base files: from the image's seed/, or the repository's data/
+        src = next((p for p in (root / "seed" / name, root / "data" / name) if p.exists()), None)
+        if src and not (st.data_dir / name).exists():
+            shutil.copy(src, st.data_dir / name)
+    db = B.db_path()
+    if not db.exists():
+        name = cloud.restore_from_github(db)
+        typer.echo(f"שוחזר מ-GitHub: {name}" if name else "אין גיבוי לשחזר: מסד חדש.")
+    init_db()
+    from .universe import sync_universe
+    with session() as s:
+        empty = s.scalars(select(Company.ticker).limit(1)).first() is None
+    if empty:
+        n, _ = sync_universe()
+        typer.echo(f"{n} חברות ב-S&P 500.")
+
+
+@app.command()
+def restore(file: Optional[str] = typer.Argument(None, help="קובץ גיבוי (.db.gz); בלי קובץ: האחרון"),
+            github: bool = typer.Option(False, "--github", help="הורד את הגיבוי האחרון מ-GitHub")) -> None:
+    """שחזור המסד מגיבוי. עוצרים קודם את metro run."""
+    from pathlib import Path as P
+    from . import backup as B, cloud
+    db = B.db_path()
+    if github:
+        name = cloud.restore_from_github(db)
+        typer.echo(f"שוחזר מ-GitHub: {name}" if name else "לא נמצא גיבוי ב-GitHub (בדוק BACKUP_GITHUB_REPO ו-GITHUB_TOKEN).")
+        return
+    src = P(file) if file else B.latest()
+    if not src or not src.exists():
+        typer.echo("לא נמצא קובץ גיבוי.")
+        raise typer.Exit(1)
+    cloud.restore(src, db)
+    typer.echo(f"שוחזר: {src.name}")
 
 
 @app.command()
