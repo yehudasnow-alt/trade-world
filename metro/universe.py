@@ -1,9 +1,11 @@
 """The universe: S&P 500 constituents with GICS sector and sub-industry.
 
 The bundled data/sp500.csv comes from the open dataset at
-github.com/datasets/s-and-p-500-companies. `metro universe --refresh` downloads
-the current version. Dual share classes (GOOGL/GOOG, FOXA/FOX, NWSA/NWS) become
-one company with alternate tickers.
+github.com/datasets/s-and-p-500-companies. The running system downloads the current
+list every weekday morning (`metro init --refresh` does it by hand) into
+data/cache/sp500.csv, outside Git; companies that join get their history pulled,
+companies that leave drop off the map. Dual share classes (GOOGL/GOOG, FOXA/FOX,
+NWSA/NWS) become one company with alternate tickers.
 """
 from __future__ import annotations
 
@@ -82,12 +84,24 @@ def bundled_path() -> Path:
     return get_settings().data_dir / "sp500.csv"
 
 
+def cached_path() -> Path:
+    return get_settings().data_dir / "cache" / "sp500.csv"
+
+
+MIN_MEMBERS = 480  # a broken download must never empty the map
+
+
 def load_members(refresh: bool = False) -> list[Member]:
-    path = bundled_path()
     if refresh:
         r = httpx.get(SOURCE_URL, timeout=30, follow_redirects=True)
         r.raise_for_status()
-        path.write_text(r.text, encoding="utf-8")
+        members = parse_csv(r.text)
+        if len(members) < MIN_MEMBERS or any(m.sector not in SECTORS for m in members):
+            raise ValueError(f"the downloaded S&P 500 list looks wrong ({len(members)} companies); keeping the current one")
+        cached_path().parent.mkdir(parents=True, exist_ok=True)
+        cached_path().write_text(r.text, encoding="utf-8")
+        return members
+    path = cached_path() if cached_path().exists() else bundled_path()
     return parse_csv(path.read_text(encoding="utf-8"))
 
 
@@ -126,6 +140,16 @@ def sync_universe(refresh: bool = False) -> tuple[int, int]:
             if t not in seen:
                 c.in_universe = False
     return len(members), added
+
+
+def refresh_universe() -> tuple[list[str], list[str]]:
+    """Download the current index list and sync it. Returns (joined, left)."""
+    with session() as s:
+        before = set(s.scalars(select(Company.ticker).where(Company.in_universe.is_(True))))
+    sync_universe(refresh=True)
+    with session() as s:
+        after = set(s.scalars(select(Company.ticker).where(Company.in_universe.is_(True))))
+    return sorted(after - before), sorted(before - after)
 
 
 # Symbol conventions differ by vendor.

@@ -188,7 +188,7 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .camhelp dt{font-weight:600; color:var(--ink); white-space:nowrap} .camhelp dd{margin:0}
 .camhelp p{margin:8px 0 0; font-size:11.5px; color:var(--ink-3)}
 .hint{position:fixed; z-index:30; left:50%; bottom:calc(var(--gb) + 92px); transform:translateX(-50%); display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:14px; font-size:13px; color:var(--ink-2); white-space:nowrap; transition:opacity .4s}
-.hint b{color:var(--ink); font-weight:600} .hint i{width:4px; height:4px; border-radius:50%; background:var(--ink-3)}
+.hint b{color:var(--ink); font-weight:600} #indexNote{bottom:auto; top:calc(var(--gt) + 60px)} #indexNote .btn{margin-inline-start:4px; height:30px; padding:0 12px; background:var(--accent); color:var(--accent-ink)} .hint i{width:4px; height:4px; border-radius:50%; background:var(--ink-3)}
 @media (min-width: 861px){ .only-desk{display:block} } @media (max-width: 860px){ .only-desk{display:none !important} .hint{bottom:auto; top:calc(var(--gt) + 52px); font-size:12px; white-space:normal; width:max-content; max-width:calc(100vw - 32px)} }
 
 .foot{grid-area:foot; display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:end; gap:14px; pointer-events:none; min-width:0; transition:margin-left .45s cubic-bezier(.2,.8,.2,1)}
@@ -537,6 +537,7 @@ ul.clean li{margin:2px 0}
   <div id="brief" class="overlay" hidden><div class="sheet glass" role="dialog" aria-modal="true" aria-label="תדריך בוקר" id="briefBody"></div></div>
   <div id="toast" class="toast" hidden role="status"></div>
   <div id="hint" class="hint glass" hidden role="status"></div>
+  <div id="indexNote" class="hint glass" hidden role="status"></div>
 </div>
 
 <script type="importmap">
@@ -2456,7 +2457,25 @@ async function pollQuotes(){
 }
 async function refreshCity(){
   if (DEMO) return;
-  try { const city = await api('/api/city'); for (const r of city.companies) { const c = byT[r.t]; if (c) Object.assign(c, r); } CITY.alerts = city.alerts; CITY.index = city.index; CITY.session = city.session; CITY.sector_etf = city.sector_etf; CITY.mode = city.mode; retarget(); renderStrip(); renderRail(); dirty = true; } catch {}
+  try {
+    const city = await api('/api/city');
+    for (const r of city.companies) { const c = byT[r.t]; if (c) Object.assign(c, r); }
+    // heights follow market cap as it moves: the tallest company sets the scale, every building eases to its new height
+    const caps = C.map(c => c.cap).filter(v => isNum(v) && v > 0);
+    if (caps.length) { CAP_MAX = Math.max(...caps); for (const c of C) if (isNum(c.cap) && c.cap > 0) c.capv = c.cap; }
+    CITY.alerts = city.alerts; CITY.index = city.index; CITY.session = city.session; CITY.sector_etf = city.sector_etf; CITY.mode = city.mode;
+    retarget(); renderStrip(); renderRail(); renderLegend(); dirty = true;
+    // a company joined or left the S&P 500: the street plan is rebuilt on reload
+    const now = new Set(city.companies.map(r => r.t)), had = new Set(C.map(c => c.t));
+    const joined = [...now].filter(t => !had.has(t)), left = [...had].filter(t => !now.has(t));
+    if (joined.length || left.length) showIndexChange(joined, left);
+  } catch {}
+}
+function showIndexChange(joined, left){
+  const n = $('#indexNote'); if (!n.hidden) return;
+  const part = (l, w) => l.length ? `<span><b>${w}:</b> ${l.slice(0, 4).map(esc).join(', ')}${l.length > 4 ? ` ועוד ${l.length - 4}` : ''}</span>` : '';
+  n.innerHTML = `<span>הרכב ה-S&P 500 השתנה</span>${part(joined, 'נכנסו')}${part(left, 'יצאו')}<button type="button" class="btn sm">רענון העיר</button>`;
+  n.querySelector('button').onclick = () => location.reload(); n.hidden = false;
 }
 
 /* ================= picking events ================= */
@@ -2532,7 +2551,7 @@ async function boot(){
   if (!DEMO) { setInterval(pollQuotes, 20000); setInterval(refreshCity, 120000); setInterval(loadStatus, 60000); }
   setInterval(() => { if (!DEMO) return; renderStrip(); }, 30000);
   const hashT = decodeURIComponent(location.hash.slice(1)).toUpperCase(); if (hashT && byT[hashT]) setTimeout(() => select(byT[hashT].i), 2300);
-  window.__metro = { get C(){ return C; }, setHScale, controls, pick: (x, y) => { const h = pick(x, y); return { b: h.b, d: h.d?.s.en }; }, stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, trees: treeMesh.count, zebras: zebraMesh.count, dashes: laneMesh.count, cars: CARS.length }), where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); } };
+  window.__metro = { get C(){ return C; }, setHScale, controls, refresh: () => refreshCity(), heightOf: t => tgt[byT[t].i].h, pick: (x, y) => { const h = pick(x, y); return { b: h.b, d: h.d?.s.en }; }, stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, trees: treeMesh.count, zebras: zebraMesh.count, dashes: laneMesh.count, cars: CARS.length }), where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); } };
 }
 boot();
 </script>

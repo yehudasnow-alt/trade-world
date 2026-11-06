@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import traceback
-from datetime import datetime
+from datetime import date, datetime
 from typing import Callable
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -108,6 +108,36 @@ class Runner:
                 syms = list(s.scalars(select(Holding.ticker))) + list(s.scalars(select(Watch.ticker)))
             self.live.set_symbols(list(dict.fromkeys(syms)))
 
+    def universe_tick(self) -> str:
+        """The S&P 500 changes a few times a quarter: newcomers get their history now, leavers drop off the map."""
+        from datetime import timedelta
+
+        from .db import Filing
+        from .universe import refresh_universe
+        joined, left = refresh_universe()
+        if joined:
+            if self.sec:
+                pipeline.sync_filings(self.sec, joined, days=400)
+                for t in joined:
+                    try:
+                        pipeline.refresh_facts(self.sec, t)
+                    except Exception as e:  # noqa: BLE001
+                        log.warning("facts %s: %s", t, e)
+                with session() as s:  # history is context: only the last three weeks get parsed and carded
+                    for f in s.scalars(select(Filing).where(Filing.ticker.in_(joined), Filing.status == "new", Filing.filed < date.today() - timedelta(days=21))):
+                        f.status = "skipped"
+            if self.alpaca:
+                pipeline.update_bars(self.alpaca, days=6 * 365, tickers=joined)
+            pipeline.compute_scores()
+        if joined or left:
+            now = utcnow()
+            with session() as s:
+                for t in joined:
+                    pipeline.add_event(s, t, now, "index", "joined", "watch", "נכנסה למדד S&P 500", dedupe=f"index:{t}:in:{now:%Y%m%d}")
+                for t in left:
+                    pipeline.add_event(s, t, now, "index", "left", "watch", "יצאה ממדד S&P 500", dedupe=f"index:{t}:out:{now:%Y%m%d}")
+        return f"joined={','.join(joined) or '-'} left={','.join(left) or '-'}"
+
     def backup_tick(self) -> str:
         from . import backup
         files = backup.backup()
@@ -149,6 +179,7 @@ class Runner:
         add(safe("brief", self.brief_tick), "cron", hour=hh, minute=mm, timezone=clock.IL)
         add(safe("alerts", self.alerts_tick), "cron", minute="*/5")
         add(safe("backup", self.backup_tick), "cron", hour=3, minute=15)
+        add(safe("universe", self.universe_tick), "cron", day_of_week="mon-fri", hour=5, minute=20)
         if st.ibkr_live:
             from .sources.ibkr import IbkrLive
             self.live = IbkrLive(lambda rows: pipeline.update_quotes(rows, "ibkr"), on_portfolio=self.live_portfolio)
