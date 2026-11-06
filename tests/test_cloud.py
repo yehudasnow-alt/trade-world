@@ -107,12 +107,26 @@ def test_a_fresh_install_fills_itself(isolated_env, monkeypatch):
     monkeypatch.setenv("ALPACA_KEY_ID", "k")
     monkeypatch.setenv("ALPACA_SECRET_KEY", "s")
     config.get_settings.cache_clear()
-    assert r.needs_first_fill()
-    monkeypatch.setattr(pipeline, "backfill_all", lambda *a, **k: {"bars": 3, "scores": 0})
+    assert r.needs_first_fill() == {"alpaca"}
+    calls = []
+
+    def fake(*a, only=None, **k):
+        calls.append(only)
+        with session() as s:
+            bs = kv_get(s, "bootstrap") or {}
+            kv_set(s, "bootstrap", {**bs, "done": sorted(set(bs.get("done", [])) | only)})
+        return {"bars": 3}
+    monkeypatch.setattr(pipeline, "backfill_all", fake)
     assert "bars=3" in r.bootstrap_tick()
-    with session() as s:
-        assert kv_get(s, "bootstrap")["state"] == "done"
     assert not r.needs_first_fill()
+    # a key added a week later fills only its own part
+    monkeypatch.setenv("FINNHUB_API_KEY", "f")
+    config.get_settings.cache_clear()
+    assert r.needs_first_fill() == {"finnhub"}
+    r.bootstrap_tick()
+    assert calls == [{"alpaca"}, {"finnhub"}]
+    with session() as s:
+        assert kv_get(s, "bootstrap")["state"] == "idle"
 
 
 def test_prune_keeps_the_disk_small(isolated_env):

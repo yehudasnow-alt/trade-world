@@ -188,6 +188,10 @@ class Runner:
             self.live.start()
             add(self.refresh_live_symbols, "interval", minutes=10)
             on.append("IBKR live")
+        with session() as s:  # at start nothing is running: a fill cut short by a restart resumes below
+            bs = kv_get(s, "bootstrap") or {}
+            if bs.get("state") == "running":
+                kv_set(s, "bootstrap", {**bs, "state": "idle"})
         if self.needs_first_fill():
             # a fresh installation (in the cloud nobody is there to type `metro backfill`): fill it now, in the background
             from datetime import timedelta
@@ -195,23 +199,28 @@ class Runner:
         self.sched.start()
         return on
 
-    def needs_first_fill(self) -> bool:
-        st = get_settings()
-        if not (st.sec_ready or st.alpaca_ready):
-            return False
-        from .db import Company, PriceBar
+    def needs_first_fill(self) -> set[str]:
+        """Sources whose key is set but whose history was never pulled (a new installation, or a key added later)."""
+        from .db import Company
         with session() as s:
-            state = (kv_get(s, "bootstrap") or {}).get("state")
-            has_bars = s.scalars(select(PriceBar.ticker).limit(1)).first() is not None
+            if kv_get(s, "mode", "live") == "demo":
+                return set()
             has_live = s.scalars(select(Company.ticker).where(Company.in_universe.is_(True)).limit(1)).first() is not None
-        return has_live and state != "done" and (not has_bars or state == "running")
+        return pipeline.ready_sources() - pipeline.filled_sources() if has_live else set()
 
     def bootstrap_tick(self) -> str:
+        todo = self.needs_first_fill()
+        if not todo:
+            return "nothing to fill"
         with session() as s:
-            kv_set(s, "bootstrap", {"state": "running", "started": utcnow().isoformat()})
-        out = pipeline.backfill_all()
-        with session() as s:
-            kv_set(s, "bootstrap", {"state": "done", "finished": utcnow().isoformat(), **{k: v for k, v in out.items() if isinstance(v, int)}})
+            bs = kv_get(s, "bootstrap") or {}
+            kv_set(s, "bootstrap", {**bs, "state": "running", "started": utcnow().isoformat(), "sources": sorted(todo)})
+        try:
+            out = pipeline.backfill_all(only=todo)
+        finally:
+            with session() as s:
+                bs = kv_get(s, "bootstrap") or {}
+                kv_set(s, "bootstrap", {**bs, "state": "idle", "finished": utcnow().isoformat()})
         return " ".join(f"{k}={v}" for k, v in out.items())
 
     def stop(self) -> None:

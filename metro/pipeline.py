@@ -493,18 +493,30 @@ def check_theses(raws: dict[str, dict]) -> list[tuple[str, str, str]]:
 
 
 # ---------------- first fill ----------------
-def backfill_all(tickers: Optional[list[str]] = None, years: int = 6, echo=log.info) -> dict:
+def ready_sources() -> set[str]:
+    st = get_settings()
+    return {k for k, on in (("sec", st.sec_ready), ("alpaca", st.alpaca_ready), ("finnhub", bool(st.finnhub_api_key)), ("flex", st.flex_ready)) if on}
+
+
+def filled_sources() -> set[str]:
+    with session() as s:
+        return set((kv_get(s, "bootstrap") or {}).get("done", []))
+
+
+def backfill_all(tickers: Optional[list[str]] = None, years: int = 6, echo=log.info, only: Optional[set[str]] = None) -> dict:
     """Everything a new installation needs: filing history and XBRL facts from the SEC, daily prices, the earnings
-    calendar, the portfolio, then scores. Used by `metro backfill` and, in the cloud, on the first start."""
+    calendar, the portfolio, then scores. Used by `metro backfill` and, in the cloud, on the first start and
+    whenever a key is added later (`only` = the sources not filled yet)."""
     from datetime import timedelta
 
     from .universe import MARKET_ETF, SECTOR_ETFS
     st = get_settings()
     out: dict[str, Any] = {}
+    want = (only if only is not None else ready_sources()) & ready_sources()
     with session() as s:
         kv_set(s, "mode", "live")
         comps = [c.ticker for c in s.scalars(select(Company).where(Company.in_universe.is_(True))) if not tickers or c.ticker in tickers]
-    if st.sec_ready:
+    if "sec" in want:
         from .sources.sec import SecClient
         sec = SecClient()
         echo("SEC: היסטוריית דיווחים...")
@@ -524,9 +536,9 @@ def backfill_all(tickers: Optional[list[str]] = None, years: int = 6, echo=log.i
                 f.status = "skipped"
         out["processed"] = process_new(sec, limit=1000)
         echo(f"  מעבד דיווחים אחרונים: {out['processed']}")
-    else:
+    elif not st.sec_ready:
         echo("SEC_USER_AGENT לא מוגדר: מדלג על ה-SEC.")
-    if st.alpaca_ready:
+    if "alpaca" in want:
         from .sources.alpaca import AlpacaClient
         al = AlpacaClient()
         echo("מחירים יומיים...")
@@ -534,17 +546,21 @@ def backfill_all(tickers: Optional[list[str]] = None, years: int = 6, echo=log.i
             kv_set(s, "bootstrap.progress", {"step": "prices"})
         out["bars"] = update_bars(al, days=365 * years, tickers=comps + [MARKET_ETF] + SECTOR_ETFS)
         echo(f"  {out['bars']} נרות. ציטוטים: {refresh_snapshots(al)}")
-    else:
+    elif not st.alpaca_ready:
         echo("מפתחות Alpaca לא מוגדרים: מדלג על מחירים.")
-    if st.finnhub_api_key:
+    if "finnhub" in want:
         from .sources.finnhub import FinnhubClient
         out["earnings"] = update_earnings(FinnhubClient(), ahead=60, back=120)
         echo(f"יומן דוחות: {out['earnings']} שורות")
-    if st.flex_ready:
+    if "flex" in want:
         from .sources import ibkr
         out["positions"] = apply_flex(ibkr.parse_flex(ibkr.fetch_flex()))
         echo(f"תיק IBKR: {out['positions']} פוזיציות")
     out["scores"] = len(compute_scores())
     echo(f"ציונים חושבו ל-{out['scores']} חברות.")
+    if not tickers:  # a full fill: remember which sources are done, so a key added later fills only its own part
+        with session() as s:
+            bs = kv_get(s, "bootstrap") or {}
+            kv_set(s, "bootstrap", {**bs, "done": sorted(set(bs.get("done", [])) | want)})
     return out
 
