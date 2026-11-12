@@ -167,6 +167,33 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .pfsum div{display:flex; flex-direction:column; padding:7px 9px; border-radius:10px; background:color-mix(in srgb, var(--ink) 4%, transparent); min-width:0}
 .pfsum span{font-size:11px; color:var(--ink-3)} .pfsum b{font-size:13.5px; font-weight:600; white-space:nowrap}
 .expo{padding:4px 16px 12px}
+.pfview{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:0 14px 8px}
+.pfview .hsc{margin:0}
+.pp{padding:0 12px 10px}
+.pp h5{margin:12px 4px 6px; font-size:12px; font-weight:600; color:var(--ink-2); display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.pp h5 small{font-weight:400; color:var(--ink-3)}
+.vs{display:grid; grid-template-columns:56px minmax(0,1fr) 58px; gap:6px 8px; align-items:center; font-size:12px; padding:0 4px}
+.vs .bar{height:7px; border-radius:4px; background:var(--line); position:relative; overflow:hidden}
+.vs .bar i{position:absolute; inset-block:0; inset-inline-start:0; border-radius:4px}
+.vs b{text-align:end; font-weight:600}
+.spark{margin:8px 4px 0} .spark svg{display:block; width:100%; height:56px; overflow:visible}
+.pstats{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; padding:0 2px}
+.pstats div{display:flex; flex-direction:column; align-items:center; padding:6px 2px; border-radius:9px; background:color-mix(in srgb, var(--ink) 4%, transparent)}
+.pstats span{font-size:10.5px; color:var(--ink-3)} .pstats b{font-size:12.5px; font-weight:600}
+.orow{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1px 8px; align-items:center; padding:6px; font-size:12.5px}
+.orow + .orow{border-top:1px solid var(--line)}
+.orow .x{grid-column:1 / 3; font-size:11px; color:var(--ink-3)}
+.orow .cx{font-size:11.5px; color:var(--down); padding:3px 8px; border-radius:7px; background:var(--down-soft)}
+.side-b{color:var(--up); font-weight:600} .side-s{color:var(--down); font-weight:600}
+.pp .reset{margin:12px 4px 0; font-size:11.5px; color:var(--ink-3); text-decoration:underline; text-underline-offset:3px}
+.pp .reset.armed{color:var(--down)}
+.ticket .pos{font-size:12.5px; color:var(--ink-2); margin:0 0 8px}
+.ticket .hsc{margin:0 0 8px}
+.ticket .chkl{display:flex; gap:8px; align-items:center; font-size:12.5px; margin-top:8px}
+.ticket .chkl input{accent-color:var(--accent); width:16px; height:16px; margin:0}
+.ticket .est{font-size:12px; color:var(--ink-2); margin-top:8px; line-height:1.55}
+.ticket .row{margin-top:10px}
+.btn2.sell{background:var(--down); color:#fff}
 .expo .bar{display:flex; height:10px; border-radius:5px; overflow:hidden; margin:6px 0}
 .expo .bar i{display:block; height:100%}
 .expo .keys{display:flex; flex-wrap:wrap; gap:4px 10px; font-size:11.5px; color:var(--ink-2)}
@@ -281,7 +308,7 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .calc{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
 .fld{display:flex; flex-direction:column; gap:3px; min-width:0}
 .fld label{font-size:11px; color:var(--ink-3)}
-.fld input,.fld select,.fld textarea{width:100%; height:34px; border-radius:10px; border:1px solid var(--line-2); background:var(--glass); padding:0 9px; font-size:13.5px}
+.fld input,.fld select,.fld textarea{box-sizing:border-box; width:100%; height:34px; border-radius:10px; border:1px solid var(--line-2); background:var(--glass); padding:0 9px; font-size:13.5px}
 .fld input{font-family:var(--font-data); font-variant-numeric:tabular-nums; direction:ltr; text-align:right}
 .fld textarea{height:auto; min-height:76px; padding:8px 10px; resize:vertical; line-height:1.5}
 .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--accent); outline:none; box-shadow:0 0 0 3px var(--accent-soft)}
@@ -595,7 +622,9 @@ function demoSave(v){ store.set(LS_PREFIX + 'demo', v); }
 async function demoApi(path, opts){
   const u = new URL(path, 'http://x'); const p = u.pathname; const method = (opts.method || 'GET').toUpperCase();
   const body = opts.body ? JSON.parse(opts.body) : null; const L = demoLocal();
-  if (p === '/api/city') { const c = structuredClone(DEMO.city); for (const r of c.companies) { if (L.watch[r.t]) r.watch = true; if (L.unwatch.includes(r.t)) r.watch = false; } return c; }
+  if (p === '/api/city') { const c = structuredClone(DEMO.city); const pv = demoPaperView(demoPaper(L)); c.paper = pv.account;
+    for (const r of c.companies) { if (L.watch[r.t]) r.watch = true; if (L.unwatch.includes(r.t)) r.watch = false; r.paper = pv.rows[r.t] || null; } return c; }
+  if (p.startsWith('/api/paper')) return demoPaperApi(p, method, body, L);
   if (p === '/api/status') return DEMO.status;
   if (p === '/api/brief') return DEMO.brief;
   if (p === '/api/timeline') return DEMO.timeline;
@@ -612,6 +641,69 @@ async function demoApi(path, opts){
   m = p.match(/^\/api\/company\/(.+)$/);
   if (m) return demoCompany(decodeURIComponent(m[1]).toUpperCase(), L);
   if (p.startsWith('/api/alerts/')) return { ok: true };
+  throw new Error('לא זמין במצב הדגמה');
+}
+/* paper trading in the static demo: the same rules as the server, kept in this browser; prices are frozen at build time */
+function demoPaper(L){ return (L.paper ||= { start: 100000, cash: 100000, realized: 0, fees: 0, created: new Date().toISOString().slice(0, 19), pos: {}, orders: [], seq: 1 }); }
+const demoPx = t => DEMO.city.companies.find(r => r.t === t)?.px;
+const paperFee = (q, px) => Math.round(Math.min(Math.max(1, 0.005 * q), 0.01 * q * px) * 100) / 100;
+function demoPaperFill(P, o, px){
+  const now = new Date().toISOString().slice(0, 19); o.fill_ts = now;
+  const kids = P.orders.filter(k => k.parent === o.id && (k.status === 'pending' || k.status === 'held'));
+  if (o.side === 'buy') {
+    const f = paperFee(o.qty, px), cost = o.qty * px + f;
+    if (cost > P.cash + 1e-6) { o.status = 'rejected'; o.reason = 'אין מספיק מזומן'; for (const k of kids) { k.status = 'cancelled'; k.reason = 'הקנייה נדחתה'; } return; }
+    const p0 = P.pos[o.t]; P.pos[o.t] = p0 ? { q: p0.q + o.qty, cost: (p0.q * p0.cost + cost) / (p0.q + o.qty), opened: p0.opened } : { q: o.qty, cost: cost / o.qty, opened: now };
+    P.cash -= cost; for (const k of kids) if (k.status === 'held') k.status = 'pending'; o.fee = f;
+  } else {
+    const ps = P.pos[o.t]; if (!ps) { o.status = 'rejected'; o.reason = 'אין מניות למכור'; return; }
+    o.qty = Math.min(o.qty, ps.q); const f = paperFee(o.qty, px); o.fee = f;
+    o.realized = Math.round(((px - ps.cost) * o.qty - f) * 100) / 100; P.cash += o.qty * px - f; P.realized += o.realized; ps.q -= o.qty;
+    for (const x of P.orders) if (x !== o && (x.status === 'pending' || x.status === 'held') && ((o.oco && x.oco === o.oco) || (ps.q <= 1e-9 && x.t === o.t && x.side === 'sell'))) { x.status = 'cancelled'; x.reason = o.oco && x.oco === o.oco ? 'ההוראה התאומה בוצעה' : 'הפוזיציה נסגרה'; }
+    if (ps.q <= 1e-9) delete P.pos[o.t]; else for (const x of P.orders) if (x !== o && x.t === o.t && x.side === 'sell' && (x.status === 'pending' || x.status === 'held')) x.qty = Math.min(x.qty, ps.q);
+  }
+  o.status = 'filled'; o.fill_price = px; P.fees += o.fee;
+}
+function demoPaperProcess(P){
+  for (const o of P.orders) { if (o.status !== 'pending') continue; const px = demoPx(o.t); if (!isNum(px)) continue;
+    const hit = o.kind === 'market' || (o.kind === 'limit' ? (o.side === 'buy' ? px <= o.trigger : px >= o.trigger) : (o.side === 'buy' ? px >= o.trigger : px <= o.trigger));
+    if (hit) demoPaperFill(P, o, px); }
+}
+function demoPaperView(P){
+  const pos = Object.entries(P.pos).map(([t, p]) => { const px = demoPx(t) ?? p.cost; return { t, n: DEMO.city.companies.find(r => r.t === t)?.n || t, q: p.q, cost: p.cost, px, v: p.q * px, pnl: (px / p.cost - 1) * 100, pnl_usd: (px - p.cost) * p.q, day_usd: 0 }; });
+  const inv = pos.reduce((a, p) => a + p.v, 0), nav = P.cash + inv;
+  const account = { start_cash: P.start, cash: P.cash, nav, invested: inv, ret_pct: (nav / P.start - 1) * 100, realized: P.realized, unrealized: pos.reduce((a, p) => a + p.pnl_usd, 0), day_usd: 0, fees: P.fees,
+    spy_ret_pct: null, spy_start: null, positions: pos.length, pending: P.orders.filter(o => o.status === 'pending').length, fills_now: true, created: P.created };
+  const rows = Object.fromEntries(pos.map(p => [p.t, { w: Math.round(p.v / nav * 1000) / 10, pnl: Math.round(p.pnl * 10) / 10, th: null, q: p.q, cost: p.cost, v: Math.round(p.v) }]));
+  return { account, rows, pos };
+}
+function demoPaperApi(p, method, body, L){
+  const P = demoPaper(L); const reply = extra => { demoSave(L); const v = demoPaperView(P); return { ...extra, account: v.account, rows: v.rows }; };
+  if (p === '/api/paper' && method === 'GET') {
+    const v = demoPaperView(P); const sells = P.orders.filter(o => o.side === 'sell' && o.status === 'filled').map(o => o.realized); const wins = sells.filter(x => x > 0), losses = sells.filter(x => x <= 0);
+    return { account: v.account, positions: v.pos.sort((a, b) => b.v - a.v), orders: P.orders.filter(o => o.status === 'pending' || o.status === 'held').slice().reverse(),
+      trades: P.orders.filter(o => o.status !== 'pending' && o.status !== 'held').slice().reverse().slice(0, 60), curve: [], session: CITY?.session?.state,
+      stats: { closed: sells.length, wins: wins.length, win_rate: sells.length ? Math.round(wins.length / sells.length * 100) : null, avg_win: wins.length ? wins.reduce((a, b) => a + b, 0) / wins.length : null, avg_loss: losses.length ? losses.reduce((a, b) => a + b, 0) / losses.length : null } };
+  }
+  if (p === '/api/paper/reset') { L.paper = null; const n = demoPaper(L); if (isNum(body?.cash)) n.start = n.cash = body.cash; demoSave(L); const v = demoPaperView(n); return { account: v.account, rows: v.rows }; }
+  const m = p.match(/^\/api\/paper\/order\/(\d+)$/);
+  if (m && method === 'DELETE') { const o = P.orders.find(x => x.id === +m[1]); if (!o || !['pending', 'held'].includes(o.status)) throw new Error('ההוראה כבר לא פתוחה');
+    o.status = 'cancelled'; o.reason = 'בוטלה'; for (const k of P.orders) if (k.parent === o.id && ['pending', 'held'].includes(k.status)) { k.status = 'cancelled'; k.reason = 'הוראת האם בוטלה'; } return reply({ order: o }); }
+  if (p === '/api/paper/order' && method === 'POST') {
+    const t = String(body.ticker || '').toUpperCase(), qty = Math.floor(body.qty || 0), kind = body.kind || 'market', px = demoPx(t);
+    if (!isNum(px)) throw new Error(`${t} לא נמצאה`); if (qty < 1) throw new Error('כמות של מניה אחת לפחות');
+    if (kind !== 'market' && !(body.trigger > 0)) throw new Error('להוראת לימיט או סטופ צריך מחיר');
+    const ref = kind === 'market' ? px : body.trigger;
+    if (body.side === 'sell') { const ps = P.pos[t]; if (!ps) throw new Error(`אין לך ${t} בתיק הדמו. אין מכירה בחסר.`); if (qty > ps.q) throw new Error(`יש לך רק ${ps.q} מניות ${t}`); }
+    else { const resv = P.orders.filter(o => o.side === 'buy' && o.status === 'pending').reduce((a, o) => a + o.qty * (o.trigger || demoPx(o.t) || 0), 0); const need = qty * ref + paperFee(qty, ref);
+      if (need > P.cash - resv + 1e-6) throw new Error(`צריך $${Math.round(need).toLocaleString('en-US')} ויש $${Math.max(0, Math.round(P.cash - resv)).toLocaleString('en-US')} מזומן פנוי`);
+      if (body.stop && !(body.stop < ref)) throw new Error('הסטופ צריך להיות מתחת למחיר הכניסה'); if (body.target && !(body.target > ref)) throw new Error('היעד צריך להיות מעל מחיר הכניסה'); }
+    const row = DEMO.city.companies.find(r => r.t === t); const ts = new Date().toISOString().slice(0, 19);
+    const o = { id: P.seq++, ts, t, side: body.side, qty, kind, trigger: kind === 'market' ? null : body.trigger, status: 'pending', parent: null, oco: null, fill_price: null, fill_ts: null, fee: 0, realized: null, reason: '', note: body.note || '', score: row?.sc ? Math.round(row.sc.tot) : null };
+    P.orders.push(o);
+    for (const [k, v] of [['stop', body.stop], ['limit', body.target]]) if (v && body.side === 'buy') P.orders.push({ id: P.seq++, ts, t, side: 'sell', qty, kind: k, trigger: v, status: 'held', parent: o.id, oco: 'b' + o.id, fill_price: null, fill_ts: null, fee: 0, realized: null, reason: '', note: '', score: null });
+    demoPaperProcess(P); return reply({ order: o });
+  }
   throw new Error('לא זמין במצב הדגמה');
 }
 function demoCompany(t, L){
@@ -763,7 +855,8 @@ function placeIsland(d){
 let C = [], DIST = [], byT = {}, CITY = null, ROADS = null, BRIDGES = [];
 function buildData(city){
   CITY = city;
-  C = city.companies.map((r, i) => ({ ...r, i, si: SEC_BY_EN[r.s] ?? 5 }));
+  C = city.companies.map((r, i) => ({ ...r, realHold: r.hold, i, si: SEC_BY_EN[r.s] ?? 5 }));
+  applyPfView();
   const caps = C.map(c => c.cap).filter(v => isNum(v) && v > 0).sort((a, b) => a - b);
   const med = caps.length ? caps[Math.floor(caps.length / 2)] : 40;
   CAP_MAX = caps.length ? caps.at(-1) : 1;
@@ -1915,7 +2008,7 @@ function headHTML(js, c){
     <button type="button" data-act="close" aria-label="סגירת הכרטיס"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></span></div>
     <div class="p-id"><span class="tkr num">${esc(c.t)}</span><span class="nm">${esc(c.n)}</span>${(c.alts || []).length ? `<span class="alts">+ ${c.alts.map(esc).join(', ')}</span>` : ''}</div>
     <div class="p-px"><span class="px num">${fmtUsd(px)}</span><span class="ch num ${sg(chg)}">${fmtPct(chg)}</span>${isNum(c.sig) ? `<span class="chip ${Math.abs(c.sig) >= 2 ? (c.sig < 0 ? 'down' : 'up') : ''}">${N(fmtNum(c.sig, 1) + 'σ')} מול התנודתיות</span>` : ''}</div>
-    <div class="p-meta"><span class="chip">שווי ${N(fmtCapB(c.cap))}</span>${isNum(c.beta) ? `<span class="chip">בטא ${N(c.beta.toFixed(2))}</span>` : ''}${isNum(c.rvol) ? `<span class="chip">נפח ${N(c.rvol.toFixed(1) + '×')}</span>` : ''}${c.hold ? `<span class="chip ${THESIS[c.hold.th]?.[1] || ''}">בתיק · ${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>` : ''}${(c.veto || []).map(v => `<span class="chip down">${esc(v)}</span>`).join('')}${CITY.mode === 'demo' ? '<span class="chip wr">נתוני הדגמה</span>' : ''}</div>
+    <div class="p-meta"><span class="chip">שווי ${N(fmtCapB(c.cap))}</span>${isNum(c.beta) ? `<span class="chip">בטא ${N(c.beta.toFixed(2))}</span>` : ''}${isNum(c.rvol) ? `<span class="chip">נפח ${N(c.rvol.toFixed(1) + '×')}</span>` : ''}${c.hold ? `<span class="chip ${THESIS[c.hold.th]?.[1] || ''}">${PF_VIEW === 'paper' ? 'בתיק הדמו' : 'בתיק'} · ${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>` : ''}${(c.veto || []).map(v => `<span class="chip down">${esc(v)}</span>`).join('')}${CITY.mode === 'demo' ? '<span class="chip wr">נתוני הדגמה</span>' : ''}</div>
     <div class="tabs" role="tablist">${[['overview', 'סקירה'], ['report', 'הדוח'], ['numbers', 'מספרים'], ['thesis', 'תזה ויומן']].map(([k, l]) => `<button type="button" class="tab" role="tab" data-tab="${k}" aria-selected="${panelTab === k}">${l}</button>`).join('')}</div>`;
 }
 function wireHead(c){
@@ -2060,6 +2153,7 @@ function tabOverview(js, c){
       <div class="fld"><label for="cAtr">ATR יומי</label><input id="cAtr" value="${atrUsd.toFixed(2)}" disabled></div>
     </div><div class="res" id="cRes"></div><div class="warnline" id="cWarn"></div>
     ${js.next_earnings ? `<p class="note">הדוח הבא ${N(dLabel(js.next_earnings))}. אם הוא בתוך תקופת ההחזקה, הסטופ עלול לא להחזיק בפער של יום הדוח.</p>` : ''}</div>
+  ${ticketHTML(c)}
   <div class="sec"><h4>שכנים ברחוב <small dir="ltr">${esc(c.u)}</small></h4>
     <div class="peer hd"><span>סימול</span><span>חברה</span><span>היום</span><span>P/E</span></div>
     ${(js.peers || []).map(o => `<button type="button" class="peer ${o.t === c.t ? 'me' : ''}" data-t="${o.t}"><span class="t">${esc(o.t)}</span><span class="n">${esc(o.n)}</span><span class="num ${sg(o.chg)}">${fmtPct(o.chg, 1)}</span><span class="num">${isNum(o.pe) ? o.pe.toFixed(1) : '–'}</span></button>`).join('')}</div>
@@ -2147,6 +2241,63 @@ function metricRow(r, i, opts){
     <div class="fld"><label for="mO${i}">תנאי</label><select id="mO${i}">${['>', '>=', '<', '<='].map(o => `<option ${o === r.op ? 'selected' : ''}>${o}</option>`).join('')}</select></div>
     <div class="fld"><label for="mV${i}">ערך</label><input id="mV${i}" inputmode="decimal" value="${r.value ?? ''}"></div><button type="button" class="x" data-rm="${i}" aria-label="הסר מדד">✕</button></div>`;
 }
+/* ---------- paper trading: the order ticket in the company card ---------- */
+const TICKET = { calc: null, sync: null, side: 'buy' };
+const KIND_HE = { market: 'שוק', limit: 'לימיט', stop: 'סטופ' };
+const marketOpen = () => CITY?.mode === 'demo' || !!DEMO || CITY?.session?.state === 'open';
+function ticketHTML(c){
+  const h = c.paper;
+  return `<div class="sec ticket"><h4>מסחר בדמו <small>כסף וירטואלי · מחירים אמיתיים</small></h4>
+    <p class="pos">${h ? `בתיק הדמו: <b class="num">${N(String(h.q))}</b> מניות · עלות ממוצעת <span class="num">${fmtUsd(h.cost)}</span> · <span class="num ${sg(h.pnl)}">${fmtPct(h.pnl, 1)}</span>` : `אין ${esc(c.t)} בתיק הדמו. מזומן פנוי: <span class="num">${fmtUsd(CITY.paper?.cash, 0)}</span>`}</p>
+    <div class="hsc" role="group" aria-label="קנייה או מכירה" id="pSide"><button type="button" data-v="buy" aria-pressed="true">קנייה</button><button type="button" data-v="sell" aria-pressed="false" ${h ? '' : 'disabled'}>מכירה</button></div>
+    <div class="calc ptk">
+      <div class="fld"><label for="pQty">כמות</label><input id="pQty" inputmode="numeric"></div>
+      <div class="fld"><label for="pKind">סוג הוראה</label><select id="pKind">${Object.entries(KIND_HE).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
+      <div class="fld"><label for="pTrig">מחיר ההוראה</label><input id="pTrig" inputmode="decimal" placeholder="במחיר השוק" disabled></div>
+    </div>
+    <label class="chkl" id="pBrL"><input type="checkbox" id="pBr" checked> <span>צרף סטופ ויעד מהמחשבון</span></label>
+    <div class="est" id="pEst"></div>
+    <div class="row"><button type="button" class="btn2" id="pGo">קנה</button></div></div>`;
+}
+function wireTicket(c){
+  const qty = $('#pQty'), kind = $('#pKind'), trig = $('#pTrig'), br = $('#pBr'), go = $('#pGo'), est = $('#pEst'); if (!qty) return;
+  let touched = false; TICKET.side = 'buy';
+  qty.addEventListener('input', () => { touched = true; TICKET.sync(); });
+  TICKET.sync = () => {
+    if (!document.body.contains(qty)) { TICKET.sync = null; return; }
+    const buy = TICKET.side === 'buy', h = c.paper;
+    if (!touched) qty.value = buy ? (TICKET.calc?.shares || '') : (h?.q || '');
+    $('#pBrL').hidden = !buy;
+    go.textContent = buy ? 'קנה' : 'מכור'; go.classList.toggle('sell', !buy);
+    const n = Math.floor(parseFloat(qty.value) || 0), k = kind.value, t = parseFloat(trig.value);
+    const ref = k === 'market' ? c.px : t; const f = n > 0 && isNum(ref) ? Math.min(Math.max(1, 0.005 * n), 0.01 * n * ref) : 0;
+    const parts = [];
+    if (n > 0 && isNum(ref)) parts.push(buy ? `עלות משוערת <b class="num">${fmtUsd(n * ref + f, 0)}</b> כולל עמלה ${fmtUsd(f)}` : `תמורה משוערת <b class="num">${fmtUsd(n * ref - f, 0)}</b>`);
+    if (buy && br.checked && TICKET.calc) parts.push(`סטופ <span class="num">${fmtUsd(TICKET.calc.stop)}</span> · יעד <span class="num">${fmtUsd(TICKET.calc.target)}</span>`);
+    if (k === 'market' && !marketOpen()) parts.push('השוק סגור עכשיו: הוראת שוק תתבצע בפתיחה, במחיר של אז.');
+    if (k === 'limit') parts.push(buy ? 'תתבצע רק אם המחיר ירד אל מחיר ההוראה או מתחתיו.' : 'תתבצע רק אם המחיר יעלה אל מחיר ההוראה או מעליו.');
+    if (k === 'stop') parts.push(buy ? 'תתבצע כשהמחיר יעלה אל מחיר ההוראה (פריצה).' : 'תתבצע כשהמחיר ירד אל מחיר ההוראה. בפער פתיחה הביצוע יהיה נמוך יותר.');
+    est.innerHTML = parts.join('<br>');
+  };
+  $('#pSide').querySelectorAll('button').forEach(b => b.onclick = () => { TICKET.side = b.dataset.v; touched = false; $('#pSide').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); TICKET.sync(); });
+  kind.onchange = () => { trig.disabled = kind.value === 'market'; if (!trig.disabled && !trig.value) trig.value = (c.px || 0).toFixed(2); if (trig.disabled) trig.value = ''; TICKET.sync(); };
+  trig.addEventListener('input', TICKET.sync); br.onchange = TICKET.sync;
+  go.onclick = async () => {
+    const buy = TICKET.side === 'buy', body = { ticker: c.t, side: TICKET.side, qty: Math.floor(parseFloat(qty.value) || 0), kind: kind.value };
+    if (kind.value !== 'market') body.trigger = parseFloat(trig.value);
+    if (buy && br.checked && TICKET.calc) { body.stop = TICKET.calc.stop; body.target = TICKET.calc.target; }
+    go.disabled = true;
+    try {
+      const j = await api('/api/paper/order', { method: 'POST', body: JSON.stringify(body) }); const o = j.order;
+      applyPaperReply(j);
+      toast(o.status === 'filled' ? `בוצע: ${buy ? 'קנית' : 'מכרת'} ${o.qty} ${o.t} ב-${fmtUsd(o.fill_price)}${isNum(o.realized) ? ` · ${o.realized >= 0 ? 'רווח' : 'הפסד'} ${fmtUsd(Math.abs(o.realized), 0)}` : ''}`
+        : o.status === 'rejected' ? `נדחתה: ${o.reason}` : `ההוראה נקלטה וממתינה (${KIND_HE[o.kind]})`);
+      if (CO) renderPanel();
+    } catch (e) { toast(e.message); go.disabled = false; }
+  };
+  TICKET.sync();
+}
+
 function wireBody(js, c){
   panel.querySelectorAll('.peer[data-t]').forEach(b => b.onclick = () => { const o = byT[b.dataset.t]; if (o) select(o.i); });
   if (panelTab === 'overview') {
@@ -2155,13 +2306,15 @@ function wireBody(js, c){
       const port = v('cPort'), risk = v('cRisk'), en = v('cEntry'), sp = v('cStop'), tg = v('cTgt');
       store.set(LS_PREFIX + 'port', isFinite(port) ? port : 100000); store.set(LS_PREFIX + 'risk', isFinite(risk) ? risk : 1);
       const res = $('#cRes'), warn = $('#cWarn');
-      if (![port, risk, en, sp, tg].every(isFinite) || en <= sp || port <= 0 || risk <= 0) { res.innerHTML = ''; warn.textContent = 'הסטופ צריך להיות מתחת למחיר הכניסה, וכל השדות מספרים חיוביים.'; return; }
+      if (![port, risk, en, sp, tg].every(isFinite) || en <= sp || port <= 0 || risk <= 0) { TICKET.calc = null; TICKET.sync?.(); res.innerHTML = ''; warn.textContent = 'הסטופ צריך להיות מתחת למחיר הכניסה, וכל השדות מספרים חיוביים.'; return; }
       const per = en - sp, shares = Math.floor(port * risk / 100 / per), pos = shares * en, pct = pos / port * 100, rr = (tg - en) / per;
+      TICKET.calc = { shares, stop: sp, target: tg }; TICKET.sync?.();
       res.innerHTML = `<div><span>מניות</span><b class="num">${shares.toLocaleString('en-US')}</b></div><div><span>סכום</span><b class="num">${fmtUsd(pos, 0)}</b></div><div><span>מהתיק</span><b class="num">${pct.toFixed(1)}%</b></div><div><span>סיכוי/סיכון</span><b class="num ${rr >= 2 ? 'up' : rr < 1 ? 'down' : ''}">1:${Math.max(0, rr).toFixed(1)}</b></div>`;
       const sectorW = C.filter(o => o.si === c.si && o.hold).reduce((a, o) => a + (o.hold.w || 0), 0);
       warn.textContent = pct > 20 ? `הפוזיציה תהיה ${pct.toFixed(0)}% מהתיק. מעל 20% זה ריכוז גבוה.` : sectorW + pct > 35 ? `יחד עם ההחזקות הקיימות, החשיפה לאי ${SECTORS[c.si].he} תגיע ל-${(sectorW + pct).toFixed(0)}%.` : '';
     };
-    panel.querySelectorAll('.calc input').forEach(inp => inp.addEventListener('input', calc)); calc();
+    panel.querySelectorAll('.calc:not(.ptk) input').forEach(inp => inp.addEventListener('input', calc)); calc();
+    wireTicket(c);
   }
   if (panelTab === 'thesis') {
     if (!thesisOpts) api('/api/thesis-options').then(o => { thesisOpts = o; if (CO && panelTab === 'thesis') renderPanel(); }).catch(() => {});
@@ -2209,27 +2362,80 @@ function setMode(m){
   dirty = true;
 }
 const PORT = { data: null };
+let PF_VIEW = store.get(LS_PREFIX + 'pfview', 'real'), PAPER = null, resetArmed = false;
+function applyPfView(){ for (const c of C) c.hold = PF_VIEW === 'paper' ? (c.paper || null) : (c.realHold || null); }
+function setPfView(v){
+  if (v === PF_VIEW) return; PF_VIEW = v; store.set(LS_PREFIX + 'pfview', v); applyPfView();
+  if (mode === 'portfolio') { retarget(); placeBeams(); } renderRail(); if (CO) renderPanel(); dirty = true;
+  if (v === 'paper') loadPaper();
+}
+async function loadPaper(){ try { PAPER = await api('/api/paper'); if (mode === 'portfolio' && PF_VIEW === 'paper') renderRail(); } catch {} }
+function applyPaperReply(j){
+  CITY.paper = j.account; for (const c of C) c.paper = j.rows[c.t] || null; applyPfView();
+  if (mode === 'portfolio') { retarget(); placeBeams(); } dirty = true; renderRail(); loadPaper();
+}
+const fmtTs = iso => { if (!iso) return ''; const d = new Date(iso.endsWith('Z') ? iso : iso + 'Z'); return d.toLocaleString('he-IL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }); };
+function orderLine(o){
+  const kind = o.side === 'sell' && o.parent ? (o.kind === 'stop' ? 'סטופ' : 'יעד') : KIND_HE[o.kind];
+  return `<span class="${o.side === 'buy' ? 'side-b' : 'side-s'}">${o.side === 'buy' ? 'קנייה' : 'מכירה'}</span> <span class="num">${N(String(o.qty))}</span> <b>${esc(o.t)}</b> · ${kind}${isNum(o.trigger) ? ` <span class="num">${fmtUsd(o.trigger)}</span>` : ''}`;
+}
+function curveSVG(curve, a){
+  if (!curve || curve.length < 2) return '';
+  const me = curve.map(r => (r.nav / a.start_cash - 1) * 100), idx = curve.map(r => isNum(r.spy) && a.spy_start ? (r.spy / a.spy_start - 1) * 100 : null);
+  const all = [...me, ...idx.filter(isNum), 0], lo = Math.min(...all), hi = Math.max(...all), W = 300, H = 56, n = curve.length;
+  const X = i => (1 - i / (n - 1)) * W, Y = v => H - 4 - (v - lo) / Math.max(hi - lo, 0.5) * (H - 8);  // RTL: time runs right to left
+  const path = arr => arr.map((v, i) => isNum(v) ? `${i && isNum(arr[i - 1]) ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}` : '').join('');
+  return `<div class="spark"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="שווי התיק מול S&P 500 לאורך זמן"><path d="M0,${Y(0).toFixed(1)}H${W}" stroke="var(--line-2)" stroke-dasharray="3 3" fill="none"/>
+    <path d="${path(idx)}" stroke="var(--ink-3)" stroke-width="1.5" fill="none" vector-effect="non-scaling-stroke"/><path d="${path(me)}" stroke="var(--accent)" stroke-width="2.2" fill="none" vector-effect="non-scaling-stroke"/></svg></div>`;
+}
+function paperHTML(){
+  const a = CITY.paper || {}, P = PAPER, st = P?.stats || {};
+  const mx = Math.max(Math.abs(a.ret_pct || 0), Math.abs(a.spy_ret_pct || 0), 1);
+  const bar = v => `<span class="bar"><i style="width:${(Math.abs(v || 0) / mx * 100).toFixed(1)}%;background:var(--${(v || 0) >= 0 ? 'up' : 'down'})"></i></span>`;
+  const since = a.created ? new Date(a.created + 'Z').toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' }) : '';
+  return `<div class="pp">
+    <h5>מול המדד <small>מאז ${since}</small></h5>
+    <div class="vs"><span>התיק שלי</span>${bar(a.ret_pct)}<b class="num ${sg(a.ret_pct)}">${fmtPct(a.ret_pct, 1)}</b><span>S&P 500</span>${bar(a.spy_ret_pct)}<b class="num ${sg(a.spy_ret_pct)}">${fmtPct(a.spy_ret_pct, 1)}</b></div>
+    ${curveSVG(P?.curve, a)}
+    <h5>איך אני סוחר</h5>
+    <div class="pstats"><div><span>עסקאות</span><b class="num">${N(String(st.closed ?? 0))}</b></div><div><span>הצלחה</span><b class="num">${isNum(st.win_rate) ? N(st.win_rate + '%') : '–'}</b></div><div><span>ממומש</span><b class="num ${sg(a.realized)}">${fmtUsd(a.realized, 0)}</b></div><div><span>עמלות</span><b class="num">${fmtUsd(a.fees, 0)}</b></div></div>
+    ${P?.orders?.length ? `<h5>הוראות פתוחות <small>${N(String(P.orders.length))}</small></h5>${P.orders.map(o => `<div class="orow"><span>${orderLine(o)}</span><button type="button" class="cx" data-cx="${o.id}">ביטול</button><span class="x">${o.status === 'held' ? 'מחכה שהקנייה תתבצע' : o.kind === 'market' ? 'תתבצע בפתיחת המסחר' : 'ממתינה למחיר'} · ${fmtTs(o.ts)}</span></div>`).join('')}` : ''}
+    ${P?.trades?.length ? `<h5>ביצועים אחרונים</h5>${P.trades.filter(o => o.status !== 'cancelled' || !o.parent).slice(0, 8).map(o => `<div class="orow"><span>${orderLine(o)}${o.status === 'filled' ? ` ב-<span class="num">${fmtUsd(o.fill_price)}</span>` : ''}</span>${isNum(o.realized) ? `<b class="num ${sg(o.realized)}">${fmtUsd(o.realized, 0)}</b>` : '<span></span>'}
+      <span class="x">${o.status === 'filled' ? fmtTs(o.fill_ts) : o.status === 'rejected' ? 'נדחתה: ' + esc(o.reason) : 'בוטלה'}${isNum(o.score) ? ` · ציון בכניסה ${N(String(o.score))}` : ''}</span></div>`).join('')}` : ''}
+    <button type="button" class="reset ${resetArmed ? 'armed' : ''}" id="pReset">${resetArmed ? `לחץ שוב כדי להתחיל מחדש עם ${fmtUsd(a.start_cash, 0)}` : 'התחל את תיק הדמו מחדש'}</button></div>`;
+}
+function wirePaperRail(rail){
+  rail.querySelectorAll('[data-cx]').forEach(b => b.onclick = async () => { try { applyPaperReply(await api(`/api/paper/order/${b.dataset.cx}`, { method: 'DELETE' })); toast('ההוראה בוטלה'); } catch (e) { toast(e.message); } });
+  const r = rail.querySelector('#pReset'); if (r) r.onclick = async () => {
+    if (!resetArmed) { resetArmed = true; renderRail(); setTimeout(() => { resetArmed = false; if (mode === 'portfolio') renderRail(); }, 4000); return; }
+    resetArmed = false; try { applyPaperReply(await api('/api/paper/reset', { method: 'POST', body: JSON.stringify({ cash: CITY.paper?.start_cash }) })); toast('תיק הדמו התחיל מחדש. ההיסטוריה הקודמת נשמרה.'); } catch (e) { toast(e.message); }
+  };
+}
 function renderRail(){
   const rail = $('#rail');
   if (mode === 'portfolio') {
     const hs = C.filter(c => c.hold).sort((a, b) => (b.hold.w || 0) - (a.hold.w || 0));
     const total = hs.reduce((a, c) => a + (c.hold.w || 0), 0);
     const bySec = {}; for (const c of hs) bySec[c.si] = (bySec[c.si] || 0) + (c.hold.w || 0);
-    const pf = CITY.portfolio || {}; const q = c => c.hold.q || 0;
+    const paperV = PF_VIEW === 'paper'; const pf = paperV ? { ...(CITY.paper || {}), source: 'paper' } : (CITY.portfolio || {}); const q = c => c.hold.q || 0;
     const value = hs.reduce((a, c) => a + q(c) * (c.px || 0), 0);
     const day = hs.reduce((a, c) => a + q(c) * (c.px || 0) * (c.chg || 0) / (100 + (c.chg || 0)), 0);
     const unrl = hs.reduce((a, c) => a + (isNum(c.hold.cost) ? (c.px - c.hold.cost) * q(c) : 0), 0);
     const age = isNum(pf.age_s) ? (pf.age_s < 90 ? 'עכשיו' : pf.age_s < 3600 ? `לפני ${Math.round(pf.age_s / 60)} דק׳` : `לפני ${Math.round(pf.age_s / 3600)} שע׳`) : '';
-    const srcTxt = pf.source === 'ibkr_live' ? `חי מ-IB Gateway · ${age}` : pf.source === 'flex' ? `מדוח ה-Flex${age ? ' · ' + age : ''}` : 'תיק הדגמה';
-    rail.innerHTML = `<header><h2>התיק שלי</h2><small>${hs.length} פוזיציות · ${N(total.toFixed(0) + '%')} מושקע</small></header>
+    const srcTxt = paperV ? `תיק דמו · מחירים אמיתיים · ${marketOpen() ? 'הוראות מתבצעות עכשיו' : 'השוק סגור, הוראות שוק יתבצעו בפתיחה'}` : pf.source === 'ibkr_live' ? `חי מ-IB Gateway · ${age}` : pf.source === 'flex' ? `מדוח ה-Flex${age ? ' · ' + age : ''}` : 'תיק הדגמה';
+    rail.innerHTML = `<header><h2>${paperV ? 'תיק הדמו' : 'התיק שלי'}</h2><small>${hs.length} פוזיציות · ${N(total.toFixed(0) + '%')} מושקע</small></header>
+      <div class="pfview"><div class="hsc" role="group" aria-label="איזה תיק להציג"><button type="button" data-pv="real" aria-pressed="${!paperV}">תיק אמיתי</button><button type="button" data-pv="paper" aria-pressed="${paperV}">תיק דמו</button></div></div>
       <div class="pfsum"><div><span>שווי התיק</span><b class="num">${fmtUsd(pf.nav ?? value, 0)}</b></div><div><span>היום</span><b class="num ${sg(day)}">${fmtUsd(day, 0)} · ${fmtPct(value - day ? day / (value - day) * 100 : 0)}</b></div>
-        <div><span>רווח לא ממומש</span><b class="num ${sg(unrl)}">${fmtUsd(unrl, 0)}</b></div><div><span>מזומן</span><b class="num">${isNum(pf.cash) ? fmtUsd(pf.cash, 0) : '–'}</b></div></div>
+        <div><span>${paperV ? 'תשואה מההתחלה' : 'רווח לא ממומש'}</span><b class="num ${sg(paperV ? pf.ret_pct : unrl)}">${paperV ? `${fmtPct(pf.ret_pct, 1)} · ${fmtUsd(pf.nav - pf.start_cash, 0)}` : fmtUsd(unrl, 0)}</b></div><div><span>מזומן</span><b class="num">${isNum(pf.cash) ? fmtUsd(pf.cash, 0) : '–'}</b></div></div>
       <div class="expo"><div class="bar">${Object.entries(bySec).map(([si, w]) => `<i style="width:${(w / Math.max(total, 1) * 100).toFixed(1)}%;background:${SECTORS[si].hue}" title="${SECTORS[si].he}"></i>`).join('')}</div>
       <div class="keys">${Object.entries(bySec).sort((a, b) => b[1] - a[1]).map(([si, w]) => `<span style="--c:${SECTORS[si].hue}">${SECTORS[si].he} ${N(w.toFixed(0) + '%')}</span>`).join('')}</div></div>
       <ol>${hs.map(c => `<li><button type="button" class="hrow" data-t="${c.t}"><span class="t">${esc(c.t)}</span><span class="w" title="משקל"><i style="width:${clamp((c.hold.w || 0) * 4, 2, 100)}%"></i></span><span class="num ${sg(c.hold.pnl)}">${fmtPct(c.hold.pnl, 1)}</span>
-        <span class="meta"><span class="num">${c.hold.w}%</span>·<span class="num">${fmtUsd((c.hold.q || 0) * (c.px || 0), 0)}</span>·<span class="num ${sg(c.chg)}" title="היום">${fmtPct(c.chg, 1)}</span>·<span class="chip ${THESIS[c.hold.th]?.[1] || ''}" style="height:19px">${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>${c.rep?.st === 'soon' && c.rep.days <= 10 ? `<span class="chip ac" style="height:19px">דוח בעוד ${c.rep.days}</span>` : ''}</span></button></li>`).join('') || '<li class="note" style="padding:12px">אין פוזיציות. חבר את IBKR Flex כדי למשוך את התיק.</li>'}</ol>
-      <footer><i class="dot ${pf.source === 'ibkr_live' ? 'ok' : ''}"></i>${srcTxt}</footer>`;
+        <span class="meta"><span class="num">${c.hold.w}%</span>·<span class="num">${fmtUsd((c.hold.q || 0) * (c.px || 0), 0)}</span>·<span class="num ${sg(c.chg)}" title="היום">${fmtPct(c.chg, 1)}</span>·<span class="chip ${THESIS[c.hold.th]?.[1] || ''}" style="height:19px">${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>${c.rep?.st === 'soon' && c.rep.days <= 10 ? `<span class="chip ac" style="height:19px">דוח בעוד ${c.rep.days}</span>` : ''}</span></button></li>`).join('') || `<li class="note" style="padding:12px">${paperV ? 'עוד אין פוזיציות בתיק הדמו. פתח חברה בעיר, ובכרטיס שלה יש "מסחר בדמו".' : 'אין פוזיציות. חבר את IBKR Flex כדי למשוך את התיק.'}</li>`}</ol>
+      ${paperV ? paperHTML() : ''}
+      <footer><i class="dot ${pf.source === 'ibkr_live' || (paperV && marketOpen()) ? 'ok' : ''}"></i>${srcTxt}</footer>`;
     rail.querySelectorAll('.hrow').forEach(b => b.onclick = () => select(byT[b.dataset.t].i));
+    rail.querySelectorAll('[data-pv]').forEach(b => b.onclick = () => setPfView(b.dataset.pv));
+    if (paperV) { wirePaperRail(rail); if (!PAPER) loadPaper(); }
     return;
   }
   const rows = DIST.filter(d => d.rect).sort((a, b) => b.capSum - a.capSum);
@@ -2459,7 +2665,8 @@ async function refreshCity(){
   if (DEMO) return;
   try {
     const city = await api('/api/city');
-    for (const r of city.companies) { const c = byT[r.t]; if (c) Object.assign(c, r); }
+    for (const r of city.companies) { const c = byT[r.t]; if (c) { Object.assign(c, r); c.realHold = r.hold; } }
+    CITY.paper = city.paper; applyPfView(); if (PF_VIEW === 'paper' && mode === 'portfolio') loadPaper();
     // heights follow market cap as it moves: the tallest company sets the scale, every building eases to its new height
     const caps = C.map(c => c.cap).filter(v => isNum(v) && v > 0);
     if (caps.length) { CAP_MAX = Math.max(...caps); for (const c of C) if (isNum(c.cap) && c.cap > 0) c.capv = c.cap; }

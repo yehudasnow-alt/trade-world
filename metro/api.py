@@ -15,6 +15,7 @@ from sqlalchemy import select
 
 from . import brief as B
 from . import clock
+from . import paper
 from .analytics.thesis import KILLS_HE, METRICS_HE
 from .config import ROOT, get_settings
 from .db import (AiJob, Alert, Company, Earnings, Event, Holding, JournalEntry, PriceBar, Promise, Quarter, Quote,
@@ -105,6 +106,7 @@ def city() -> dict:
         scores = {x.ticker: x for x in s.scalars(select(Score))}
         quotes = {x.ticker: x for x in s.scalars(select(Quote))}
         held = {x.ticker: x for x in s.scalars(select(Holding))}
+        paper_rows, paper_sum = paper.city_rows(s)
         theses = {x.ticker: x for x in s.scalars(select(Thesis))}
         watch = set(s.scalars(select(Watch.ticker)))
         past, nxt = {}, {}
@@ -142,6 +144,7 @@ def city() -> dict:
                 "pe": _r(m.get("pe_ttm"), 1), "rep": rep, "watch": c.ticker in watch, "th": c.themes,
                 "hold": {"w": _r(h.weight_pct, 1), "pnl": _r(h.pnl_pct, 1), "th": th.status if th else None, "q": _r(h.quantity, 4),
                          "cost": _r(h.avg_cost), "v": _r(h.market_value, 0)} if h else None,
+                "paper": paper_rows.get(c.ticker),
             })
         alerts = [{"id": a.id, "ts": a.ts.isoformat(), "t": a.ticker, "level": a.level, "kind": a.kind, "title": a.title,
                    "body": a.body, "read": a.read}
@@ -159,7 +162,8 @@ def city() -> dict:
             "index": {"chg": _r(sum(w * c for w, c in caps) / wsum), "breadth": _r(sum(1 for _, c in caps if c > 0) / max(1, len(caps)) * 100, 0)},
             "relations": relations(), "generated": utcnow().isoformat(),
             "portfolio": {"source": pf_info.get("source", "demo" if mode == "demo" else "flex"), "nav": pf_info.get("nav"),
-                          "cash": pf_info.get("cash"), "age_s": pf_age}}
+                          "cash": pf_info.get("cash"), "age_s": pf_age},
+            "paper": paper_sum}
 
 
 @app.get("/api/quotes", dependencies=[Depends(guard)])
@@ -404,6 +408,63 @@ def add_journal(body: JournalIn) -> dict:
         s.add(j)
         s.flush()
         return {"id": j.id}
+
+
+# ---------------- paper trading ----------------
+class PaperOrderIn(BaseModel):
+    ticker: str = Field(min_length=1, max_length=12)
+    side: str = Field(pattern="^(buy|sell)$")
+    qty: float = Field(gt=0, le=10_000_000)
+    kind: str = Field(default="market", pattern="^(market|limit|stop)$")
+    trigger: Optional[float] = Field(default=None, gt=0)
+    stop: Optional[float] = Field(default=None, gt=0)
+    target: Optional[float] = Field(default=None, gt=0)
+    note: str = Field(default="", max_length=2000)
+
+
+class PaperResetIn(BaseModel):
+    cash: Optional[float] = None
+
+
+def _paper_reply(s, extra: dict) -> dict:
+    rows, summ = paper.city_rows(s)
+    return {**extra, "account": summ, "rows": rows}
+
+
+@app.get("/api/paper", dependencies=[Depends(guard)])
+def paper_state() -> dict:
+    with session() as s:
+        return paper.state(s)
+
+
+@app.post("/api/paper/order", dependencies=[Depends(guard)])
+def paper_order(body: PaperOrderIn) -> dict:
+    with session() as s:
+        try:
+            o = paper.place(s, body.ticker, body.side, body.qty, body.kind, body.trigger, body.stop, body.target, body.note)
+        except paper.PaperError as e:
+            raise HTTPException(400, str(e))
+        return _paper_reply(s, {"order": paper._order_row(o)})
+
+
+@app.delete("/api/paper/order/{order_id}", dependencies=[Depends(guard)])
+def paper_cancel(order_id: int) -> dict:
+    with session() as s:
+        try:
+            o = paper.cancel(s, order_id)
+        except paper.PaperError as e:
+            raise HTTPException(400, str(e))
+        return _paper_reply(s, {"order": paper._order_row(o)})
+
+
+@app.post("/api/paper/reset", dependencies=[Depends(guard)])
+def paper_reset(body: PaperResetIn) -> dict:
+    with session() as s:
+        try:
+            paper.reset(s, body.cash)
+        except paper.PaperError as e:
+            raise HTTPException(400, str(e))
+        return _paper_reply(s, {})
 
 
 class WatchIn(BaseModel):

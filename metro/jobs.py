@@ -138,6 +138,18 @@ class Runner:
                     pipeline.add_event(s, t, now, "index", "left", "watch", "יצאה ממדד S&P 500", dedupe=f"index:{t}:out:{now:%Y%m%d}")
         return f"joined={','.join(joined) or '-'} left={','.join(left) or '-'}"
 
+    def paper_tick(self) -> str:
+        from . import paper
+        with session() as s:
+            return f"filled={paper.process(s)}"
+
+    def paper_close(self) -> str:
+        from . import paper
+        with session() as s:
+            paper.process(s)
+            row = paper.snapshot_day(s)
+            return f"nav={row.nav:,.0f}"
+
     def backup_tick(self) -> str:
         from . import backup, cloud
         cloud.prune_disk()
@@ -180,6 +192,8 @@ class Runner:
         add(safe("brief", self.brief_tick), "cron", hour=hh, minute=mm, timezone=clock.IL)
         add(safe("alerts", self.alerts_tick), "cron", minute="*/5")
         add(safe("backup", self.backup_tick), "cron", hour=3, minute=15)
+        add(safe("paper", self.paper_tick), "cron", day_of_week="mon-fri", hour="9-15", minute="*")  # practice orders fill on live prices
+        add(safe("paper_close", self.paper_close), "cron", day_of_week="mon-fri", hour=16, minute=5)
         add(safe("universe", self.universe_tick), "cron", day_of_week="mon-fri", hour=5, minute=20)
         if st.ibkr_live:
             from .sources.ibkr import IbkrLive

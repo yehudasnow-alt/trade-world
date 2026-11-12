@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     # trading defaults (used by the trade calculator)
     portfolio_size_usd: float = 100_000
     risk_per_trade_pct: float = 1.0
+    paper_start_cash: float = 100_000  # the practice account starts with this much virtual cash
 
     @model_validator(mode="after")
     def _db_in_data_dir(self) -> "Settings":

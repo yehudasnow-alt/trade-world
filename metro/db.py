@@ -251,6 +251,59 @@ class Alert(Base):
     sent: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
+# ---------------- paper trading: a practice account that trades on the real prices ----------------
+class PaperAccount(Base):
+    __tablename__ = "paper_accounts"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    start_cash: Mapped[float] = mapped_column(Float)
+    cash: Mapped[float] = mapped_column(Float)
+    realized: Mapped[float] = mapped_column(Float, default=0)
+    fees: Mapped[float] = mapped_column(Float, default=0)
+    spy_start: Mapped[float | None] = mapped_column(Float)  # the index price on day one, for "me against the S&P 500"
+    active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+
+
+class PaperPosition(Base):
+    __tablename__ = "paper_positions"
+    account_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticker: Mapped[str] = mapped_column(String(12), primary_key=True)
+    quantity: Mapped[float] = mapped_column(Float)
+    avg_cost: Mapped[float] = mapped_column(Float)  # buy fees included
+    opened: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class PaperOrder(Base):
+    __tablename__ = "paper_orders"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    account_id: Mapped[int] = mapped_column(Integer, index=True)
+    ts: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    ticker: Mapped[str] = mapped_column(String(12), index=True)
+    side: Mapped[str] = mapped_column(String(4))  # buy | sell
+    quantity: Mapped[float] = mapped_column(Float)
+    kind: Mapped[str] = mapped_column(String(6), default="market")  # market | limit | stop
+    trigger: Mapped[float | None] = mapped_column(Float)
+    status: Mapped[str] = mapped_column(String(10), default="pending", index=True)  # held | pending | filled | cancelled | rejected
+    parent_id: Mapped[int | None] = mapped_column(Integer)  # a stop/target waits ("held") until its buy fills
+    oco: Mapped[str | None] = mapped_column(String(24))  # stop and target: when one fills the other is cancelled
+    fill_price: Mapped[float | None] = mapped_column(Float)
+    fill_ts: Mapped[datetime | None] = mapped_column(DateTime)
+    fee: Mapped[float] = mapped_column(Float, default=0)
+    realized: Mapped[float | None] = mapped_column(Float)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    note: Mapped[str] = mapped_column(Text, default="")
+    snapshot: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class PaperDaily(Base):
+    __tablename__ = "paper_daily"
+    account_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    nav: Mapped[float] = mapped_column(Float)
+    cash: Mapped[float] = mapped_column(Float)
+    spy: Mapped[float | None] = mapped_column(Float)
+
+
 class KV(Base):
     __tablename__ = "kv"
     key: Mapped[str] = mapped_column(String(80), primary_key=True)
