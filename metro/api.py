@@ -20,7 +20,7 @@ from .analytics.thesis import KILLS_HE, METRICS_HE
 from .config import ROOT, get_settings
 from .db import (AiJob, Alert, Company, Earnings, Event, Holding, JournalEntry, PriceBar, Promise, Quarter, Quote,
                  ReportCard, Score, Thesis, Watch, init_db, kv_age_seconds, kv_get, session, utcnow)
-from .universe import SECTORS
+from .universe import MARKET_ETF, SECTORS
 
 WEB = ROOT / "web"
 
@@ -157,9 +157,16 @@ def city() -> dict:
         pf_info = kv_get(s, "portfolio.last", None) or kv_get(s, "ibkr.flex", None) or {}
         pf_age = kv_age_seconds(s, "portfolio.last")
     caps = [(r["cap"] or 0, r["chg"]) for r in rows if r["chg"] is not None]
-    wsum = sum(w for w, _ in caps) or 1
+    wsum = sum(w for w, _ in caps)
+    spy = quotes.get(MARKET_ETF)
+    if spy and spy.prev_close:  # the index itself, when its ETF is priced
+        idx = (spy.price / spy.prev_close - 1) * 100
+    elif wsum:  # otherwise weighted by market cap
+        idx = sum(w * c for w, c in caps) / wsum
+    else:  # no market caps yet (SEC not filled): a plain average
+        idx = sum(c for _, c in caps) / len(caps) if caps else None
     return {"session": session_info(), "mode": mode, "companies": rows, "alerts": alerts, "sector_etf": etfs,
-            "index": {"chg": _r(sum(w * c for w, c in caps) / wsum), "breadth": _r(sum(1 for _, c in caps if c > 0) / max(1, len(caps)) * 100, 0)},
+            "index": {"chg": _r(idx), "breadth": _r(sum(1 for _, c in caps if c > 0) / max(1, len(caps)) * 100, 0)},
             "relations": relations(), "generated": utcnow().isoformat(),
             "portfolio": {"source": pf_info.get("source", "demo" if mode == "demo" else "flex"), "nav": pf_info.get("nav"),
                           "cash": pf_info.get("cash"), "age_s": pf_age},
@@ -537,7 +544,8 @@ def status() -> dict:
     open_ = clock.session_state() in ("open", "pre", "post")
     from .cloud import on_cloud
     return {"mode": mode, "cloud": on_cloud(), "session": session_info(), "sources": {
-        "sec": src("sec.feed", st.sec_ready, 600 if open_ else 86400),
+        "sec": {**src("sec.feed", st.sec_ready, 600 if open_ else 86400),
+                **({"bad_value": "SEC_USER_AGENT צריך שם, רווח וכתובת מייל, למשל: Metropolin you@example.com"} if st.sec_user_agent and not st.sec_ready else {})},
         "prices": src("quotes.alpaca", st.alpaca_ready, 300 if open_ else 86400 * 3),
         "ibkr_live": src("quotes.ibkr", st.ibkr_live, 120 if open_ else 86400 * 3),
         "ibkr_flex": src("ibkr.flex", st.flex_ready, 86400 * 2),
