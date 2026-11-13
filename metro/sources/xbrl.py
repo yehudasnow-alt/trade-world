@@ -38,6 +38,14 @@ FLOW: dict[str, list[Any]] = {
     "net_interest_income": ["InterestIncomeExpenseNet", "InterestIncomeExpenseAfterProvisionForLoanLoss"],
     "noninterest_income": ["NoninterestIncome"],
     "credit_provision": ["ProvisionForLoanLeaseAndOtherLosses", "ProvisionForLoanAndLeaseLosses", "ProvisionForCreditLosses"],
+    "sga": ["SellingGeneralAndAdministrativeExpense", ("ifrs-full", "SellingGeneralAndAdministrativeExpense")],
+    "income_tax": ["IncomeTaxExpenseBenefit", ("ifrs-full", "IncomeTaxExpenseContinuingOperations")],
+    "pretax": ["IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+               "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+               ("ifrs-full", "ProfitLossBeforeTax")],
+    "acquisitions": ["PaymentsToAcquireBusinessesNetOfCashAcquired"],
+    "debt_repaid": ["RepaymentsOfLongTermDebt", "RepaymentsOfDebt"],
+    "debt_issued": ["ProceedsFromIssuanceOfLongTermDebt", "ProceedsFromIssuanceOfDebt"],
 }
 # non-additive durations: never sum, Q4 is an approximation
 PER_SHARE: dict[str, list[Any]] = {
@@ -341,4 +349,44 @@ def store_rows(facts: dict[str, Any]) -> list[dict[str, Any]]:
             unit = "USD/shares" if key == "eps_diluted" else ("shares" if key in ("diluted_shares", "shares_out") else "USD")
             out.append(dict(concept=o.concept, unit=unit, start=o.start, end=o.end, val=o.val, accn=o.accn,
                             form=o.form, filed=o.filed))
+    return out
+
+
+def build_annual(facts: dict[str, Any], fye: str | None = None, years: int = 11, as_of: date | None = None) -> list[dict[str, Any]]:
+    """Fiscal years as reported in the 10-K (full-year durations), newest last, with return on invested capital.
+
+    Ten years is what a long-term owner looks at: did sales and cash grow every year, or only in the good ones;
+    does the business earn well on the money put into it (ROIC), through a whole cycle.
+    """
+    ends: dict[date, QuarterRow] = {}
+    for group in (FLOW, PER_SHARE):
+        for k in group:
+            for pv in _periods(extract(facts, k, as_of)).values():
+                if pv.start is None or not _between(_days(pv), Y_DAYS):
+                    continue
+                row = ends.setdefault(pv.end, QuarterRow(pv.end, pv.start, fiscal_label(pv.end, fye).split()[-1], "", None))
+                row.values[k] = pv.latest
+    rows = [r for e, r in sorted(ends.items()) if "revenue" in r.values or "net_income" in r.values]
+    insts = {k: instants(extract(facts, k, as_of)) for k in INSTANT}
+    for r in rows:
+        for k, series in insts.items():
+            hit = _near(r.end, series, 4) if k != "shares_out" else _after(r.end, series, 75)
+            if hit is not None:
+                r.values[k] = series[hit].latest
+        _derive(r)
+    rows = rows[-years:]
+    out, prev_ic = [], None
+    for r in rows:
+        v = r.values
+        ic = None
+        if "equity" in v:
+            ic = v["equity"] + v.get("debt_total", 0.0) - v.get("cash", 0.0) - v.get("short_investments", 0.0)
+        tax = 0.21
+        if v.get("pretax") and v["pretax"] > 0 and v.get("income_tax") is not None:
+            tax = min(0.4, max(0.0, v["income_tax"] / v["pretax"]))
+        base = (ic + prev_ic) / 2 if ic is not None and prev_ic is not None else ic
+        if v.get("operating_income") is not None and base and base > 0:
+            v["roic"] = v["operating_income"] * (1 - tax) / base * 100
+        prev_ic = ic
+        out.append({"fy": r.fiscal, "end": r.end.isoformat(), "values": {k: x for k, x in v.items() if x is not None}})
     return out

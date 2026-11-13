@@ -289,6 +289,7 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .decomp .bar i{position:absolute; top:0; bottom:0; border-radius:2px}
 .decomp .val{text-align:left; font-weight:600}
 .note{font-size:12.5px; color:var(--ink-2); margin:10px 0 0}
+.note.warn{color:var(--warn)}
 .rings{display:grid; grid-template-columns:auto repeat(4,1fr); gap:10px; align-items:center}
 .total{display:flex; flex-direction:column; align-items:center; padding-inline-end:8px; border-inline-end:1px solid var(--line)}
 .total b{font-size:28px; font-weight:700; line-height:1}
@@ -332,6 +333,25 @@ button{cursor:pointer; background:none; border:0; padding:0}
 /* report card */
 .verif{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
 .headline{font-size:15.5px; font-weight:600; line-height:1.5; margin:4px 0 0; text-wrap:balance}
+.lead{font-size:16px; font-weight:600; line-height:1.5; margin:2px 0 0}
+.stack{display:flex; height:14px; border-radius:7px; overflow:hidden; background:var(--line); margin:10px 0 8px}
+.stack i{display:block; height:100%; min-width:2px}
+.stack i + i{box-shadow:inset 1.5px 0 0 var(--glass-strong)}
+.lgd{display:grid; grid-template-columns:12px minmax(0,1fr) auto auto; gap:5px 8px; align-items:center; font-size:12.5px}
+.lgd i{width:10px; height:10px; border-radius:3px}
+.lgd b{font-weight:600; text-align:end} .lgd small{color:var(--ink-3); text-align:end; min-width:62px}
+.flow{display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) auto; gap:6px 8px; align-items:center; font-size:12.5px; margin-top:4px}
+.flow .bar{height:9px; border-radius:5px; background:var(--line); position:relative; overflow:hidden}
+.flow .bar i{position:absolute; inset-block:0; inset-inline-start:0; border-radius:5px}
+.flow .tot{font-weight:700} .flow b{font-weight:600; text-align:end}
+.checks2{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; font-size:13px}
+.checks2 li{display:grid; grid-template-columns:20px minmax(0,1fr); gap:6px; line-height:1.5}
+.checks2 .ok{color:var(--up); font-weight:700} .checks2 .no{color:var(--down); font-weight:700} .checks2 .mid{color:var(--warn); font-weight:700}
+.clean.cl li{margin-bottom:8px}
+.ownl{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px}
+.ownl td{padding:6px 2px; border-top:1px solid var(--line); vertical-align:top}
+.ownl td.n{text-align:end; white-space:nowrap}
+.verdict{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px}
 .para{font-size:13.5px; color:var(--ink-2); margin:6px 0 0; line-height:1.6}
 .wwl{display:grid; gap:8px}
 .wwl > div{padding:11px 12px; border-radius:13px; background:color-mix(in srgb, var(--ink) 3.5%, transparent)}
@@ -726,6 +746,7 @@ function demoCompany(t, L){
     metrics: c.m || {}, volume_profile: c.vp || [],
     series: { days: days.slice(-126), c: closes.slice(-126), ma50: ma50.slice(-126) },
     earnings: c.e || [], next_earnings: row.rep?.st !== 'done' ? row.rep?.day : null, quarters: c.q || [],
+    biz: c.b ? { ...c.b, profile_state: 'demo' } : null,
     card: c.card || null, card_history: [], card_pending: false, promises: c.pr || [], events: c.ev || [],
     peers, street: { pe_median: pes.length ? pes[Math.floor(pes.length / 2)] : null, n: street.length },
     thesis: th, watch: unw ? null : (watchLocal || c.w || (row.watch ? {} : null)), holding: c.h || null,
@@ -2010,7 +2031,7 @@ function headHTML(js, c){
     <div class="p-id"><span class="tkr num">${esc(c.t)}</span><span class="nm">${esc(c.n)}</span>${(c.alts || []).length ? `<span class="alts">+ ${c.alts.map(esc).join(', ')}</span>` : ''}</div>
     <div class="p-px"><span class="px num">${fmtUsd(px)}</span><span class="ch num ${sg(chg)}">${fmtPct(chg)}</span>${isNum(c.sig) ? `<span class="chip ${Math.abs(c.sig) >= 2 ? (c.sig < 0 ? 'down' : 'up') : ''}">${N(fmtNum(c.sig, 1) + 'σ')} מול התנודתיות</span>` : ''}</div>
     <div class="p-meta"><span class="chip">שווי ${N(fmtCapB(c.cap))}</span>${isNum(c.beta) ? `<span class="chip">בטא ${N(c.beta.toFixed(2))}</span>` : ''}${isNum(c.rvol) ? `<span class="chip">נפח ${N(c.rvol.toFixed(1) + '×')}</span>` : ''}${c.hold ? `<span class="chip ${THESIS[c.hold.th]?.[1] || ''}">${PF_VIEW === 'paper' ? 'בתיק הדמו' : 'בתיק'} · ${THESIS[c.hold.th]?.[0] || 'בלי תזה'}</span>` : ''}${(c.veto || []).map(v => `<span class="chip down">${esc(v)}</span>`).join('')}${CITY.mode === 'demo' ? '<span class="chip wr">נתוני הדגמה</span>' : ''}</div>
-    <div class="tabs" role="tablist">${[['overview', 'סקירה'], ['report', 'הדוח'], ['numbers', 'מספרים'], ['thesis', 'תזה ויומן']].map(([k, l]) => `<button type="button" class="tab" role="tab" data-tab="${k}" aria-selected="${panelTab === k}">${l}</button>`).join('')}</div>`;
+    <div class="tabs" role="tablist">${[['overview', 'סקירה'], ['business', 'העסק'], ['report', 'הדוח'], ['numbers', 'מספרים'], ['thesis', 'תזה ויומן']].map(([k, l]) => `<button type="button" class="tab" role="tab" data-tab="${k}" aria-selected="${panelTab === k}">${l}</button>`).join('')}</div>`;
 }
 function wireHead(c){
   panel.querySelector('[data-act="close"]').onclick = closePanel;
@@ -2024,7 +2045,7 @@ function wireHead(c){
 function renderPanel(){
   const c = byT[CO.company.t]; if (!c) return;
   const scroll = panel.querySelector('.p-body')?.scrollTop || 0; const sameTab = renderPanel.last === CO.company.t + panelTab;
-  panel.innerHTML = `<div class="p-head">${headHTML(CO, c)}</div><div class="p-body">${({ overview: tabOverview, report: tabReport, numbers: tabNumbers, thesis: tabThesis })[panelTab](CO, c)}</div>`;
+  panel.innerHTML = `<div class="p-head">${headHTML(CO, c)}</div><div class="p-body">${({ overview: tabOverview, business: tabBusiness, report: tabReport, numbers: tabNumbers, thesis: tabThesis })[panelTab](CO, c)}</div>`;
   wireHead(c); wireBody(CO, c);
   panel.querySelector('.p-body').scrollTop = sameTab ? scroll : 0; renderPanel.last = CO.company.t + panelTab;
 }
@@ -2190,6 +2211,133 @@ function tabReport(js){
   ${(k.flags || []).length ? `<div class="sec"><h4>דגלים</h4>${k.flags.map(f => `<p class="note"><span class="chip ${f.severity === 'red_flag' ? 'down' : f.severity === 'positive' ? 'up' : 'wr'}">${({ red_flag: 'דגל אדום', watch: 'לבדיקה', positive: 'חיובי' })[f.severity]}</span> ${esc(f.text_he)}</p>`).join('')}</div>` : ''}
   <div class="sec"><a class="link" href="${js.links.edgar}" target="_blank" rel="noopener">כל הדיווחים של ${esc(js.company.t)} ב-SEC EDGAR</a></div>`;
 }
+/* ---------- the business: who they are, the money in and out, ten years, owners, will it last ---------- */
+const MOAT_HE = { network_effects: 'אפקט רשת', switching_costs: 'עלות מעבר גבוהה ללקוח', cost_advantage: 'יתרון עלות', intangibles: 'מותג, פטנטים או רישיונות', efficient_scale: 'שוק שמתאים לשחקן אחד או שניים', none_clear: 'אין יתרון ברור' };
+const MOAT_S = { wide: ['חפיר רחב', 'up'], narrow: ['חפיר צר', 'wr'], none: ['בלי חפיר', 'down'] };
+const AI_HE = { threat: ['AI: איום', 'down'], mixed: ['AI: גם איום וגם הזדמנות', 'wr'], opportunity: ['AI: הזדמנות', 'up'], limited: ['AI: השפעה קטנה', 'ac'] };
+const DUR_HE = { high: ['עמידות גבוהה', 'up'], medium: ['עמידות בינונית', 'wr'], low: ['עמידות נמוכה', 'down'] };
+const claimList = xs => (xs || []).length ? `<ul class="clean cl">${xs.map(x => `<li>${esc(x.text_he)}${cite(x.citation)}</li>`).join('')}</ul>` : '';
+const usd0 = v => isNum(v) ? fmtBig(v) : '–';
+function profileIntro(b, c){
+  const P = b.profile?.profile;
+  if (!P) {
+    const st = b.profile_state;
+    const btn = st === 'ready' && !DEMO ? `<div class="row" style="margin-top:10px"><button type="button" class="btn2" id="mkProfile">כתוב פרופיל לחברה</button></div>` : '';
+    const why = st === 'queued' ? 'הבקשה בתור. Claude קורא עכשיו את הדוח השנתי, והפרופיל יופיע כאן תוך כמה דקות.'
+      : st === 'needs_key' ? 'את הפרופיל כותב Claude מתוך הדוח השנתי (10-K): מה החברה מוכרת, למי, מי המתחרים, האם יש לה חפיר, ומה הסיכון מ-AI. כדי להפעיל: ANTHROPIC_API_KEY במשתני השירות.'
+      : DEMO ? 'בהדגמה יש פרופיל לדוגמה רק לחברות שבתיק ובמעקב.' : 'עוד לא נכתב פרופיל לחברה הזאת. הוא נכתב אוטומטית לחברות שבתיק, במעקב ובתיק הדמו, ולכל חברה אחרת בלחיצה.';
+    return `<div class="sec"><h4>מי החברה</h4><div class="empty"><b>${esc(c.n)}</b>${why}${b.profile_error ? `<br><small class="muted">ניסיון קודם נכשל: ${esc(b.profile_error)}</small>` : ''}${btn}</div></div>`;
+  }
+  const v = b.profile.verification || {};
+  const segs = (P.segments || []).filter(x => isNum(x.share_pct));
+  const SEGC = ['var(--accent)', 'var(--cheap)', 'var(--beacon)', 'var(--up)', 'var(--ink-3)', 'var(--down)'];
+  return `<div class="sec"><div class="verif">${P.demo ? '<span class="chip wr">פרופיל לדוגמה</span>' : `<span class="chip">מתוך הדוח השנתי</span>${v.quotes ? `<span class="chip ${v.quote_ok_pct >= 90 ? 'up' : 'wr'}">ציטוטים מאומתים ${N(Math.round(v.quote_ok_pct || 0) + '%')}</span>` : ''}`}</div>
+    <p class="lead">${esc(P.one_liner_he)}</p><p class="para">${esc(P.what_it_does_he)}</p></div>
+  <div class="sec"><h4>מאיפה בא הכסף <small>מגזרים ולקוחות</small></h4>
+    ${segs.length ? `<div class="stack">${segs.map((x, i) => `<i style="width:${x.share_pct}%;background:${SEGC[i % SEGC.length]}" title="${esc(x.name)}"></i>`).join('')}</div>
+      <div class="lgd">${segs.map((x, i) => `<i style="background:${SEGC[i % SEGC.length]}"></i><span>${esc(x.name)} <small class="muted">${esc(x.what_he)}</small></span><b class="num">${N(Math.round(x.share_pct) + '%')}</b><span></span>`).join('')}</div>`
+      : (P.segments || []).length ? `<ul class="clean cl">${P.segments.map(x => `<li><b>${esc(x.name)}</b>: ${esc(x.what_he)}</li>`).join('')}</ul>` : ''}
+    <div class="wwl" style="margin-top:10px"><div><b>מי הלקוחות</b>${esc(P.customers_he)}</div><div><b>תלות בלקוח גדול</b>${esc(P.customer_concentration_he)}${claimList(P.top_customers)}</div><div><b>לקוחות העתיד</b>${esc(P.future_customers_he)}</div></div></div>`;
+}
+function moneyHTML(b){
+  const m = b.money || {};
+  if (!isNum(m.revenue)) return `<div class="sec"><h4>כמה נכנס וכמה יוצא</h4><div class="empty">צריך ארבעה רבעונים מדוחות ה-SEC. הנתונים יופיעו כשהמילוי הראשון יסתיים.</div></div>`;
+  const rev = m.revenue, loss = isNum(m.net_income) && m.net_income < 0;
+  const parts = [['עלות המוצר או השירות', m.cogs, 'var(--ink-3)', 'חומרים, ייצור, שרתים, משלוח'], ['מחקר ופיתוח', m.rnd, 'var(--accent)', 'השקעה במוצרים של מחר'],
+    ['מכירות, שיווק והנהלה', m.sga, 'var(--cheap)', 'אנשי מכירות, פרסום, משרדים, הנהלה'], ['הוצאות תפעול אחרות', m.other_opex, 'var(--beacon)', 'פחת, הפחתות, ארגון מחדש ועוד'],
+    ['ריבית, מס ואחר', m.below_oi, 'var(--warn)', 'מה שבין הרווח התפעולי לנקי'], [loss ? 'הפסד נקי' : 'רווח נקי', loss ? null : m.net_income, 'var(--up)', 'מה שנשאר לבעלי המניות']]
+    .filter(x => isNum(x[1]) && x[1] > 0);
+  const sum = parts.reduce((a, x) => a + x[1], 0) || rev;
+  const cash = [['נכנס מהפעילות', m.cfo, 'var(--up)', 'הכסף שהעסק באמת גבה, אחרי ספקים ומשכורות'], ['השקעה בציוד ומבנים', isNum(m.capex) ? -m.capex : null, 'var(--ink-3)', 'מפעלים, שרתים, חנויות'],
+    ['= תזרים חופשי', m.fcf, 'var(--accent)', 'מה שנשאר אחרי ששמרו על העסק', true], ['דיבידנדים', isNum(m.dividends) && m.dividends ? -m.dividends : null, 'var(--cheap)', 'מזומן ישר לבעלי המניות'],
+    ['רכישה עצמית של מניות', isNum(m.buybacks) && m.buybacks ? -m.buybacks : null, 'var(--cheap)', 'פחות מניות, חלק גדול יותר לכל מחזיק'], ['רכישת חברות', isNum(m.acquisitions) && m.acquisitions ? -m.acquisitions : null, 'var(--beacon)', ''],
+    [isNum(m.debt_paid_net) && m.debt_paid_net < 0 ? 'גיוס חוב נטו' : 'החזר חוב נטו', isNum(m.debt_paid_net) && m.debt_paid_net ? -m.debt_paid_net : null, 'var(--warn)', ''],
+    ['= נשאר בקופה', m.kept, 'var(--ink)', 'מצטבר במזומן, או נלקח מהקופה כשהמספר שלילי', true]].filter(x => isNum(x[1]));
+  const big = Math.max(...cash.map(x => Math.abs(x[1])), 1);
+  return `<div class="sec"><h4>כמה נכנס וכמה יוצא <small>12 החודשים האחרונים · ${esc(m.period || '')}</small></h4>
+    <div class="kvg"><div><span>הכנסות בשנה</span><b class="num">${usd0(rev)}</b><small>${usd0(rev / 12)} בחודש</small></div>
+      <div><span>${loss ? 'הפסד נקי בחודש' : 'רווח נקי בחודש'}</span><b class="num ${loss ? 'down' : ''}">${usd0(m.per_month_net)}</b><small>${isNum(m.per_100_net) ? `${m.per_100_net >= 0 ? 'נשארים' : 'מפסידים'} ${N(Math.abs(m.per_100_net).toFixed(1))} דולר מכל 100 דולר מכירות` : ''}</small></div>
+      <div><span>מזומן חופשי בחודש</span><b class="num ${(m.fcf || 0) < 0 ? 'down' : ''}">${usd0(m.per_month_fcf)}</b><small>${isNum(m.fcf_yield) ? `${N(m.fcf_yield.toFixed(1) + '%')} משווי השוק בשנה` : ''}</small></div></div>
+    <div class="tlh" style="margin-top:12px">לאן הולך כל דולר של מכירות <small class="muted">(באחוזים מההכנסות)</small></div>
+    <div class="stack">${parts.map(x => `<i style="width:${(x[1] / sum * 100).toFixed(2)}%;background:${x[2]}" title="${x[0]}"></i>`).join('')}</div>
+    <div class="lgd">${parts.map(x => `<i style="background:${x[2]}"></i><span>${x[0]} <small class="muted">${x[3]}</small></span><b class="num">${usd0(x[1])}</b><small class="num">${N((x[1] / rev * 100).toFixed(1) + '%')}</small>`).join('')}</div>
+    ${loss ? `<p class="note warn">החברה הפסידה ${usd0(-m.net_income)} בשנה האחרונה: ההוצאות גדולות מההכנסות.</p>` : ''}
+    <div class="tlh" style="margin-top:14px">ומה קרה למזומן</div>
+    <div class="flow">${cash.map(x => `<span class="${x[4] ? 'tot' : ''}">${x[0]}${x[3] ? `<br><small class="muted">${x[3]}</small>` : ''}</span><span class="bar"><i style="width:${(Math.abs(x[1]) / big * 100).toFixed(1)}%;background:${x[1] < 0 && !x[4] ? 'var(--down)' : x[2]};opacity:${x[4] ? 1 : .8}"></i></span><b class="num ${x[1] < 0 ? 'down' : ''}">${usd0(x[1])}</b>`).join('')}</div>
+    ${isNum(m.sbc) && m.sbc > 0 && isNum(m.fcf) ? `<p class="note">תגמול במניות לעובדים: ${usd0(m.sbc)} בשנה (${N((m.sbc / Math.max(m.fcf, 1) * 100).toFixed(0) + '%')} מהתזרים החופשי). זו עלות אמיתית שלא יוצאת במזומן, אלא בדילול של בעלי המניות.</p>` : ''}</div>`;
+}
+function decadeSVG(rows){
+  const n = rows.length; if (n < 2) return '';
+  const W = 420, H = 140, top = 12, bot = 26, rev = rows.map(r => r.values.revenue || 0), fcf = rows.map(r => r.values.fcf ?? null);
+  const hi = Math.max(...rev, ...fcf.filter(isNum), 1), lo = Math.min(0, ...fcf.filter(isNum));
+  const bw = (W - 8) / n, Y = v => top + (1 - (v - lo) / (hi - lo)) * (H - top - bot), y0 = Y(0);
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="הכנסות ותזרים חופשי לאורך השנים">
+    <line x1="0" x2="${W}" y1="${y0}" y2="${y0}" stroke="var(--line-2)"/>
+    ${rows.map((r, i) => { const x = 4 + i * bw; const f = fcf[i]; return `<g><title>${esc(r.fy)}: הכנסות ${fmtBig(rev[i])}${isNum(f) ? ` · תזרים חופשי ${fmtBig(f)}` : ''}${isNum(r.values.roic) ? ` · ROIC ${r.values.roic.toFixed(0)}%` : ''}</title>
+      <rect x="${(x + bw * 0.12).toFixed(1)}" width="${(bw * 0.76).toFixed(1)}" y="${Y(rev[i]).toFixed(1)}" height="${Math.max(1, y0 - Y(rev[i])).toFixed(1)}" rx="2.5" fill="var(--accent)" opacity=".28"/>
+      ${isNum(f) ? `<rect x="${(x + bw * 0.3).toFixed(1)}" width="${(bw * 0.4).toFixed(1)}" y="${Math.min(Y(f), y0).toFixed(1)}" height="${Math.max(1, Math.abs(y0 - Y(f))).toFixed(1)}" rx="2" fill="${f >= 0 ? 'var(--up)' : 'var(--down)'}"/>` : ''}
+      <text x="${(x + bw / 2).toFixed(1)}" y="${H - 13}" text-anchor="middle" font-size="9.5" fill="var(--ink-3)">${esc(r.fy.replace('FY', "'"))}</text>
+      ${isNum(r.values.roic) ? `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 2}" text-anchor="middle" font-size="9" font-weight="600" fill="${r.values.roic >= 15 ? 'var(--up)' : r.values.roic >= 8 ? 'var(--ink-2)' : 'var(--down)'}">${r.values.roic.toFixed(0)}%</text>` : ''}</g>`; }).join('')}
+  </svg></div><div class="tlkey"><span><i style="background:var(--accent);opacity:.35"></i>הכנסות</span><span><i style="background:var(--up)"></i>תזרים חופשי</span><span>מספר בתחתית: תשואה על ההון המושקע (ROIC)</span></div>`;
+}
+function decadeHTML(b){
+  const L = b.long || {}, rows = b.annual || [];
+  if (!rows.length) return `<div class="sec"><h4>עשר שנים</h4><div class="empty">ההיסטוריה השנתית נקראת מה-SEC ותופיע כאן אחרי המילוי.</div></div>`;
+  const chk = (ok, text) => `<li><span class="${ok === null ? 'mid' : ok ? 'ok' : 'no'}">${ok === null ? '~' : ok ? '✓' : '✗'}</span><span>${text}</span></li>`;
+  const items = [];
+  if (L.rev_years) items.push(chk(L.rev_up_years / L.rev_years >= 0.8 ? true : L.rev_up_years / L.rev_years >= 0.6 ? null : false, `ההכנסות עלו ב-${N(L.rev_up_years)} מתוך ${N(L.rev_years)} שנים${isNum(L.rev_cagr_10) ? `, בממוצע ${N(L.rev_cagr_10.toFixed(1) + '%')} בשנה לעשור` : isNum(L.rev_cagr_5) ? `, בממוצע ${N(L.rev_cagr_5.toFixed(1) + '%')} בשנה לחמש שנים` : ''}.`));
+  if (L.fcf_years) items.push(chk(L.fcf_pos_years === L.fcf_years ? true : L.fcf_pos_years >= L.fcf_years - 1 ? null : false, `ייצרה מזומן חופשי ב-${N(L.fcf_pos_years)} מתוך ${N(L.fcf_years)} שנים.`));
+  if (isNum(L.roic_avg5)) items.push(chk(L.roic_avg5 >= 15 ? true : L.roic_avg5 >= 8 ? null : false, `על כל $100 שמושקעים בעסק הוא מרוויח בממוצע $${N(L.roic_avg5.toFixed(0))} בשנה (ROIC ל-5 שנים). ${L.roic_avg5 >= 15 ? 'זה גבוה: סימן ליתרון תחרותי.' : L.roic_avg5 >= 8 ? 'סביר, לא יוצא דופן.' : 'נמוך: העסק לא מייצר הרבה על הכסף שהושקע בו.'}`));
+  if (isNum(L.op_margin_lo)) items.push(chk(L.op_margin_hi - L.op_margin_lo <= 10 && L.op_margin_lo > 0 ? true : L.op_margin_lo > 0 ? null : false, `הרווח התפעולי נע בין ${N(L.op_margin_lo.toFixed(0) + '%')} ל-${N(L.op_margin_hi.toFixed(0) + '%')} מהמכירות. ${L.op_margin_hi - L.op_margin_lo <= 10 ? 'יציב: העסק שומר על המחיר שלו גם בשנים קשות.' : 'תנודתי: הרווחיות תלויה במחזור.'}`));
+  if (isNum(L.shares_change_pct)) items.push(chk(L.shares_change_pct <= 0 ? true : L.shares_change_pct <= 5 ? null : false, L.shares_change_pct <= 0 ? `מספר המניות ירד ב-${N(Math.abs(L.shares_change_pct).toFixed(0) + '%')} ב-${N(L.shares_span)} שנים: החלק שלך בחברה גדל.` : `מספר המניות עלה ב-${N(L.shares_change_pct.toFixed(0) + '%')} ב-${N(L.shares_span)} שנים: החלק שלך בחברה התדלל.`));
+  if (isNum(L.returned_pct_fcf5)) items.push(chk(L.returned_pct_fcf5 >= 40 ? true : null, `ב-5 השנים האחרונות החזירה לבעלי המניות ${N(L.returned_pct_fcf5 + '%')} מהתזרים החופשי, בדיבידנדים וברכישה עצמית.`));
+  return `<div class="sec"><h4>עשר שנים <small>${esc(L.first || '')}–${esc(L.last || '')} · מהדוחות השנתיים</small></h4>${decadeSVG(rows)}
+    <div class="tlh" style="margin-top:12px">בדיקות של משקיע לטווח ארוך</div><ul class="checks2">${items.join('')}</ul></div>`;
+}
+function ownersHTML(b){
+  const o = b.owners || {};
+  const has = (o.majors || []).length || (o.insiders || []).length;
+  if (!has) return `<div class="sec"><h4>מי מחזיק במניה</h4><div class="empty">${o.loading ? 'קורא עכשיו את הדיווחים מה-SEC (Form 4 ו-13G). זה לוקח כחצי דקה, והכרטיס יתעדכן לבד.' : o.updated ? 'לא נמצאו דיווחים של בעלי עניין או של מחזיקים מעל 5% בשנים האחרונות.' : 'בעלי המניות נקראים מה-SEC. הנתונים יופיעו אחרי החיבור.'}</div></div>`;
+  const seg = [['בעלי עניין', o.insiders_pct, 'var(--beacon)', 'מנהלים, דירקטורים, מייסדים'], ['מחזיקים מעל 5%', o.majors_pct, 'var(--accent)', 'בעיקר קרנות מדד וגופים מוסדיים'], ['הציבור', o.public_pct, 'var(--ink-3)', 'כל השאר: קרנות קטנות, פנסיה, משקיעים פרטיים']];
+  const fmtSh = v => isNum(v) ? (v >= 1e6 ? N((v / 1e6).toFixed(1)) + 'M' : N(Math.round(v).toLocaleString('en-US'))) : '–';
+  return `<div class="sec"><h4>מי מחזיק במניה <small>${o.updated ? 'עודכן ' + new Date(o.updated + (o.updated.endsWith('Z') ? '' : 'Z')).toLocaleDateString('he-IL') : ''}</small></h4>
+    <div class="stack">${seg.map(x => `<i style="width:${Math.max(0, x[1] || 0)}%;background:${x[2]}" title="${x[0]}"></i>`).join('')}</div>
+    <div class="lgd">${seg.map(x => `<i style="background:${x[2]}"></i><span>${x[0]} <small class="muted">${x[3]}</small></span><b class="num">${N((x[1] || 0).toFixed(1) + '%')}</b><span></span>`).join('')}</div>
+    ${o.controlled ? `<p class="note warn">${esc(o.top.name)} מחזיק ${N(o.top.pct.toFixed(1) + '%')} מהמניות. מחזיק כזה יכול להכריע הצבעות ולהשפיע על כיוון החברה.</p>` : o.top ? `<p class="note">המחזיק הגדול ביותר: ${esc(o.top.name)}, ${N(o.top.pct.toFixed(1) + '%')}.</p>` : ''}
+    ${(o.majors || []).length ? `<div class="tlh">מחזיקים מעל 5%</div><table class="ownl"><tbody>${o.majors.map(h => `<tr><td>${h.url ? `<a href="${esc(h.url)}" target="_blank" rel="noopener">${esc(h.name)}</a>` : esc(h.name)}<br><small class="muted">${h.active ? 'מחזיק פעיל (13D): עשוי לדרוש שינויים' : 'מחזיק פסיבי (13G)'}${h.as_of ? ' · ' + esc(h.as_of) : ''}</small></td><td class="n num">${isNum(h.pct) ? N(h.pct.toFixed(1) + '%') : '–'}</td></tr>`).join('')}</tbody></table>` : ''}
+    ${(o.insiders || []).length ? `<div class="tlh" style="margin-top:10px">בעלי עניין</div><table class="ownl"><tbody>${o.insiders.slice(0, 10).map(h => `<tr><td>${h.url ? `<a href="${esc(h.url)}" target="_blank" rel="noopener">${esc(h.name)}</a>` : esc(h.name)}<br><small class="muted">${esc(h.title || '')}${h.as_of ? ' · דיווח אחרון ' + esc(h.as_of) : ''}</small></td><td class="n num">${fmtSh(h.shares)} מניות<br><small class="muted">${isNum(h.pct) ? N(h.pct.toFixed(h.pct < 0.1 ? 3 : 2) + '%') : ''}</small></td></tr>`).join('')}</tbody></table>` : ''}
+    <p class="note">מקור: דיווחי Form 4 של בעלי עניין (שנתיים אחרונות) ו-13D/13G של מחזיקים מעל 5% (ארבע שנים). גופים שמחזיקים פחות מ-5% נכללים ב"ציבור".</p></div>`;
+}
+function lastingHTML(b){
+  const P = b.profile?.profile; if (!P) return '';
+  const ms = MOAT_S[P.moat_strength] || ['', ''], ai = AI_HE[P.ai_impact] || ['', ''], du = DUR_HE[P.durability] || ['', ''];
+  return `<div class="sec"><h4>האם היא כאן להישאר</h4>
+    <div class="verdict"><span class="chip ${ms[1]}">${ms[0]}</span><span class="chip">${MOAT_HE[P.moat_type] || ''}</span><span class="chip ${ai[1]}">${ai[0]}</span><span class="chip ${du[1]}">${du[0]}</span></div>
+    <div class="wwl"><div><b>החפיר: למה קשה לקחת לה את הרווחים</b>${esc(P.moat_he)}${claimList(P.moat_evidence)}</div>
+      <div><b>מתחרים</b>${(P.competitors || []).length ? `<ul class="clean">${P.competitors.map(x => `<li><b style="display:inline;color:var(--ink)">${esc(x.name)}</b>: ${esc(x.note_he)}</li>`).join('')}</ul>` : 'הדוח לא מפרט מתחרים בשמם.'}</div>
+      <div><b>בינה מלאכותית ומתחרים חדשים</b>${esc(P.ai_impact_he)}${claimList(P.ai_evidence)}</div>
+      <div><b>בעוד עשר שנים</b>${esc(P.durability_he)}</div>
+      <div><b>מה ההנהלה עושה עם הכסף</b>${esc(P.capital_allocation_he)}</div>
+      <div><b>הסיכונים המרכזיים</b>${claimList(P.key_risks)}</div>
+      ${(P.what_to_watch_he || []).length ? `<div><b>מה לבדוק כל רבעון</b><ul class="clean">${P.what_to_watch_he.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div>
+    <p class="note">החפיר, השפעת ה-AI והעמידות הם הערכה של Claude מתוך הדוח השנתי ועשר שנות המספרים, לא עובדה. הציטוטים מאומתים מול הדוח.</p></div>`;
+}
+function tabBusiness(js, c){
+  const b = js.biz || {};
+  return profileIntro(b, c) + moneyHTML(b) + decadeHTML(b) + ownersHTML(b) + lastingHTML(b);
+}
+let ownTimer = null;
+function wireBusiness(c){
+  const b = CO?.biz || {};
+  const mk = $('#mkProfile');
+  if (mk) mk.onclick = async () => { mk.disabled = true; try { await api(`/api/company/${c.t}/profile`, { method: 'POST' }); toast('הבקשה נשלחה. הפרופיל יופיע תוך כמה דקות.'); CO.biz.profile_state = 'queued'; renderPanel(); } catch (e) { toast(e.message); mk.disabled = false; } };
+  clearTimeout(ownTimer);
+  if (b.owners?.loading || b.profile_state === 'queued') {
+    const t = c.t;
+    ownTimer = setTimeout(async () => { if (!CO || CO.company.t !== t || panelTab !== 'business') return; try { CO = await api(`/api/company/${t}`); renderPanel(); } catch {} }, b.owners?.loading ? 25000 : 60000);
+  }
+}
+
 function tabNumbers(js){
   const qs = js.quarters || []; const m = js.metrics || {};
   const cell = (q, k, f) => { const v = q.values[k]; return `<td class="n">${isNum(v) ? f(v) : '–'}</td>`; };
@@ -2317,6 +2465,7 @@ function wireBody(js, c){
     panel.querySelectorAll('.calc:not(.ptk) input').forEach(inp => inp.addEventListener('input', calc)); calc();
     wireTicket(c);
   }
+  if (panelTab === 'business') wireBusiness(c);
   if (panelTab === 'thesis') {
     if (!thesisOpts) api('/api/thesis-options').then(o => { thesisOpts = o; if (CO && panelTab === 'thesis') renderPanel(); }).catch(() => {});
     const rows = () => [...panel.querySelectorAll('#mrows .krow')].map(r => { const i = r.dataset.i; return { name: $('#mN' + i).value, op: $('#mO' + i).value, value: parseFloat($('#mV' + i).value) }; });

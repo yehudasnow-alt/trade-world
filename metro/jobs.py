@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 from . import alerts, brief, clock, pipeline
 from .config import get_settings
-from .db import Holding, Watch, kv_get, kv_set, session, utcnow
+from .db import Company, Holding, Watch, kv_get, kv_set, session, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -78,8 +78,43 @@ class Runner:
 
     def ai_tick(self) -> str:
         from .ai import runner
+        from .ai import profile
         stats = runner.run_jobs(self.engine)
-        return f"{stats} batches_done={runner.poll_batches(self.engine)}"
+        prof = profile.run_profiles(self.engine, self.sec)
+        return f"{stats} batches_done={runner.poll_batches(self.engine)} profiles={prof}"
+
+    def ownership_tick(self, budget_s: float = 1500) -> str:
+        """Who owns each company: the companies you follow first, then the stalest; all 500 within about a week."""
+        import time as _t
+        t0, n = _t.monotonic(), 0
+        with session() as s:
+            order = pipeline.ownership_order(s)
+        for t in order:
+            if _t.monotonic() - t0 > budget_s:
+                break
+            try:
+                pipeline.refresh_ownership(self.sec, t)
+                n += 1
+            except Exception as e:  # noqa: BLE001
+                log.warning("ownership %s: %s", t, e)
+        return f"companies={n}"
+
+    def upgrade_tick(self) -> str:
+        """Once after an update that reads new fields from the SEC: re-read every company's facts (ten years, cash uses)."""
+        with session() as s:
+            if kv_get(s, "facts.version") == pipeline.FACTS_VERSION or not pipeline.filled_sources() & {"sec"}:
+                return "up to date"
+            comps = list(s.scalars(select(Company.ticker).where(Company.in_universe.is_(True))))
+        n = 0
+        for t in comps:
+            try:
+                pipeline.refresh_facts(self.sec, t)
+                n += 1
+            except Exception as e:  # noqa: BLE001
+                log.warning("facts %s: %s", t, e)
+        with session() as s:
+            kv_set(s, "facts.version", pipeline.FACTS_VERSION)
+        return f"companies={n}"
 
     def alerts_tick(self) -> str:
         """Rules every 5 minutes, day and night: an 8-K filed after the close must not wait for the next session."""
@@ -166,6 +201,9 @@ class Runner:
             self.sec = SecClient()
             add(safe("sec", self.sec_tick), "cron", day_of_week="mon-fri", hour="6-21", minute="*/2")
             add(safe("sec_nightly", self.sec_nightly), "cron", hour=2, minute=30)
+            add(safe("ownership", self.ownership_tick), "cron", hour=1, minute=5)
+            from datetime import timedelta as _td
+            add(safe("upgrade", self.upgrade_tick), "date", run_date=datetime.now(clock.NY) + _td(minutes=3))
             on.append("SEC")
         if st.alpaca_ready:
             from .sources.alpaca import AlpacaClient

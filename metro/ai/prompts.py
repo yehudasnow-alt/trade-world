@@ -25,6 +25,20 @@ SYSTEM_LIGHT = """You summarize a company's earnings press release for an invest
 Use only the source text. Numbers exactly as printed with their printed scale. Quotes word for word.
 Hebrew for *_he fields. No investment advice."""
 
+SYSTEM_PROFILE = """You write the business profile of one company for a private investor who wants to understand it as an owner.
+
+Rules:
+1. Base every factual statement on the sources: the latest annual report (10-K) sections and the <xbrl> ten-year table.
+2. Citations: copy 6 to 40 English words exactly from the source, no ellipsis. Cite the strongest evidence for each claim.
+3. Segment shares: only from stated figures (segment revenue / total). Leave share_pct null if not stated.
+4. Customers above 10% of revenue: only as disclosed. If none is disclosed, say so.
+5. moat, ai_impact and durability are your assessment. Reason from the facts in the sources (pricing power, margins over ten
+   years, return on invested capital, switching costs the company describes, competition it names, technology risks it lists).
+   Say plainly when the sources do not support a confident view. Do not use outside knowledge about recent events.
+6. Plain Hebrew in *_he fields, short sentences, financial terms in English in parentheses the first time.
+7. No investment advice and no price targets.
+"""
+
 SYSTEM_REVIEW = """You are the second reader of a quarterly report card. You did not write it.
 Compare the card with the sources. List omissions (material facts in the sources that the card misses),
 contradictions (the card says something the sources do not), and unsupported claims.
@@ -80,3 +94,15 @@ def changes_block(diffs: dict) -> str:
         out += [f"~ {c['before']}  =>  {c['after']}" for c in d["changed"][:15]]
         out.append("</section>")
     return "<language_changes>\n" + "\n".join(out) + "\n</language_changes>"
+
+
+def annual_block(rows: list[dict]) -> str:
+    if not rows:
+        return "<xbrl status=\"missing\"/>"
+    keys = ["revenue", "gross_margin", "op_margin", "net_income", "fcf", "roic", "rnd", "sga", "dividends_paid", "buybacks",
+            "acquisitions", "debt_total", "cash", "diluted_shares"]
+    lines = ["fiscal_year | " + " | ".join(keys)]
+    for r in rows:
+        v = r["values"]
+        lines.append(r["fy"] + " | " + " | ".join("" if v.get(k) is None else (f"{v[k]:.1f}" if abs(v[k]) < 1000 else f"{v[k]:,.0f}") for k in keys))
+    return "<xbrl note=\"annual, USD, from the SEC; margins and roic in percent\">\n" + "\n".join(lines) + "\n</xbrl>"

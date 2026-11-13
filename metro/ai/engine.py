@@ -9,7 +9,7 @@ from pydantic import BaseModel, ValidationError
 
 from ..config import get_settings
 from . import prompts as P
-from .schema import LightCard, ReportCard, Review
+from .schema import CompanyProfile, LightCard, ReportCard, Review
 
 # USD per million tokens: (input, output). Haiku 5.5 is priced higher above 100K prompt tokens.
 PRICES = {
@@ -20,7 +20,8 @@ PRICES = {
 }
 LIMITS = {"card": {"press_release": 120_000, "filing": 420_000, "transcript_prepared": 90_000, "transcript_qa": 140_000},
           "light": {"press_release": 60_000}}
-SCHEMAS: dict[str, type[BaseModel]] = {"card": ReportCard, "light": LightCard, "review": Review}
+SCHEMAS: dict[str, type[BaseModel]] = {"card": ReportCard, "light": LightCard, "review": Review, "profile": CompanyProfile}
+PROFILE_LIMITS = {"business": 120_000, "risk_factors": 70_000, "mdna": 45_000, "market_equity": 8_000}
 
 
 class AiError(RuntimeError):
@@ -106,6 +107,25 @@ def build_review(ctx: Context, src: Sources, card: dict, model: str | None = Non
     ])
     return {"model": model or get_settings().ai_model_review, "max_tokens": 4000, "system": _system(P.SYSTEM_REVIEW),
             "messages": [{"role": "user", "content": body}], "output_config": _format("review")}
+
+
+def build_profile(ticker: str, name: str, sub_industry: str, sections: dict[str, str], annual: list[dict],
+                  model: str | None = None) -> dict[str, Any]:
+    """The annual report's business, risk and MD&A sections plus ten years of numbers; one call per company per year."""
+    parts = []
+    for k, lim in PROFILE_LIMITS.items():
+        if sections.get(k):
+            txt = sections[k]
+            parts.append(f"=== {k} ===\n" + (txt if len(txt) <= lim else txt[:lim] + "\n[truncated]"))
+    body = "\n\n".join([f"<company>{ticker} | {name} | {sub_industry}</company>", P.annual_block(annual),
+                          P.source_block("filing", "\n\n".join(parts), 10**7), "Write the business profile."])
+    return {"model": model or get_settings().ai_model_card, "max_tokens": 8000, "system": _system(P.SYSTEM_PROFILE),
+            "messages": [{"role": "user", "content": body}], "output_config": _format("profile")}
+
+
+def profile_source(sections: dict[str, str]) -> str:
+    """The same text the model saw, for checking its quotes."""
+    return "\n\n".join(sections[k] if len(sections[k]) <= lim else sections[k][:lim] for k, lim in PROFILE_LIMITS.items() if sections.get(k))
 
 
 def cost_usd(model: str, usage: dict[str, int], batch: bool = False) -> float:

@@ -304,6 +304,46 @@ class PaperDaily(Base):
     spy: Mapped[float | None] = mapped_column(Float)
 
 
+class Annual(Base):
+    """A fiscal year from the 10-K (up to eleven), for the long-term view."""
+    __tablename__ = "annuals"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticker: Mapped[str] = mapped_column(String(12), index=True)
+    fy: Mapped[str] = mapped_column(String(8))
+    period_end: Mapped[date] = mapped_column(Date)
+    values: Mapped[dict] = mapped_column(JSON, default=dict)
+    __table_args__ = (UniqueConstraint("ticker", "period_end", name="uq_annual"),)
+
+
+class Holder(Base):
+    """Who owns the stock: insiders from their last Form 4, holders of 5% or more from Schedule 13D/13G."""
+    __tablename__ = "holders"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticker: Mapped[str] = mapped_column(String(12), index=True)
+    kind: Mapped[str] = mapped_column(String(10))  # insider | major
+    name: Mapped[str] = mapped_column(String(200))
+    title: Mapped[str] = mapped_column(String(200), default="")
+    shares: Mapped[float | None] = mapped_column(Float)
+    pct: Mapped[float | None] = mapped_column(Float)
+    as_of: Mapped[date | None] = mapped_column(Date)
+    form: Mapped[str] = mapped_column(String(20), default="")
+    url: Mapped[str] = mapped_column(Text, default="")
+    active: Mapped[bool] = mapped_column(Boolean, default=True)  # a 13D/G activist (D) or passive (G) holder
+
+
+class CompanyProfile(Base):
+    """The business in plain words, from the latest annual report (10-K): what it sells, to whom, moat, AI, durability."""
+    __tablename__ = "company_profiles"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    ticker: Mapped[str] = mapped_column(String(12), index=True)
+    accession: Mapped[str] = mapped_column(String(24))
+    created: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    model: Mapped[str] = mapped_column(String(40))
+    profile: Mapped[dict] = mapped_column(JSON, default=dict)
+    verification: Mapped[dict] = mapped_column(JSON, default=dict)
+    cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
+
+
 class KV(Base):
     __tablename__ = "kv"
     key: Mapped[str] = mapped_column(String(80), primary_key=True)

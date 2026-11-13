@@ -158,3 +158,44 @@ class ReviewIssue(BaseModel):
 class Review(BaseModel):
     verdict: Literal["pass", "fix"]
     issues: list[ReviewIssue]
+
+
+# ---------------- the business profile, from the annual report ----------------
+class Claim(BaseModel):
+    text_he: str = Field(description="Hebrew, one or two sentences.")
+    citation: Optional[Citation]
+
+
+class Segment(BaseModel):
+    name: str = Field(description="The segment, product line or region as the company names it, in English.")
+    share_pct: Optional[float] = Field(description="Share of total revenue in percent, only if stated or computable from stated figures.")
+    what_he: str = Field(description="Hebrew: what is sold here and to whom, one sentence.")
+    citation: Optional[Citation]
+
+
+class Competitor(BaseModel):
+    name: str = Field(description="As named in the sources. If the sources name only types of competitors, describe the type.")
+    note_he: str
+
+
+class CompanyProfile(BaseModel):
+    one_liner_he: str = Field(description="Hebrew: what the company does, in one plain sentence a teenager would understand.")
+    what_it_does_he: str = Field(description="Hebrew, 3-5 sentences: products, how it makes money, the business model.")
+    segments: list[Segment]
+    customers_he: str = Field(description="Hebrew: who pays the company, by type (consumers, businesses, governments, hospitals...).")
+    customer_concentration_he: str = Field(description="Hebrew: customers above 10% of revenue as disclosed, or that none is disclosed.")
+    top_customers: list[Claim]
+    future_customers_he: str = Field(description="Hebrew: the new customers, markets or uses management is going after, from the sources.")
+    competitors: list[Competitor]
+    moat_type: Literal["network_effects", "switching_costs", "cost_advantage", "intangibles", "efficient_scale", "none_clear"]
+    moat_strength: Literal["wide", "narrow", "none"]
+    moat_he: str = Field(description="Hebrew: why competitors can or cannot take the profits away. Your assessment, reasoned from the sources.")
+    moat_evidence: list[Claim]
+    ai_impact: Literal["threat", "mixed", "opportunity", "limited"]
+    ai_impact_he: str = Field(description="Hebrew: could AI or a new kind of competitor replace or squeeze this business, or does it gain? Reasoned from the sources.")
+    ai_evidence: list[Claim]
+    durability: Literal["high", "medium", "low"]
+    durability_he: str = Field(description="Hebrew: is the business likely to exist and earn in ten years, and what would have to go wrong.")
+    capital_allocation_he: str = Field(description="Hebrew: what management does with the cash: reinvest, buy back, dividends, acquisitions, debt.")
+    key_risks: list[Claim]
+    what_to_watch_he: list[str] = Field(description="Hebrew: three to five things an owner should check every quarter.")

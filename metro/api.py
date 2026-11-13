@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -21,6 +22,8 @@ from .config import ROOT, get_settings
 from .db import (AiJob, Alert, Company, Earnings, Event, Holding, JournalEntry, PriceBar, Promise, Quarter, Quote,
                  ReportCard, Score, Thesis, Watch, init_db, kv_age_seconds, kv_get, session, utcnow)
 from .universe import MARKET_ETF, SECTORS
+
+log = logging.getLogger(__name__)
 
 WEB = ROOT / "web"
 
@@ -239,7 +242,9 @@ def company(ticker: str) -> dict:
         th, w, h = s.get(Thesis, t), s.get(Watch, t), s.get(Holding, t)
         journal = [{"id": j.id, "ts": j.ts.isoformat(), "action": j.action, "price": j.price, "note": j.note, "snapshot": j.snapshot}
                    for j in s.scalars(select(JournalEntry).where(JournalEntry.ticker == t).order_by(JournalEntry.ts.desc()).limit(30))]
+        biz = _business(s, t, qrows, m)
         out = {
+            "biz": biz,
             "company": {"t": t, "n": c.name, "sector": c.sector, "sub": c.sub_industry, "cik": c.cik, "alts": c.alt_tickers,
                         "fye": c.fiscal_year_end, "template": c.template, "themes": c.themes},
             "quote": {"px": q.price, "prev": q.prev_close, "ts": q.ts.isoformat(), "source": q.source} if q else None,
@@ -261,6 +266,75 @@ def company(ticker: str) -> dict:
             "defaults": {"portfolio": get_settings().portfolio_size_usd, "risk_pct": get_settings().risk_per_trade_pct},
         }
     return json.loads(json.dumps(out, default=str))
+
+
+_own_busy: set[str] = set()
+
+
+def _ownership_soon(t: str) -> bool:
+    """Read the owners of one company in the background (about 10-20 seconds of SEC requests)."""
+    if t in _own_busy or not get_settings().sec_ready:
+        return False
+    _own_busy.add(t)
+
+    def run() -> None:
+        try:
+            from .sources.sec import SecClient
+            from . import pipeline
+            pipeline.refresh_ownership(SecClient(), t)
+        except Exception as e:  # noqa: BLE001
+            log.warning("ownership %s: %s", t, e)
+        finally:
+            _own_busy.discard(t)
+    import threading
+    threading.Thread(target=run, daemon=True).start()
+    return True
+
+
+def _business(s, t: str, qrows: list, m: dict) -> dict:
+    """The owner's view: ten years, the money in and out, who owns it, and the business profile."""
+    from .ai import profile as AP
+    from .analytics import business as B
+    from .db import Annual, CompanyProfile, Holder
+    annual = [{"fy": a.fy, "end": a.period_end.isoformat(), "values": a.values}
+              for a in s.scalars(select(Annual).where(Annual.ticker == t).order_by(Annual.period_end))]
+    keep = ("revenue", "gross_profit", "operating_income", "net_income", "fcf", "cfo", "capex", "dividends_paid", "buybacks",
+            "acquisitions", "roic", "op_margin", "gross_margin", "fcf_margin", "diluted_shares", "shares_out", "debt_total", "cash", "rnd", "sga")
+    quarters = [{"fiscal": r.fiscal_label, "values": r.values} for r in qrows]
+    holders = [{"kind": h.kind, "name": h.name, "title": h.title, "shares": h.shares, "pct": _r(h.pct, 2), "as_of": h.as_of.isoformat() if h.as_of else None,
+                "form": h.form, "url": h.url, "active": h.active} for h in s.scalars(select(Holder).where(Holder.ticker == t))]
+    own_info = kv_get(s, f"own.{t}")
+    loading = False
+    if own_info is None and kv_get(s, "mode", "live") != "demo":
+        loading = _ownership_soon(t) or t in _own_busy
+    shares = m.get("shares")
+    owners = {**B.ownership(holders, shares), "insiders": sorted([h for h in holders if h["kind"] == "insider"], key=lambda h: -(h["shares"] or 0))[:15],
+              "majors": sorted([h for h in holders if h["kind"] == "major"], key=lambda h: -(h["pct"] or 0)),
+              "updated": (own_info or {}).get("at"), "loading": loading}
+    pr = s.scalars(select(CompanyProfile).where(CompanyProfile.ticker == t).order_by(CompanyProfile.created.desc())).first()
+    return {
+        "annual": [{"fy": a["fy"], "end": a["end"], "values": {k: a["values"][k] for k in keep if a["values"].get(k) is not None}} for a in annual],
+        "long": B.long_term(annual), "money": B.money_flow(quarters, m.get("market_cap")), "owners": owners,
+        "profile": {"profile": pr.profile, "verification": pr.verification, "created": pr.created.isoformat(), "accession": pr.accession,
+                    "model": pr.model} if pr else None,
+        "profile_state": AP.state(s, t), "profile_error": kv_get(s, f"profile.error.{t}"),
+    }
+
+
+@app.post("/api/company/{ticker}/profile", dependencies=[Depends(guard)])
+def make_profile(ticker: str) -> dict:
+    from .ai import profile as AP
+    if not get_settings().anthropic_api_key:
+        raise HTTPException(400, "פרופיל העסק נכתב על ידי Claude. הגדר ANTHROPIC_API_KEY במשתני השירות.")
+    AP.request(ticker.upper())
+    return {"state": "queued"}
+
+
+@app.post("/api/company/{ticker}/ownership", dependencies=[Depends(guard)])
+def refresh_owners(ticker: str) -> dict:
+    if not get_settings().sec_ready:
+        raise HTTPException(400, "בעלי המניות נקראים מה-SEC. הגדר SEC_USER_AGENT.")
+    return {"started": _ownership_soon(ticker.upper())}
 
 
 @app.get("/api/timeline", dependencies=[Depends(guard)])

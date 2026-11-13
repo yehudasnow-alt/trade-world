@@ -7,7 +7,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy import func, select
 
 from ..config import get_settings
-from ..db import AiJob, Company, Filing, Promise, Quarter, ReportCard, kv_set, session, utcnow
+from ..db import AiJob, Company, CompanyProfile, Filing, Promise, Quarter, ReportCard, kv_set, session, utcnow
 from ..sources import transcripts
 from ..sources.sections import LABELS_HE
 from . import engine as E
@@ -21,7 +21,9 @@ FILING_ORDER = ["mdna", "risk_factors", "legal", "repurchases", "controls", "mar
 
 def month_spend(s) -> float:
     start = utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    return float(s.scalar(select(func.coalesce(func.sum(ReportCard.cost_usd), 0.0)).where(ReportCard.created >= start)) or 0)
+    cards = float(s.scalar(select(func.coalesce(func.sum(ReportCard.cost_usd), 0.0)).where(ReportCard.created >= start)) or 0)
+    profiles = float(s.scalar(select(func.coalesce(func.sum(CompanyProfile.cost_usd), 0.0)).where(CompanyProfile.created >= start)) or 0)
+    return cards + profiles
 
 
 def _filing_text(secs: dict[str, str]) -> tuple[str, str]:

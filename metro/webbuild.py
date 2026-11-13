@@ -39,6 +39,17 @@ def _src() -> str:
     return s
 
 
+def _compact(x):
+    """Money in the business view: whole dollars are plenty for billions."""
+    if isinstance(x, float):
+        return round(x) if abs(x) >= 1000 else round(x, 2)
+    if isinstance(x, dict):
+        return {k: _compact(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_compact(v) for v in x]
+    return x
+
+
 def _round(x, n=4):
     if isinstance(x, float):
         return round(x, n)
@@ -99,6 +110,7 @@ def demo_payload() -> dict:
                        "values": _round({k: q["values"][k] for k in QUARTER_KEYS if k in q["values"]}, 4)} for q in js.get("quarters") or []],
                 "card": js.get("card"), "pr": js.get("promises") or [], "ev": js.get("events") or [], "th": js.get("thesis"),
                 "w": js.get("watch"), "h": js.get("holding"), "j": js.get("journal") or [], "tpl": js["company"].get("template"),
+                "b": _compact(js.get("biz")),
             }
             co[t] = {k: v for k, v in entry.items() if v not in (None, [], {}, "standard")}
         return {"city": city, "days": days, "co": co, "status": get("/api/status"), "brief": get("/api/brief"), "timeline": get("/api/timeline"),

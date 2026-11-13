@@ -19,7 +19,7 @@ from . import clock
 from .analytics import events as EV
 from .analytics import scoring, thesis
 from .config import get_settings
-from .db import (AiJob, Company, Earnings, Event, Fact, Filing, Holding, PriceBar, Quarter, Quote, ReportCard, Score,
+from .db import (AiJob, Annual, Company, Earnings, Event, Fact, Filing, Holding, PriceBar, Quarter, Quote, ReportCard, Score,
                  Thesis, Watch, kv_age_seconds, kv_get, kv_set, session, utcnow)
 from .sources import sections as SX
 from .sources import xbrl
@@ -126,7 +126,9 @@ def refresh_facts(client, ticker: str) -> int:
     facts = client.companyfacts(cik, ttl=0)
     rows = xbrl.store_rows(facts)
     quarters = xbrl.build_quarters(facts, fye, min_end=date.today() - timedelta(days=365 * 7))
+    annual = xbrl.build_annual(facts, fye)
     with session() as s:
+        write_annual(s, ticker, annual)
         s.execute(delete(Fact).where(Fact.cik == cik))
         seen = set()
         for r in rows:
@@ -136,6 +138,47 @@ def refresh_facts(client, ticker: str) -> int:
                 s.add(Fact(cik=cik, **r))
         write_quarters(s, ticker, quarters)
     return len(quarters)
+
+
+FACTS_VERSION = "2026-11-annual"  # bump when refresh_facts starts reading new fields, so existing installs re-read once
+
+
+def ownership_order(s) -> list[str]:
+    """The companies you follow first, then those never read or read longest ago."""
+    from .db import Holder, PaperPosition
+    comps = list(s.scalars(select(Company.ticker).where(Company.in_universe.is_(True))))
+    seen = {t: (kv_get(s, f"own.{t}") or {}).get("at", "") for t in comps}
+    focus = focus_tickers(s) | set(s.scalars(select(PaperPosition.ticker)))
+    return sorted(comps, key=lambda t: (t not in focus, seen[t]))
+
+
+def refresh_ownership(client, ticker: str) -> dict:
+    """Insiders and holders of 5%+ from the SEC, replacing the previous snapshot."""
+    from .db import Holder
+    from .sources import ownership as OW
+    with session() as s:
+        c = s.get(Company, ticker)
+        cik = c.cik
+        sc = s.get(Score, ticker)
+        q = s.scalars(select(Quarter).where(Quarter.ticker == ticker).order_by(Quarter.period_end.desc())).first()
+        shares = ((sc.metrics or {}).get("shares") if sc else None) or (q.values.get("shares_out") if q else None)
+    got = OW.collect(client, cik, shares)
+    with session() as s:
+        s.execute(delete(Holder).where(Holder.ticker == ticker))
+        for m in got["majors"]:
+            s.add(Holder(ticker=ticker, kind="major", name=m["name"], title="13D" if m["active"] else "13G", shares=m["shares"], pct=m["pct"],
+                         as_of=date.fromisoformat(m["as_of"]), form=m["form"], url=m["url"], active=m["active"]))
+        for i in got["insiders"]:
+            s.add(Holder(ticker=ticker, kind="insider", name=i["name"], title=i["title"], shares=i["shares"], pct=i["pct"],
+                         as_of=date.fromisoformat(i["as_of"]), form="4", url=i["url"]))
+        kv_set(s, f"own.{ticker}", {"at": utcnow().isoformat(), "majors": len(got["majors"]), "insiders": len(got["insiders"])})
+    return {"majors": len(got["majors"]), "insiders": len(got["insiders"])}
+
+
+def write_annual(s, ticker: str, rows: list[dict]) -> None:
+    s.execute(delete(Annual).where(Annual.ticker == ticker))
+    for r in rows:
+        s.add(Annual(ticker=ticker, fy=r["fy"], period_end=date.fromisoformat(r["end"]), values=r["values"]))
 
 
 def write_quarters(s, ticker: str, rows: list[xbrl.QuarterRow]) -> None:
@@ -536,6 +579,9 @@ def backfill_all(tickers: Optional[list[str]] = None, years: int = 6, echo=log.i
                 f.status = "skipped"
         out["processed"] = process_new(sec, limit=1000)
         echo(f"  מעבד דיווחים אחרונים: {out['processed']}")
+        if not tickers:
+            with session() as s:
+                kv_set(s, "facts.version", FACTS_VERSION)
     elif not st.sec_ready:
         echo("SEC_USER_AGENT לא מוגדר: מדלג על ה-SEC.")
     if "alpaca" in want:

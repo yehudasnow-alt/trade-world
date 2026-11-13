@@ -14,8 +14,8 @@ from sqlalchemy import delete, select
 
 from . import alerts, clock, pipeline
 from .ai.schema import COVERAGE
-from .db import (AiJob, Alert, Company, Earnings, Event, Fact, Filing, Holding, JournalEntry, PriceBar, Promise, Quarter,
-                 Quote, ReportCard, Score, Thesis, Watch, kv_set, session, utcnow)
+from .db import (AiJob, Alert, Annual, Company, CompanyProfile, Earnings, Event, Fact, Filing, Holder, Holding, JournalEntry,
+                 PriceBar, Promise, Quarter, Quote, ReportCard, Score, Thesis, Watch, kv_set, session, utcnow)
 from .universe import MARKET_ETF, SECTORS, sync_universe
 
 CAPS = {  # rough size tiers (USD billions) so the skyline looks like the market; not live values
@@ -50,6 +50,10 @@ SECTOR_TODAY = {"Information Technology": 0.58, "Energy": -0.96, "Financials": -
 HOLD = {"MSFT": (16, 0.82), "NVDA": (14, 0.71), "GOOGL": (12, 0.80), "JPM": (10, 0.91), "LLY": (10, 1.06),
         "COST": (9, 0.96), "PANW": (8, 1.03), "XOM": (7, 1.13)}
 WATCH = {"CRWD": None, "AMD": None, "ADBE": None, "UNH": None, "NKE": None}
+PAYOUT = {"Utilities": 0.7, "Consumer Staples": 0.55, "Energy": 0.45, "Real Estate": 0.8, "Financials": 0.35,
+          "Health Care": 0.35, "Information Technology": 0.12, "Communication Services": 0.1, "Consumer Discretionary": 0.15}
+ROIC = {"Information Technology": 26, "Communication Services": 18, "Consumer Discretionary": 14, "Financials": 12,
+        "Health Care": 15, "Industrials": 13, "Consumer Staples": 16, "Energy": 10, "Utilities": 6, "Real Estate": 6, "Materials": 10}
 DIPS = ["ADBE", "UNH", "NKE", "CRM", "TGT", "ACN", "INTU", "MRK", "EL", "SBUX", "DE", "EW"]  # demo dips for the hunt view
 
 
@@ -66,7 +70,7 @@ def generate(seed: int = 20261103, years: float = 3.0) -> dict:
     sync_universe()
     with session() as s:
         for model in (PriceBar, Quote, Quarter, Fact, Earnings, Event, Filing, ReportCard, AiJob, Promise, Holding, Thesis,
-                      JournalEntry, Watch, Score, Alert):
+                      JournalEntry, Watch, Score, Alert, Annual, Holder, CompanyProfile):
             s.execute(delete(model))
         comps = list(s.scalars(select(Company).where(Company.in_universe.is_(True))))
         kv_set(s, "mode", "demo")
@@ -134,11 +138,13 @@ def generate(seed: int = 20261103, years: float = 3.0) -> dict:
         s.execute(Quote.__table__.insert(), qrows)
 
     _fundamentals(comps, caps, levels, rng)
+    _annual_and_owners(comps, caps, rng)
     _earnings_and_events(comps, rng, days)
     _portfolio(levels)
     pipeline.compute_scores()
     _theses()
     _cards()
+    _profiles()
     pipeline.compute_scores()
     alerts.evaluate_rules()
     with session() as s:
@@ -183,6 +189,13 @@ def _fundamentals(comps, caps, levels, rng) -> None:
                     "eps_diluted": ni / sh, "diluted_shares": sh, "shares_out": sh, "cfo": rev * (fm_c + 4) / 100,
                     "capex": rev * 0.04, "sbc": rev * sbc / 100, "cash": rev_ttm * 0.2, "debt_total": max(0.0, net_debt + rev_ttm * 0.2),
                     "equity": cap * 0.3, "rpo": rev * 3.2 if c.sector == "Information Technology" else None}
+            rnd_p = {"Information Technology": 13, "Health Care": 15, "Communication Services": 9}.get(c.sector, 2)
+            sga_p = max(3.0, gm_c - om_c - rnd_p)
+            vals.update({"cost_of_revenue": rev * (100 - gm_c) / 100, "rnd": rev * rnd_p / 100, "sga": rev * sga_p / 100,
+                         "interest_expense": max(0.0, net_debt) * 0.045 / 4, "income_tax": max(0.0, ni) * 0.22,
+                         "dividends_paid": rev * (fm_c + 4) / 100 * PAYOUT.get(c.sector, 0.25),
+                         "buybacks": rev * (fm_c + 4) / 100 * (0.35 if dil < 0 else 0.1),
+                         "acquisitions": rev * 0.03 if rng.random() < 0.15 else 0.0})
             vals = {k: float(v) for k, v in vals.items() if v is not None}
             vals["fcf"] = vals["cfo"] - vals["capex"]
             vals["net_debt"] = vals["debt_total"] - vals["cash"]
@@ -195,6 +208,85 @@ def _fundamentals(comps, caps, levels, rng) -> None:
                              values=vals, first_values=vals, derived=[], restated=[]))
     with session() as s:
         s.execute(Quarter.__table__.insert(), rows)
+
+
+def _annual_and_owners(comps, caps, rng) -> None:
+    """Ten fiscal years built back from the latest quarters, and an invented shareholder register (all marked demo)."""
+    today = clock.now_ny().date()
+    with session() as s:
+        for c in comps:
+            qs = list(s.scalars(select(Quarter).where(Quarter.ticker == c.ticker).order_by(Quarter.period_end)))
+            if len(qs) < 4:
+                continue
+            last = qs[-1].period_end
+            ttm = {k: sum(q.values.get(k, 0.0) for q in qs[-4:]) for k in ("revenue", "gross_profit", "operating_income", "net_income", "cfo",
+                                                                            "capex", "dividends_paid", "buybacks", "rnd", "sga", "acquisitions")}
+            g = max(-0.02, (qs[-1].values["revenue"] / qs[-5].values["revenue"] - 1)) if len(qs) >= 5 else 0.05
+            cyc = 0.12 if c.sector in ("Energy", "Materials") else 0.04
+            roic0 = ROIC.get(c.sector, 12) * float(np.exp(rng.normal(0, 0.3)))
+            sh_last = qs[-1].values.get("diluted_shares", 1e9)
+            dil = rng.normal(-0.01, 0.012)
+            g = float(np.clip(g, -0.02, 0.25))
+            scale = [1.0]
+            for _ in range(10):  # walk back one year at a time: each year grew by about g, with a cycle around it
+                scale.append(scale[-1] / (1 + g * float(np.clip(rng.normal(1, 0.4), -0.6, 2.0)) + rng.normal(0, cyc / 2)))
+            for i in range(10, -1, -1):
+                f = scale[i]
+                m = float(np.clip(rng.normal(1, 0.06 + cyc), 0.5, 1.5))
+                v = {k: x * f * (m if k in ("operating_income", "net_income", "cfo") else 1) for k, x in ttm.items()}
+                v["fcf"] = v["cfo"] - v["capex"]
+                v["op_margin"] = v["operating_income"] / v["revenue"] * 100
+                v["gross_margin"] = v["gross_profit"] / v["revenue"] * 100
+                v["fcf_margin"] = v["fcf"] / v["revenue"] * 100
+                v["roic"] = roic0 * m * float(np.exp(rng.normal(0, 0.08)))
+                v["diluted_shares"] = sh_last * (1 + dil) ** (-i)
+                end = date(last.year - i, last.month, min(last.day, 28))
+                s.add(Annual(ticker=c.ticker, fy=f"FY{end.year % 100:02d}", period_end=end, values={k: float(x) for k, x in v.items()}))
+            sh = sh_last
+            n_maj = int(rng.integers(2, 5))
+            pcts = sorted((float(rng.uniform(5, 9.5)) for _ in range(n_maj)), reverse=True)
+            for j, pc in enumerate(pcts):
+                s.add(Holder(ticker=c.ticker, kind="major", name=f"גוף מוסדי {j + 1} (דוגמה)", title="13G", shares=sh * pc / 100, pct=pc,
+                             as_of=today - timedelta(days=int(rng.integers(20, 400))), form="SCHEDULE 13G", active=False))
+            people = [("יו\"ר הדירקטוריון (דוגמה)", float(rng.uniform(0.01, 0.3))),
+                      ("מנכ\"ל (דוגמה)", float(rng.uniform(0.02, 0.4))), ("סמנכ\"ל כספים (דוגמה)", float(rng.uniform(0.005, 0.05)))]
+            people += [(f"דירקטור {k} (דוגמה)", float(rng.uniform(0.001, 0.03))) for k in range(1, 4)]
+            for name, pc in people:
+                s.add(Holder(ticker=c.ticker, kind="insider", name=name, title=name.split(" (")[0], shares=sh * pc / 100, pct=pc,
+                             as_of=today - timedelta(days=int(rng.integers(5, 300))), form="4"))
+            kv_set(s, f"own.{c.ticker}", {"at": utcnow().isoformat(), "demo": True})
+
+
+def _profiles() -> None:
+    """Example business profiles for the focus list, so the layout can be reviewed. Marked demo; no quotes."""
+    with session() as s:
+        for t in list(HOLD) + list(WATCH):
+            c = s.get(Company, t)
+            if not c:
+                continue
+            ex = lambda x: f"דוגמה: {x}"  # noqa: E731
+            prof = {
+                "demo": True,
+                "one_liner_he": ex(f"{c.name} פועלת בתחום {c.sub_industry}. כאן יופיע משפט אחד פשוט על מה החברה עושה."),
+                "what_it_does_he": ex("כאן יופיע תיאור של 3-5 משפטים: מה החברה מוכרת, איך היא מרוויחה, ומה מודל העסקים, מתוך הדוח השנתי (10-K)."),
+                "segments": [{"name": "Segment A", "share_pct": 58.0, "what_he": ex("המגזר הגדול: מה נמכר ולמי."), "citation": None},
+                             {"name": "Segment B", "share_pct": 30.0, "what_he": ex("המגזר השני."), "citation": None},
+                             {"name": "Other", "share_pct": 12.0, "what_he": ex("שאר הפעילות."), "citation": None}],
+                "customers_he": ex("מי משלם לחברה: צרכנים, עסקים, ממשלות."),
+                "customer_concentration_he": ex("האם יש לקוח שמביא יותר מ-10% מההכנסות, כפי שדווח."),
+                "top_customers": [],
+                "future_customers_he": ex("השווקים והלקוחות החדשים שההנהלה מכוונת אליהם."),
+                "competitors": [{"name": "Competitor 1", "note_he": ex("במה הוא מתחרה")}, {"name": "Competitor 2", "note_he": ex("במה הוא מתחרה")}],
+                "moat_type": "switching_costs", "moat_strength": "narrow",
+                "moat_he": ex("למה למתחרים קשה או קל לקחת את הרווחים, עם הנימוק מהדוח ומעשר שנות מספרים."),
+                "moat_evidence": [{"text_he": ex("עדות מהדוח"), "citation": None}],
+                "ai_impact": "mixed", "ai_impact_he": ex("האם בינה מלאכותית או מתחרה חדש יכולים להחליף את העסק, ומה הסיכוי שהוא דווקא ירוויח מזה."),
+                "ai_evidence": [], "durability": "high", "durability_he": ex("האם העסק צפוי להתקיים ולהרוויח בעוד עשר שנים, ומה היה צריך להשתבש."),
+                "capital_allocation_he": ex("מה ההנהלה עושה עם הכסף: השקעה בצמיחה, רכישה עצמית, דיבידנד, רכישות."),
+                "key_risks": [{"text_he": ex("סיכון מרכזי מהדוח"), "citation": None}],
+                "what_to_watch_he": [ex("מדד לבדוק כל רבעון"), ex("מדד שני"), ex("מדד שלישי")],
+            }
+            s.add(CompanyProfile(ticker=t, accession=f"demo-{t}", model="demo", profile=prof, verification={"demo": True}, cost_usd=0.0))
 
 
 def _earnings_and_events(comps, rng, days) -> None:
