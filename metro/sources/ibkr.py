@@ -65,9 +65,13 @@ def parse_flex(xml_text: str) -> dict[str, Any]:
             "ticker": from_ibkr_symbol(a.get("symbol", "")), "day": _flex_date(d), "side": a.get("buySell", ""),
             "quantity": _num(a.get("quantity")), "price": _num(a.get("tradePrice")), "id": a.get("tradeID", ""),
         })
-    nav = None
+    nav = cash = None
     for e in root.iter("EquitySummaryByReportDateInBase"):
         nav = _num(e.attrib.get("total")) or nav
+        cash = _num(e.attrib.get("cash")) if e.attrib.get("cash") is not None else cash
+    for e in root.iter("CashReportCurrency"):
+        if e.attrib.get("currency") == "BASE_SUMMARY" and e.attrib.get("endingCash") is not None:
+            cash = _num(e.attrib.get("endingCash"))
     for e in root.iter("ChangeInNAV"):
         nav = _num(e.attrib.get("endingValue")) or nav
     if nav is None:
@@ -80,7 +84,9 @@ def parse_flex(xml_text: str) -> dict[str, Any]:
             p["pnl_pct"] = (p["mark"] / p["avg_cost"] - 1) * 100 * (1 if p["quantity"] >= 0 else -1)
         else:
             p["pnl_pct"] = None
-    return {"positions": positions, "trades": trades, "nav": nav}
+    if cash is None and nav is not None:  # no cash section in the query: what is not in stocks is cash
+        cash = nav - sum(p["market_value"] or 0 for p in positions)
+    return {"positions": positions, "trades": trades, "nav": nav, "cash": cash}
 
 
 def parse_portfolio(items: list[Any], account_values: list[Any]) -> dict[str, Any]:

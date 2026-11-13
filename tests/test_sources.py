@@ -157,6 +157,13 @@ def test_flex_parsing_positions_trades_and_weights():
     assert round(t["MSFT"]["weight_pct"], 2) == round(20408 / 250000 * 100, 2)
     assert round(t["BRK.B"]["pnl_pct"], 1) == -4.0
     assert out["trades"][0]["day"] == date(2025, 10, 15)
+    assert out["cash"] == 250000 - sum(p["market_value"] for p in out["positions"])  # no cash section: the rest of the NAV
+
+
+def test_flex_account_with_cash_only():
+    xml = """<FlexQueryResponse><FlexStatements><FlexStatement><OpenPositions/><ChangeInNAV endingValue="324.12"/></FlexStatement></FlexStatements></FlexQueryResponse>"""
+    out = ibkr.parse_flex(xml)
+    assert out["positions"] == [] and out["nav"] == 324.12 and out["cash"] == 324.12
 
 
 def test_flex_two_step_download():
