@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import traceback
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Callable
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -98,6 +98,22 @@ class Runner:
             except Exception as e:  # noqa: BLE001
                 log.warning("ownership %s: %s", t, e)
         return f"companies={n}"
+
+    def macro_tick(self) -> str:
+        """Once a day: the economy from FRED, and today's P/E of the whole index for its history."""
+        from .analytics import macro as MA
+        from .api import _market_rows
+        from .sources import fred
+        series = fred.fetch_all()
+        with session() as s:
+            if series:
+                kv_set(s, "macro.series", series)
+                kv_set(s, "macro.at", utcnow().isoformat())
+            mv = MA.market_valuation(_market_rows(s))
+            if mv["pe"]:
+                hist = [h for h in (kv_get(s, "macro.pe_hist") or []) if h[0] != clock.now_ny().date().isoformat()]
+                kv_set(s, "macro.pe_hist", (hist + [[clock.now_ny().date().isoformat(), round(mv["pe"], 2)]])[-2000:])
+        return f"series={len(series)} pe={mv['pe'] and round(mv['pe'], 1)}"
 
     def upgrade_tick(self) -> str:
         """Once after an update that reads new fields from the SEC: re-read every company's facts (ten years, cash uses)."""
@@ -230,6 +246,8 @@ class Runner:
         add(safe("brief", self.brief_tick), "cron", hour=hh, minute=mm, timezone=clock.IL)
         add(safe("alerts", self.alerts_tick), "cron", minute="*/5")
         add(safe("backup", self.backup_tick), "cron", hour=3, minute=15)
+        add(safe("macro", self.macro_tick), "cron", day_of_week="mon-fri", hour=16, minute=40)
+        add(safe("macro_boot", self.macro_tick), "date", run_date=datetime.now(clock.NY) + timedelta(minutes=2))
         add(safe("paper", self.paper_tick), "cron", day_of_week="mon-fri", hour="9-15", minute="*")  # practice orders fill on live prices
         add(safe("paper_close", self.paper_close), "cron", day_of_week="mon-fri", hour=16, minute=5)
         add(safe("universe", self.universe_tick), "cron", day_of_week="mon-fri", hour=5, minute=20)

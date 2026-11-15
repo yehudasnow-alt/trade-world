@@ -45,6 +45,7 @@ class Inputs:
     shares: float | None = None
     events: list[dict] = field(default_factory=list)  # [{day, code, severity}]
     guidance: str | None = None  # raised | maintained | lowered | withdrawn
+    annual_revenue: list[float] = field(default_factory=list)  # fiscal years from the 10-K, oldest first
     guidance_change_pct: float | None = None
     surprise_pct: float | None = None
     going_concern: bool = False
@@ -137,7 +138,12 @@ def raw_metrics(x: Inputs) -> dict[str, Any]:
         m["pe_hist"] = pe_h[-60:]
         m["pe_pct_5y"] = V.percentile_rank(m["pe_ttm"], pe_h[-60:]) if m.get("pe_ttm") else None
         m["implied_growth"] = V.implied_growth(m.get("market_cap"), fcf_t)
-        m["fair"] = V.fair_range(m["eps_ttm"], pe_h[-60:], m.get("rev_yoy"))
+        ar = [v for v in x.annual_revenue if v and v > 0]
+        m["rev_cagr5"] = ((ar[-1] / ar[-6]) ** (1 / 5) - 1) * 100 if len(ar) >= 6 else None
+        g0 = V.expected_growth(m.get("rev_yoy"), m["rev_cagr5"], m.get("eps_yoy"), x.guidance)
+        m["growth_exp"] = g0
+        m["fair"] = V.fair_range(m["eps_ttm"], pe_h[-60:], g0 if g0 is not None else m.get("rev_yoy"))
+        m["outlook"] = V.outlook(m["eps_ttm"], pe_h[-60:], g0)
 
     today = x.today or (x.days[-1] if x.days else date.today())
     veto, flags = [], []

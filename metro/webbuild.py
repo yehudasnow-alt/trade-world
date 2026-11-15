@@ -113,7 +113,7 @@ def demo_payload() -> dict:
                 "b": _compact(js.get("biz")),
             }
             co[t] = {k: v for k, v in entry.items() if v not in (None, [], {}, "standard")}
-        return {"city": city, "days": days, "co": co, "status": get("/api/status"), "brief": get("/api/brief"), "timeline": get("/api/timeline"),
+        return {"city": city, "days": days, "co": co, "status": get("/api/status"), "brief": get("/api/brief"), "timeline": get("/api/timeline"), "macro": _compact(get("/api/macro")),
                 "portfolio": get("/api/portfolio"), "thesis_options": get("/api/thesis-options"), "journal": [],
                 "built": time.strftime("%Y-%m-%d")}
 

@@ -146,7 +146,9 @@ def city() -> dict:
                 "veto": (sc.veto if sc else []), "beacon": bool(sc and sc.beacon), "val": _r(m.get("pe_pct_5y"), 0),
                 "pe": _r(m.get("pe_ttm"), 1), "rep": rep,
                 "gr": {"r": _r(m.get("rev_yoy"), 1), "e": _r(m.get("eps_yoy"), 1), "p": _r(m.get("ret_1y"), 1)},
-                "fv": _r((m.get("fair") or {}).get("base")), "watch": c.ticker in watch, "th": c.themes,
+                "fv": _r((m.get("fair") or {}).get("base")),
+                "an": {"g": _r(m["outlook"]["g0"], 1), "pe": _r(m["outlook"]["pe"], 1),
+                       "p": {k: _r(v) for k, v in m["outlook"]["path"].items()}} if m.get("outlook") else None, "watch": c.ticker in watch, "th": c.themes,
                 "hold": {"w": _r(h.weight_pct, 1), "pnl": _r(h.pnl_pct, 1), "th": th.status if th else None, "q": _r(h.quantity, 4),
                          "cost": _r(h.avg_cost), "v": _r(h.market_value, 0)} if h else None,
                 "paper": paper_rows.get(c.ticker),
@@ -314,13 +316,69 @@ def _business(s, t: str, qrows: list, m: dict) -> dict:
               "majors": sorted([h for h in holders if h["kind"] == "major"], key=lambda h: -(h["pct"] or 0)),
               "updated": (own_info or {}).get("at"), "loading": loading}
     pr = s.scalars(select(CompanyProfile).where(CompanyProfile.ticker == t).order_by(CompanyProfile.created.desc())).first()
+    money = B.money_flow(quarters, m.get("market_cap"))
+    dcf = {"fcf": m.get("fcf_ttm"), "shares": m.get("shares"), "net_debt": m.get("net_debt"), "price": m.get("price"),
+           "g0": m.get("growth_exp"), "rev_cagr5": m.get("rev_cagr5"), "rev_yoy": m.get("rev_yoy"), "sbc": money.get("sbc"),
+           "fcf_margin": m.get("fcf_margin")}
     return {
+        "dcf": dcf, "peers": _peers(s, t),
         "annual": [{"fy": a["fy"], "end": a["end"], "values": {k: a["values"][k] for k in keep if a["values"].get(k) is not None}} for a in annual],
-        "long": B.long_term(annual), "money": B.money_flow(quarters, m.get("market_cap")), "owners": owners,
+        "long": B.long_term(annual), "money": money, "owners": owners,
         "profile": {"profile": pr.profile, "verification": pr.verification, "created": pr.created.isoformat(), "accession": pr.accession,
                     "model": pr.model} if pr else None,
         "profile_state": AP.state(s, t), "profile_error": kv_get(s, f"profile.error.{t}"),
     }
+
+
+def _peers(s, t: str, n: int = 5) -> list[dict]:
+    """The company next to its closest rivals: same sub-industry (or sector), nearest in size."""
+    import math
+    from .db import Annual
+    c = s.get(Company, t)
+    comps = list(s.scalars(select(Company).where(Company.in_universe.is_(True), Company.sub_industry == c.sub_industry)))
+    if len(comps) < 4:
+        comps = list(s.scalars(select(Company).where(Company.in_universe.is_(True), Company.sector == c.sector)))
+    scores = {x.ticker: x for x in s.scalars(select(Score).where(Score.ticker.in_([x.ticker for x in comps])))}
+    cap = lambda x: ((scores.get(x.ticker).metrics or {}).get("market_cap") if scores.get(x.ticker) else None) or 0  # noqa: E731
+    me = cap(c) or 1
+    others = sorted((x for x in comps if x.ticker != t and cap(x) > 0), key=lambda x: abs(math.log(cap(x) / me)))[:n]
+    out = []
+    for x in [c] + others:
+        sc = scores.get(x.ticker)
+        mm = (sc.metrics if sc else {}) or {}
+        ann = [a.values for a in s.scalars(select(Annual).where(Annual.ticker == x.ticker).order_by(Annual.period_end.desc()).limit(3))]
+        roic = [a.get("roic") for a in ann if a.get("roic") is not None]
+        out.append({"t": x.ticker, "n": x.name, "cap": _r((mm.get("market_cap") or 0) / 1e9, 1), "rev": _r(mm.get("rev_yoy"), 1),
+                    "om": _r(mm.get("op_margin"), 1), "fm": _r(mm.get("fcf_margin"), 1), "roic": _r(sum(roic) / len(roic), 1) if roic else None,
+                    "pe": _r(mm.get("pe_ttm"), 1), "lev": _r(mm.get("net_debt_to_oi"), 1), "sc": _r(sc.total, 0) if sc else None,
+                    "g": _r(mm.get("growth_exp"), 1), "me": x.ticker == t})
+    return out
+
+
+def _market_rows(s) -> list[dict]:
+    rows = []
+    comps = {c.ticker: c for c in s.scalars(select(Company).where(Company.in_universe.is_(True)))}
+    for sc in s.scalars(select(Score).where(Score.ticker.in_(list(comps)))):
+        mm = sc.metrics or {}
+        rows.append({"t": sc.ticker, "s": comps[sc.ticker].sector, "cap": mm.get("market_cap"), "pe": mm.get("pe_ttm"), "ret": mm.get("ret_1y")})
+    return rows
+
+
+@app.get("/api/macro", dependencies=[Depends(guard)])
+def macro_view() -> dict:
+    """Rates, inflation, jobs, credit, fear, and how expensive the index and each sector are."""
+    from .analytics import macro as MA
+    with session() as s:
+        series = kv_get(s, "macro.series") or {}
+        mv = MA.market_valuation(_market_rows(s))
+        mv["pe_hist"] = (kv_get(s, "macro.pe_hist") or [])[-36 * 21:]
+        if mv["pe_hist"]:
+            mv["pe_hist"] = MA._monthly(mv["pe_hist"])
+        out = MA.read(series, mv)
+        out["sectors"] = [{"en": k, **v} for k, v in sorted(mv["sectors"].items(), key=lambda kv: -(kv[1]["cap"] or 0))]
+        out["fetched"] = kv_get(s, "macro.at")
+        out["demo"] = kv_get(s, "mode", "live") == "demo"
+    return out
 
 
 @app.post("/api/company/{ticker}/profile", dependencies=[Depends(guard)])

@@ -467,7 +467,9 @@ def build_inputs(s, c: Company, since: date, as_of: date | None = None, live: bo
                           volume_today=vol_today, session_progress=progress, quarters=qs_, eps_points=eps_points(qs_),
                           events=ev, guidance=(cd or {}).get("guidance_direction") if cd else None,
                           guidance_change_pct=guidance_change(cd), surprise_pct=surprise,
-                          going_concern=any(e["code"] == "going-concern" for e in ev), today=today)
+                          going_concern=any(e["code"] == "going-concern" for e in ev), today=today,
+                          annual_revenue=[a.values.get("revenue") for a in s.scalars(select(Annual).where(
+                              Annual.ticker == c.ticker, Annual.period_end <= (as_of or date.today()) - timedelta(days=60)).order_by(Annual.period_end))])
 
 
 def compute_scores(as_of: date | None = None, persist: bool = True) -> dict[str, dict]:

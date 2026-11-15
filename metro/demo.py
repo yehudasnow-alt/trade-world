@@ -146,6 +146,7 @@ def generate(seed: int = 20261103, years: float = 3.0) -> dict:
     _cards()
     _profiles()
     pipeline.compute_scores()
+    _macro(rng, days)
     alerts.evaluate_rules()
     with session() as s:
         beacons = list(s.scalars(select(Score.ticker).where(Score.beacon.is_(True))))
@@ -287,6 +288,36 @@ def _profiles() -> None:
                 "what_to_watch_he": [ex("מדד לבדוק כל רבעון"), ex("מדד שני"), ex("מדד שלישי")],
             }
             s.add(CompanyProfile(ticker=t, accession=f"demo-{t}", model="demo", profile=prof, verification={"demo": True}, cost_usd=0.0))
+
+
+def _macro(rng, days) -> None:
+    """Invented economic series (marked demo) shaped like the real ones, so the market view can be reviewed offline."""
+    from .analytics import macro as MA
+    from .api import _market_rows
+    end = days[-1]
+    n = 1300
+    dd = [(end - timedelta(days=n - i)).isoformat() for i in range(n)]
+
+    def walk(start, vol, lo, hi, drift=0.0):
+        v, out = start, []
+        for d in dd:
+            v = float(np.clip(v + drift + rng.normal(0, vol), lo, hi))
+            out.append([d, round(v, 2)])
+        return out
+    monthly = lambda rows: [r for r in rows if r[0].endswith("-01")] or rows[::30]  # noqa: E731
+    series = {"DGS10": walk(3.6, 0.04, 2.5, 5.2), "DGS2": walk(4.0, 0.04, 2.8, 5.4), "DFF": walk(5.3, 0.01, 3.2, 5.5, -0.0012),
+              "T10Y2Y": walk(-0.4, 0.02, -1.0, 0.8, 0.0008), "VIXCLS": walk(17, 0.8, 11, 38), "BAMLH0A0HYM2": walk(3.8, 0.03, 2.8, 6.5)}
+    cpi, v = [], 300.0
+    for r in monthly(walk(0, 0, 0, 0)):
+        v *= 1 + rng.normal(0.0024, 0.001)
+        cpi.append([r[0], round(v, 2)])
+    series["CPIAUCSL"] = cpi
+    series["UNRATE"] = [[r[0], round(3.7 + i * 0.012 + rng.normal(0, 0.05), 1)] for i, r in enumerate(monthly(walk(0, 0, 0, 0)))]
+    with session() as s:
+        kv_set(s, "macro.series", series)
+        kv_set(s, "macro.at", utcnow().isoformat())
+        pe = MA.market_valuation(_market_rows(s))["pe"] or 22
+        kv_set(s, "macro.pe_hist", [[d, round(pe * float(np.exp(rng.normal(0, 0.01) + (i - n) / n * 0.15)), 2)] for i, d in enumerate(dd)])
 
 
 def _earnings_and_events(comps, rng, days) -> None:

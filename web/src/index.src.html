@@ -333,6 +333,26 @@ button{cursor:pointer; background:none; border:0; padding:0}
 /* report card */
 .verif{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
 .headline{font-size:15.5px; font-weight:600; line-height:1.5; margin:4px 0 0; text-wrap:balance}
+.mtab{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px}
+.mtab th{font-weight:500; color:var(--ink-3); font-size:11px; text-align:start; padding:4px 3px; white-space:nowrap}
+.mtab td{padding:6px 3px; border-top:1px solid var(--line); white-space:nowrap}
+.mtab tr.me td{background:color-mix(in srgb, var(--accent) 9%, transparent); font-weight:600}
+.mtab tr[data-t]{cursor:pointer} .mtab tr[data-t]:hover td{background:color-mix(in srgb, var(--ink) 5%, transparent)}
+.mtab .best{color:var(--up); font-weight:700}
+.scrollx{overflow-x:auto; margin:0 -4px; padding:0 4px}
+.dcfg{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px}
+.dcfres{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin-top:10px}
+.dcfres div{padding:8px 10px; border-radius:12px; background:color-mix(in srgb, var(--ink) 4%, transparent); display:flex; flex-direction:column; gap:2px}
+.dcfres span{font-size:11px; color:var(--ink-3)} .dcfres b{font-size:16px}
+.sens{width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; text-align:center}
+.sens th{font-weight:500; color:var(--ink-3); font-size:11px; padding:3px}
+.sens td{padding:5px 3px; border-radius:6px}
+.mgrid{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px}
+@media (max-width:640px){ .mgrid{grid-template-columns:1fr} .dcfg{grid-template-columns:repeat(2, minmax(0,1fr))} }
+.mcard{padding:12px; border-radius:14px; background:color-mix(in srgb, var(--ink) 4%, transparent); display:flex; flex-direction:column; gap:4px}
+.mcard .t{font-size:12px; color:var(--ink-2)} .mcard .v{font-size:20px; font-weight:700}
+.mcard p{margin:2px 0 0; font-size:11.5px; color:var(--ink-3); line-height:1.5}
+.mcard svg{width:100%; height:40px; display:block}
 .lead{font-size:16px; font-weight:600; line-height:1.5; margin:2px 0 0}
 .stack{display:flex; height:14px; border-radius:7px; overflow:hidden; background:var(--line); margin:10px 0 8px}
 .stack i{display:block; height:100%; min-width:2px}
@@ -543,6 +563,7 @@ ul.clean li{margin:2px 0}
         <button class="modechip" type="button" id="modeChip"></button>
         <button class="btn glass only-phone" type="button" id="railBtn" aria-label="איים" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 2h6v6H2zM10 2h6v4h-6zM10 8h6v8h-6zM2 10h6v6H2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
         <button class="btn glass" type="button" id="projBtn" aria-label="תחזית בקצב הנוכחי" aria-pressed="false" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 16V9h4v7z" fill="currentColor"/><path d="M10 16V3.5h4V16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 1.6"/><path d="M10 16V10h4v6z" fill="currentColor"/></svg><span class="lbl">תחזית</span></button>
+        <button class="btn glass" type="button" id="macroBtn" aria-label="תמונת השוק"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 14.5l4-4.5 3 2.5 6.5-7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 5h3.5v3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="lbl">מאקרו</span></button>
         <button class="btn glass" type="button" id="tlBtn" aria-label="ציר זמן"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 9h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="5" cy="9" r="1.8" fill="currentColor"/><path d="M10.5 5.5l2 3.5-2 3.5-2-3.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M15 4v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/></svg><span class="lbl">ציר זמן</span></button>
         <button class="btn glass" type="button" id="briefBtn" aria-label="תדריך בוקר"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5h7l3 3V15.5H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.5 8h5M6.5 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="lbl">תדריך</span></button>
         <button class="btn glass" type="button" id="searchBtn" aria-label="חיפוש מניה"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 12l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="lbl">חיפוש מניה</span><kbd>Ctrl K</kbd></button>
@@ -615,6 +636,7 @@ ul.clean li{margin:2px 0}
   <div id="projPop" class="projpop glass" hidden role="dialog" aria-label="תחזית בקצב הנוכחי"></div>
   <div id="gloss" hidden role="tooltip"></div>
   <div id="tline" class="overlay" hidden><div class="sheet wide glass" role="dialog" aria-modal="true" aria-label="ציר זמן" id="tlineBody"></div></div>
+  <div id="macro" class="overlay" hidden><div class="sheet wide glass" role="dialog" aria-modal="true" aria-label="תמונת השוק" id="macroBody"></div></div>
   <div id="brief" class="overlay" hidden><div class="sheet glass" role="dialog" aria-modal="true" aria-label="תדריך בוקר" id="briefBody"></div></div>
   <div id="toast" class="toast" hidden role="status"></div>
   <div id="hint" class="hint glass" hidden role="status"></div>
@@ -681,6 +703,7 @@ async function demoApi(path, opts){
   if (p.startsWith('/api/paper')) return demoPaperApi(p, method, body, L);
   if (p === '/api/status') return DEMO.status;
   if (p === '/api/brief') return DEMO.brief;
+  if (p === '/api/macro') return DEMO.macro;
   if (p === '/api/timeline') return DEMO.timeline;
   if (p === '/api/portfolio') return DEMO.portfolio;
   if (p === '/api/alerts') return DEMO.city.alerts;
@@ -1562,6 +1585,7 @@ function buildScene(){
   NB = C.length;
   for (let k = 0; k < 3; k++) { const m = new THREE.InstancedMesh(unitBox, buildingMaterial(), NB); m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); tier.push(m); scene.add(m); }
   ghostMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.46, depthWrite: false, roughness: 0.15, metalness: 0.1 });
+  lidMesh = new THREE.InstancedMesh(unitBox, new THREE.MeshStandardMaterial({ color: 0x5B4BE0, roughness: 0.4, emissive: 0x2A1E8A, emissiveIntensity: 0.35 }), NB); lidMesh.frustumCulled = false; lidMesh.visible = false; lidMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(lidMesh);
   ghostMesh = new THREE.InstancedMesh(unitBox, ghostMat, NB); ghostMesh.frustumCulled = false; ghostMesh.renderOrder = 2; ghostMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); ghostMesh.visible = false; scene.add(ghostMesh);
   roofMesh = new THREE.InstancedMesh(unitBox, MAT.detail, NB * 2); tankMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, NB * 2); chimMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, NB);
   for (const m of [roofMesh, tankMesh, chimMesh]) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); }
@@ -1689,7 +1713,10 @@ function writeOne(i){
 }
 /* "what if the current pace continues": a glass extension on top of each tower up to the value it would reach,
    or a red sleeve over the part it would lose. In the opportunity hunt the glass is the fair value instead. */
-const PROJ = { on: store.get(LS_PREFIX + 'proj.on', false), h: store.get(LS_PREFIX + 'proj.h', 1), pace: store.get(LS_PREFIX + 'proj.pace', 'biz') };
+const PROJ = { on: store.get(LS_PREFIX + 'proj.on', false), h: store.get(LS_PREFIX + 'proj.h', 1), pace: store.get(LS_PREFIX + 'proj.pace', 'biz'), show: store.get(LS_PREFIX + 'proj.show', 'both') };
+let lidMesh = null;
+const hKey = h => Number.isInteger(h) ? h.toFixed(1) : String(h);
+function anCap(c, h = PROJ.h){ const v = c.an?.p?.[hKey(h)]; return isNum(v) && c.px && c.capv ? c.capv * v / c.px : null; }
 const HORIZONS = [[0.25, 'רבעון'], [0.5, 'חצי שנה'], [1, 'שנה'], [2, 'שנתיים'], [5, '5 שנים']];
 const PACE_CAP = [-50, 100];
 let ghostMesh = null, ghostMat = null;
@@ -1702,14 +1729,29 @@ function projCap(c){
 }
 const horizonHe = () => (HORIZONS.find(x => x[0] === PROJ.h) || [0, PROJ.h + ' שנים'])[1];
 function projRow(c){
-  if (!PROJ.on) return null; const pc = projCap(c); if (!isNum(pc)) return null;
-  const d = (pc / c.capv - 1) * 100;
-  return [mode === 'hunt' ? 'שווי הוגן' : `בעוד ${horizonHe()}`, `<b class="num ${sg(d)}">${N(fmtCapB(pc))} · ${fmtPct(d, 0)}</b>`];
+  if (!PROJ.on) return null;
+  const fmt = v => { const d = (v / c.capv - 1) * 100; return `<b class="num ${sg(d)}">${N(fmtCapB(v))} · ${fmtPct(d, 0)}</b>`; };
+  if (mode === 'hunt') { const pc = projCap(c); return isNum(pc) ? [['שווי הוגן', fmt(pc)]] : null; }
+  const rows = [], pc = projCap(c), ac = anCap(c);
+  if (PROJ.show !== 'an' && isNum(pc)) rows.push([`בקצב · ${horizonHe()}`, fmt(pc)]);
+  if (PROJ.show !== 'pace' && isNum(ac)) rows.push([`לפי הניתוח`, fmt(ac)]);
+  return rows.length ? rows : null;
 }
 function capH(capv){ const k = Math.max(0, capv / CAP_MAX); return H_SCALE === 'real' ? H_FLOOR + Math.min(k, 1.9) * (H_MAX - H_FLOOR) : H_FLOOR + 44 * Math.sqrt(Math.min(k, 3)); }
 function writeGhosts(){
   if (!ghostMesh) return;
-  ghostMesh.visible = PROJ.on && HS.v > 0.5;
+  ghostMesh.visible = PROJ.on && HS.v > 0.5 && (mode === 'hunt' || PROJ.show !== 'an');
+  lidMesh.visible = PROJ.on && HS.v > 0.5 && mode !== 'hunt' && PROJ.show !== 'pace';
+  if (lidMesh.visible) {
+    for (const c of C) {
+      const ac = anCap(c);
+      if (!isNum(ac)) { HIDE(lidMesh, c.i); continue; }
+      const ha = capH(ac) * HS.v;
+      if (Math.abs(ac / c.capv - 1) < 0.05 || !isNum(c.h)) { HIDE(lidMesh, c.i); continue; }  // within 5% of today: nothing to mark
+      setInst(lidMesh, c.i, c.x, BASE_Y + ha - 0.12, c.z, c.fw * 1.08, 0.24, c.fd * 1.08);
+    }
+    lidMesh.instanceMatrix.needsUpdate = true;
+  }
   if (!ghostMesh.visible) return;
   const upC = COL.up.clone().lerp(new THREE.Color(1, 1, 1), 0.15), dnC = COL.down.clone(), fvC = COL.beacon.clone().lerp(new THREE.Color(1, 1, 1), 0.1);
   for (const c of C) {
@@ -1729,16 +1771,19 @@ function renderProj(){
     <button type="button" class="sw" id="pjOn" aria-pressed="${PROJ.on}"><i></i>${PROJ.on ? 'מוצג: בניין שקוף לכל חברה' : 'הצג בניין שקוף לכל חברה'}</button>
     ${hunt ? `<p style="color:var(--ink-2)">במצב <b>ציד הזדמנויות</b> הבניין השקוף הוא <b>השווי ההוגן</b> של החברה (מחיר הבסיס בטווח ההוגן). בניין שנמוך מהשקוף נסחר מתחת לשווי ההוגן, וכמה שהפער גדול יותר, ההנחה גדולה יותר. בניין עטוף אדום נסחר מעל השווי ההוגן.</p>`
     : `<div class="lbl2">בעוד</div><div class="opts">${HORIZONS.map(([v, t]) => `<button type="button" data-h="${v}" aria-pressed="${PROJ.h === v}">${t}</button>`).join('')}</div>
-    <div class="lbl2">לפי הקצב של</div><div class="pace">
+    <div class="lbl2">מה להציג</div><div class="opts">${[['both', 'שניהם'], ['pace', 'הקצב הנוכחי'], ['an', 'לפי הניתוח']].map(([v, t]) => `<button type="button" data-s="${v}" aria-pressed="${PROJ.show === v}">${t}</button>`).join('')}</div>
+    ${PROJ.show !== 'pace' ? `<p style="color:var(--ink-2)"><b style="color:#5B4BE0">▬ מכסה סגול: לפי הניתוח.</b> צמיחה צפויה מתוך הנתונים של החברה (מכירות בשנה האחרונה, ממוצע 5 שנים, רווח, ותחזית ההנהלה כשיש), שדועכת בהדרגה ל-4% בשנה תוך 5 שנים, כפול המכפיל שהשוק שילם בדרך כלל על החברה. זה מה שהחברה "אמורה" להיות שווה אם הניתוח נכון.</p>` : ''}
+    ${PROJ.show !== 'an' ? `<div class="lbl2">הקצב הנוכחי: הבניין השקוף, לפי הקצב של</div><div class="pace">` : '<div hidden>'}
       <button type="button" data-p="biz" aria-pressed="${PROJ.pace === 'biz'}">העסק<small>צמיחת ההכנסות בשנה האחרונה, בהנחה שהשוק ימשיך לשלם עליהן את אותו מכפיל</small></button>
       <button type="button" data-p="px" aria-pressed="${PROJ.pace === 'px'}">המניה<small>כמה המניה עלתה או ירדה בשנה האחרונה</small></button></div>`}
     <p>${hunt ? 'השווי ההוגן מחושב מהרווח הצפוי לשנה הבאה כפול המכפיל החציוני של החברה בחמש השנים האחרונות.' : 'ירוק שקוף מעל הבניין: כמה הוא יגדל. אדום שקוף סביב הקצה: כמה יקטן. הקצב מוגבל בין −50% ל-+100% בשנה.'} זו המשכה של הקצב הנוכחי, לא תחזית: קצבים חריגים בדרך כלל לא נמשכים, במיוחד לאורך שנים.</p>`;
   el.querySelector('#pjOn').onclick = () => { PROJ.on = !PROJ.on; saveProj(); };
   el.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { PROJ.h = +b.dataset.h; PROJ.on = true; saveProj(); });
   el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { PROJ.pace = b.dataset.p; PROJ.on = true; saveProj(); });
+  el.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { PROJ.show = b.dataset.s; PROJ.on = true; saveProj(); });
 }
 function saveProj(){
-  for (const k of ['on', 'h', 'pace']) store.set(LS_PREFIX + 'proj.' + k, PROJ[k]);
+  for (const k of ['on', 'h', 'pace', 'show']) store.set(LS_PREFIX + 'proj.' + k, PROJ[k]);
   renderProj(); renderLegend(); writeGhosts(); dirty = true;
   if (hoverI >= 0) { const i = hoverI; hoverI = -2; setHover(i); }
 }
@@ -2025,7 +2070,7 @@ const hcard = $('#hcard'); let hcardHold = false, hideTimer = 0;
 hcard.addEventListener('pointerenter', () => { hcardHold = true; clearTimeout(hideTimer); });
 hcard.addEventListener('pointerleave', () => { hcardHold = false; setHover(-1); });
 function hoverRows(c){
-  const pr = projRow(c); if (pr) return [...hoverRowsBase(c).slice(0, 2), pr];
+  const pr = projRow(c); if (pr) return [...hoverRowsBase(c).slice(0, 3 - pr.length), ...pr];
   return hoverRowsBase(c);
 }
 function hoverRowsBase(c){
@@ -2203,6 +2248,12 @@ const GLOSS = [
   ['fair', HP + 'שווי(?: ה)?הוגן|' + HP + 'מחיר(?: ה)?הוגן', 'שווי הוגן', 'הרווח הצפוי לשנה הבאה כפול המכפיל שהשוק שילם בדרך כלל על החברה בחמש השנים האחרונות. דובי, בסיס ושורי לפי מכפיל נמוך, חציוני וגבוה.', 'הערכה, לא מחיר יעד.'],
   ['ins', HP + 'בעלי עניין', 'בעלי עניין', 'מנהלים, דירקטורים ומי שמחזיק מעל 10%. הם חייבים לדווח על כל עסקה במניה.', ''],
   ['atr', 'ATR', 'ATR', 'הטווח היומי הממוצע של המניה באחוזים: כמה היא זזה ביום רגיל.', 'משמש לקביעת סטופ שלא ייפגע מרעש רגיל.'],
+  ['vix', 'VIX', 'VIX: מדד הפחד', 'כמה תנודה השוק מצפה לחודש הקרוב, לפי מחירי האופציות על S&P 500.', 'מתחת ל-15 רגוע, מעל 30 פחד.'],
+  ['erp', 'פרמיית(?: ה)?סיכון', 'פרמיית סיכון של מניות', 'כמה יותר מניות "מחזירות" מאג"ח ממשלתי בטוח: תשואת הרווח של השוק פחות תשואת האג"ח ל-10 שנים.', 'פרמיה נמוכה: מניות יקרות יחסית לאג"ח.'],
+  ['yc', 'עקום(?: ה)?תשואות', 'עקום התשואות', 'ההפרש בין ריבית ל-10 שנים לריבית לשנתיים. בדרך כלל חיובי.', 'כשהוא שלילי (הפוך), שוק האג"ח מצפה להאטה. לפני רוב המיתונים הוא התהפך.'],
+  ['dcf', 'DCF|' + HP + 'ערך(?: ה)?פנימי|' + HP + 'שווי(?: ה)?פנימי', 'ערך פנימי (DCF)', 'כמה שווה היום כל המזומן שהעסק ייצר בעתיד, אחרי שמהוונים אותו: דולר בעוד 10 שנים שווה פחות מדולר היום.', 'התוצאה רגישה מאוד להנחות. לכן מסתכלים על טבלת הרגישות ולא על מספר אחד.'],
+  ['mos', HP + 'מרווח(?: ה)?ביטחון', 'מרווח ביטחון', 'כמה מתחת לשווי הפנימי קונים, כדי שטעות בהערכה לא תעלה ביוקר.', 'הרעיון המרכזי של בנג\'מין גרהם, המורה של באפט.'],
+  ['req', HP + 'תשואה נדרשת', 'תשואה נדרשת', 'כמה אחוז בשנה אתה רוצה להרוויח כדי שיהיה שווה לקחת את הסיכון. משמש להיוון המזומנים העתידיים.', 'מקובל 8–10%.'],
   ['rs', 'חוזק יחסי|מול הסקטור', 'חוזק יחסי', 'האם המניה עשתה טוב יותר או פחות טוב מהסקטור שלה בתקופה האחרונה.', ''],
 ];
 const GLOSS_BY = Object.fromEntries(GLOSS.map(g => [g[0], g]));
@@ -2533,13 +2584,78 @@ function lastingHTML(b){
       ${(P.what_to_watch_he || []).length ? `<div><b>מה לבדוק כל רבעון</b><ul class="clean">${P.what_to_watch_he.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div>
     <p class="note">החפיר, השפעת ה-AI והעמידות הם הערכה של Claude מתוך הדוח השנתי ועשר שנות המספרים, לא עובדה. הציטוטים מאומתים מול הדוח.</p></div>`;
 }
+function worthHTML(b, c){
+  const d = b.dcf || {}, an = c.an;
+  const rows = HORIZONS.map(([h, t]) => {
+    const a = an?.p?.[hKey(h)], g = c.gr?.r ?? c.gr?.e; const p = isNum(g) && c.px ? c.px * Math.pow(1 + clamp(g, ...PACE_CAP) / 100, h) : null;
+    const cell = v => isNum(v) ? `<td class="num">${fmtUsd(v)} <small class="${sg(v / c.px - 1)}">${fmtPct((v / c.px - 1) * 100, 0)}</small></td>` : '<td>–</td>';
+    return `<tr><td>${t}</td>${cell(p)}${cell(a)}</tr>`;
+  }).join('');
+  const table = `<div class="tlh">איפה המניה יכולה להיות <small class="muted">(מחיר למניה, היום ${fmtUsd(c.px)})</small></div>
+    <table class="mtab"><thead><tr><th>בעוד</th><th>בקצב הנוכחי של המכירות${isNum(c.gr?.r) ? ` (${N(c.gr.r.toFixed(0) + '%')} בשנה)` : ''}</th><th>לפי הניתוח${isNum(an?.g) ? ` (מתחיל ב-${N(an.g.toFixed(0) + '%')}, דועך ל-4%)` : ''}</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="note">"לפי הניתוח": הרווח הצפוי שנה קדימה מכל תאריך, כפול המכפיל שהשוק שילם בדרך כלל על החברה${isNum(an?.pe) ? ` (${N(an.pe.toFixed(1))})` : ''}. הצמיחה מתחילה מהנתונים של החברה ודועכת בהדרגה, כי צמיחה מהירה כמעט אף פעם לא נמשכת לנצח. ${an ? '' : 'לחברה בהפסד, או עם פחות משנה של היסטוריית מכפילים, אין תחזית לפי הניתוח.'}</p>`;
+  const can = isNum(d.fcf) && d.fcf > 0 && isNum(d.shares);
+  const g1 = clamp(Math.round(d.g0 ?? d.rev_yoy ?? 6), -10, 35);
+  return `<div class="sec"><h4>כמה העסק שווה</h4>${table}
+    <div class="tlh" style="margin-top:14px">מחשבון ערך פנימי (DCF)</div>
+    ${can ? `<p class="note" style="margin-top:2px">כמה שווה היום כל המזומן שהעסק ייצר בעתיד. משנים את ההנחות ורואים מה קורה: זו בדיוק השאלה ששואל באפט.</p>
+    <div class="calc dcfg ptk" id="dcf">
+      <div class="fld"><label for="dF">תזרים חופשי בסיס ($B)</label><input id="dF" inputmode="decimal" value="${(d.fcf / 1e9).toFixed(2)}"></div>
+      <div class="fld"><label for="dG1">צמיחה שנים 1–5 (%)</label><input id="dG1" inputmode="decimal" value="${g1}"></div>
+      <div class="fld"><label for="dG2">צמיחה שנים 6–10 (%)</label><input id="dG2" inputmode="decimal" value="${Math.max(3, Math.round(g1 / 2))}"></div>
+      <div class="fld"><label for="dT">צמיחה לטווח ארוך (%)</label><input id="dT" inputmode="decimal" value="3"></div>
+      <div class="fld"><label for="dR">תשואה נדרשת (%)</label><input id="dR" inputmode="decimal" value="9"></div>
+      <div class="fld"><label for="dM">מרווח ביטחון רצוי (%)</label><input id="dM" inputmode="decimal" value="25"></div>
+    </div>
+    ${isNum(d.sbc) && d.sbc > 0 ? `<label class="chkl" style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin-top:8px"><input type="checkbox" id="dS" checked style="accent-color:var(--accent)"> הפחת תגמול במניות לעובדים (${fmtBig(d.sbc)} בשנה) מהתזרים, כמו שמרני</label>` : ''}
+    <div id="dcfOut"></div>
+    <p class="note">תשואה נדרשת: כמה אחוז בשנה אתה רוצה להרוויח על הסיכון. מקובל 8–10% (אג"ח ממשלתי ועוד 4–5%). מרווח ביטחון: כמה מתחת לשווי הפנימי אתה רוצה לקנות, כדי שטעות בהנחות לא תעלה ביוקר. באפט ידוע ב"קנה בדולר מה ששווה שניים".</p>`
+    : '<div class="empty">אין תזרים חופשי חיובי בשנה האחרונה, אז מחשבון DCF לא ייתן תוצאה משמעותית. לחברות כאלה עדיף להסתכל על הכנסות, רווחיות עתידית ומכפיל מכירות.</div>'}</div>`;
+}
+function dcfValue(f, g1, g2, t, r, shares, netDebt){
+  let v = 0, cf = f;
+  for (let y = 1; y <= 10; y++) { cf *= 1 + (y <= 5 ? g1 : g2) / 100; v += cf / Math.pow(1 + r / 100, y); }
+  if (r <= t) return null;
+  v += cf * (1 + t / 100) / ((r - t) / 100) / Math.pow(1 + r / 100, 10);
+  return (v - (netDebt || 0)) / shares;
+}
+function wireDcf(c){
+  const box = $('#dcf'); if (!box) return; const d = CO.biz.dcf;
+  const run = () => {
+    const num = id => parseFloat($(id)?.value);
+    let f = num('#dF') * 1e9; if ($('#dS')?.checked) f -= d.sbc;
+    const g1 = num('#dG1'), g2 = num('#dG2'), t = num('#dT'), r = num('#dR'), mos = num('#dM');
+    const out = $('#dcfOut');
+    if (![f, g1, g2, t, r, mos].every(isFinite) || f <= 0 || r <= t) { out.innerHTML = '<p class="note warn">התשואה הנדרשת חייבת להיות גבוהה מהצמיחה לטווח ארוך, והתזרים חיובי.</p>'; return; }
+    const iv = dcfValue(f, g1, g2, t, r, d.shares, d.net_debt), buy = iv * (1 - mos / 100), gap = (iv / c.px - 1) * 100;
+    const tone = c.px <= buy ? 'up' : c.px <= iv ? 'wr' : 'down';
+    const sens = [r - 1, r, r + 1].map(rr => `<tr><th>${N(rr + '%')}</th>${[g1 - 5, g1, g1 + 5].map(gg => { const v = dcfValue(f, gg, Math.max(t, gg / 2), t, rr, d.shares, d.net_debt); const k = v ? v / c.px - 1 : null;
+      return `<td class="num" style="background:color-mix(in srgb, var(--${k === null ? 'line' : k >= 0 ? 'up' : 'down'}) ${k === null ? 0 : Math.min(40, Math.abs(k) * 60).toFixed(0)}%, transparent)">${v ? fmtUsd(v, 0) : '–'}</td>`; }).join('')}</tr>`).join('');
+    out.innerHTML = `<div class="dcfres"><div><span>שווי פנימי למניה</span><b class="num">${fmtUsd(iv)}</b></div><div><span>המחיר היום</span><b class="num">${fmtUsd(c.px)}</b><small class="num ${sg(gap)}">${gap >= 0 ? 'מתחת לשווי ב-' : 'מעל השווי ב-'}${N(Math.abs(gap).toFixed(0) + '%')}</small></div><div><span>מחיר קנייה עם מרווח ביטחון</span><b class="num ${tone}">${fmtUsd(buy)}</b></div></div>
+      <p class="note ${tone === 'down' ? 'warn' : ''}">${tone === 'up' ? 'לפי ההנחות שלך, המחיר היום נמוך גם מהשווי הפנימי וגם ממחיר הקנייה עם מרווח הביטחון.' : tone === 'wr' ? 'המחיר מתחת לשווי הפנימי, אבל עדיין מעל מחיר הקנייה עם מרווח הביטחון שביקשת.' : 'לפי ההנחות שלך, המחיר היום גבוה מהשווי הפנימי. כדי להצדיק אותו צריך צמיחה גבוהה יותר או תשואה נדרשת נמוכה יותר.'}</p>
+      <div class="tlh" style="margin-top:8px">רגישות: שווי למניה לפי תשואה נדרשת (שורות) וצמיחה בשנים 1–5 (עמודות)</div>
+      <table class="sens"><thead><tr><th></th>${[g1 - 5, g1, g1 + 5].map(gg => `<th>${N(gg + '%')}</th>`).join('')}</tr></thead><tbody>${sens}</tbody></table>`;
+  };
+  box.querySelectorAll('input').forEach(i => i.addEventListener('input', run)); $('#dS')?.addEventListener('change', run); run();
+}
+function peersHTML(b){
+  const P = b.peers || []; if (P.length < 2) return '';
+  const cols = [['cap', 'שווי', v => N(fmtCapB(v)), 0], ['rev', 'צמיחה', v => fmtPct(v, 0), 1], ['om', 'שולי תפעול', v => N(v.toFixed(0) + '%'), 1], ['fm', 'שולי תזרים', v => N(v.toFixed(0) + '%'), 1],
+    ['roic', 'ROIC', v => N(v.toFixed(0) + '%'), 1], ['pe', 'P/E', v => N(v.toFixed(1)), -1], ['sc', 'ציון', v => N(String(v)), 1]];
+  const best = {}; for (const [k, , , dir] of cols) { if (!dir) continue; const vals = P.map(p => p[k]).filter(v => isNum(v) && (k !== 'pe' || v > 0)); if (vals.length) best[k] = dir > 0 ? Math.max(...vals) : Math.min(...vals); }
+  return `<div class="sec"><h4>מול המתחרים <small>אותו תחום, בגודל דומה</small></h4><div class="scrollx"><table class="mtab"><thead><tr><th>חברה</th>${cols.map(c => `<th>${c[1]}</th>`).join('')}</tr></thead><tbody>
+    ${P.map(p => `<tr class="${p.me ? 'me' : ''}" ${p.me ? '' : `data-t="${esc(p.t)}"`}><td><b>${esc(p.t)}</b></td>${cols.map(([k, , f]) => `<td class="num ${isNum(p[k]) && best[k] === p[k] && P.length > 2 ? 'best' : ''}">${isNum(p[k]) ? f(p[k]) : '–'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <p class="note">ירוק: הכי טוב בקבוצה (ב-P/E: הכי זול). ROIC הוא ממוצע שלוש השנים האחרונות. לחיצה על שורה פותחת את החברה.</p></div>`;
+}
 function tabBusiness(js, c){
   const b = js.biz || {};
-  return profileIntro(b, c) + moneyHTML(b) + decadeHTML(b) + ownersHTML(b) + lastingHTML(b);
+  return profileIntro(b, c) + moneyHTML(b) + decadeHTML(b) + worthHTML(b, c) + peersHTML(b) + ownersHTML(b) + lastingHTML(b);
 }
 let ownTimer = null;
 function wireBusiness(c){
   const b = CO?.biz || {};
+  wireDcf(c);
+  panel.querySelectorAll('.mtab tr[data-t]').forEach(tr => tr.onclick = () => { const x = byT[tr.dataset.t]; if (x) select(x.i); });
   const mk = $('#mkProfile');
   if (mk) mk.onclick = async () => { mk.disabled = true; try { await api(`/api/company/${c.t}/profile`, { method: 'POST' }); toast('הבקשה נשלחה. הפרופיל יופיע תוך כמה דקות.'); CO.biz.profile_state = 'queued'; renderPanel(); } catch (e) { toast(e.message); mk.disabled = false; } };
   clearTimeout(ownTimer);
@@ -2715,7 +2831,7 @@ function legendHTML(){
   return `<h3>התיק שלי</h3>${hl}<div class="lrow"><span class="ico">■</span>רק הפוזיציות צבועות; שאר העיר דהויה</div><div class="lrow"><span class="ico">■</span>צבע = רווח או הפסד על הפוזיציה</div>${div(N(MINUS + '25%'), N('+25%'))}${cb}`;
 }
 function setHScale(v){ if (v === H_SCALE) return; H_SCALE = v; store.set(LS_PREFIX + 'hscale', v); HOME_DIST = HOME().dist; renderLegend(); retarget(); dirty = true; }
-function projLegend(){ if (!PROJ.on) return ''; return `<div class="row" style="margin-top:8px;font-size:12px;color:var(--ink-2)"><span style="display:inline-block;width:10px;height:14px;border-radius:2px;margin-inline-end:6px;vertical-align:-2px;background:color-mix(in srgb, var(--${mode === 'hunt' ? 'beacon' : 'up'}) 45%, transparent);outline:1px solid color-mix(in srgb, var(--${mode === 'hunt' ? 'beacon' : 'up'}) 70%, transparent)"></span>${mode === 'hunt' ? 'שקוף: השווי ההוגן. אדום: מעל השווי ההוגן' : `שקוף: השווי בעוד ${horizonHe()} בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'}. אדום: ירידה`}</div>`; }
+function projLegend(){ if (!PROJ.on) return ''; return `<div class="row" style="margin-top:8px;font-size:12px;color:var(--ink-2)"><span style="display:inline-block;width:10px;height:14px;border-radius:2px;margin-inline-end:6px;vertical-align:-2px;background:color-mix(in srgb, var(--${mode === 'hunt' ? 'beacon' : 'up'}) 45%, transparent);outline:1px solid color-mix(in srgb, var(--${mode === 'hunt' ? 'beacon' : 'up'}) 70%, transparent)"></span>${mode === 'hunt' ? 'שקוף: השווי ההוגן. אדום: מעל השווי ההוגן' : [PROJ.show !== 'an' ? `שקוף: בעוד ${horizonHe()} בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'} (אדום: ירידה)` : '', PROJ.show !== 'pace' ? `<b style="color:#5B4BE0">▬</b> מכסה סגול: לפי הניתוח` : ''].filter(Boolean).join(' · ')}</div>`; }
 function renderLegend(){ $('#legend').innerHTML = legendHTML() + projLegend(); $('#legend').querySelectorAll('.hsc button').forEach(b => b.onclick = () => setHScale(b.dataset.h)); const t = $('#cbToggle'); if (t) t.onchange = () => { document.documentElement.classList.toggle('cb', t.checked); store.set(LS_PREFIX + 'cb', t.checked); readTheme(); renderRail(); }; }
 function setMode(m){
   if (m === mode) return; mode = m; store.set(LS_PREFIX + 'mode', m);
@@ -2877,6 +2993,45 @@ async function openBrief(){
   } catch (e) { body.innerHTML = `<header><h2>תדריך בוקר</h2></header><div class="body"><div class="empty">${esc(e.message)}</div></div>`; }
 }
 $('#briefBtn').onclick = openBrief;
+function miniLine(pts){
+  if (!pts || pts.length < 3) return '';
+  const v = pts.map(p => p[1]), lo = Math.min(...v), hi = Math.max(...v), W = 200, H = 40, n = v.length;
+  const d = v.map((y, i) => `${i ? 'L' : 'M'}${(i / (n - 1) * W).toFixed(1)},${(H - 3 - (y - lo) / Math.max(hi - lo, 1e-9) * (H - 6)).toFixed(1)}`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
+}
+async function openMacro(){
+  const o = $('#macro'); o.hidden = false; const body = $('#macroBody');
+  const head = `<header><h2>תמונת השוק</h2><button class="btn icon" type="button" id="macroX" aria-label="סגירה"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></header>`;
+  body.innerHTML = head + '<div class="body"><p class="note">טוען…</p></div>'; $('#macroX').onclick = () => { o.hidden = true; };
+  let m; try { m = await api('/api/macro'); } catch (e) { body.innerHTML = head + `<div class="body"><div class="empty">${esc(e.message)}</div></div>`; $('#macroX').onclick = () => { o.hidden = true; }; return; }
+  const items = m.items || [];
+  const SEC_HE = Object.fromEntries(SECTORS.map(x => [x.en, x.he]));
+  body.innerHTML = head + `<div class="body">
+    ${m.demo ? '<p class="note warn">נתוני הדגמה: הסדרות הכלכליות מומצאות.</p>' : ''}
+    <div class="sec"><h4>במשפט אחד</h4><p class="para">${esc(macroSummary(items))}</p></div>
+    <div class="sec"><h4>המדדים <small>${m.updated ? 'נתון אחרון ' + esc(m.updated) : ''}</small></h4>
+      ${items.length ? `<div class="mgrid">${items.map(x => `<div class="mcard"><span class="t">${esc(x.title)}</span><span class="v num">${N(String(x.value))}${esc(x.unit)}</span><span class="chip ${x.tone}" style="align-self:flex-start">${esc(x.verdict)}</span>${miniLine(x.chart)}<p>${esc(x.explain)}</p></div>`).join('')}</div>`
+      : '<div class="empty">הנתונים הכלכליים נמשכים מ-FRED (של הפד, חינם, בלי מפתח) פעם ביום, ויופיעו כאן אחרי המשיכה הראשונה.</div>'}</div>
+    <div class="sec"><h4>הסקטורים <small>מכפיל רווח ותשואה בשנה האחרונה, משוקלל לפי שווי</small></h4>
+      <table class="mtab"><thead><tr><th>סקטור</th><th>P/E</th><th>שנה אחרונה</th></tr></thead><tbody>${(m.sectors || []).map(x => `<tr><td>${esc(SEC_HE[x.en] || x.en)}</td><td class="num">${isNum(x.pe) ? N(x.pe.toFixed(1)) : '–'}</td><td class="num ${sg(x.ret_1y)}">${fmtPct(x.ret_1y, 0)}</td></tr>`).join('')}</tbody></table>
+      <p class="note">מכפיל גבוה בסקטור אומר שהשוק מצפה שם לצמיחה, או שהוא נלהב מדי. תשואה חזקה בשנה האחרונה עם מכפיל גבוה היא סיבה לזהירות, לא לרדוף.</p></div></div>`;
+  $('#macroX').onclick = () => { o.hidden = true; };
+  glossify(body);
+}
+function macroSummary(items){
+  const by = Object.fromEntries(items.map(x => [x.key, x])); const parts = [];
+  if (by.PE) parts.push(by.PE.tone === 'down' ? 'המניות יקרות ביחס להיסטוריה' : by.PE.tone === 'wr' ? 'המניות מעט יקרות מהממוצע' : 'המניות במחיר סביר');
+  if (by.ERP) parts.push(by.ERP.tone === 'down' ? 'ואג"ח ממשלתי נותן כמעט אותה תשואה בלי סיכון' : by.ERP.tone === 'up' ? 'ונותנות פרמיה טובה מעל אג"ח' : '');
+  if (by.DFF) parts.push(by.DFF.tone === 'up' ? 'הפד מוריד ריבית' : by.DFF.tone === 'down' ? 'הפד מעלה ריבית' : 'הריבית יציבה');
+  if (by.CPI) parts.push(by.CPI.tone === 'up' ? 'האינפלציה בשליטה' : 'האינפלציה עדיין מעל היעד');
+  if (by.T10Y2Y?.tone === 'wr') parts.push('עקום התשואות הפוך');
+  if (by.UNRATE?.tone === 'down') parts.push('האבטלה עולה');
+  if (by.HY) parts.push(by.HY.tone === 'down' ? 'ויש לחץ בשוק האשראי' : 'שוק האשראי רגוע');
+  if (by.VIX) parts.push(by.VIX.tone === 'down' ? 'והשוק מפחד' : by.VIX.tone === 'wr' ? 'והשוק עצבני' : 'והשוק רגוע');
+  return parts.filter(Boolean).length ? parts.filter(Boolean).join(', ') + '.' : 'הנתונים יופיעו אחרי המשיכה הראשונה.';
+}
+$('#macroBtn').onclick = openMacro;
+$('#macro').addEventListener('pointerdown', e => { if (e.target.id === 'macro') $('#macro').hidden = true; });
 /* city timeline: where the year and the season stand, and the next eight weeks */
 async function openTimeline(){
   const o = $('#tline'); o.hidden = false; const body = $('#tlineBody');
@@ -2971,7 +3126,7 @@ $('#searchBtn').onclick = openSearch;
 addEventListener('keydown', e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); sEl.hidden ? openSearch() : closeSearch(); return; }
-  if (e.key === 'Escape') { if (!sEl.hidden) closeSearch(); else if (!$('#brief').hidden) $('#brief').hidden = true; else if (!$('#tline').hidden) $('#tline').hidden = true; else if (!$('#drawer').hidden) $('#drawer').hidden = true; else if (!$('#statusPop').hidden) $('#statusPop').hidden = true; else if (!$('#projPop').hidden) $('#projPop').hidden = true; else if (selI >= 0) closePanel(); else if (focusD) goHome(); return; }
+  if (e.key === 'Escape') { if (!sEl.hidden) closeSearch(); else if (!$('#brief').hidden) $('#brief').hidden = true; else if (!$('#macro').hidden) $('#macro').hidden = true; else if (!$('#tline').hidden) $('#tline').hidden = true; else if (!$('#drawer').hidden) $('#drawer').hidden = true; else if (!$('#statusPop').hidden) $('#statusPop').hidden = true; else if (!$('#projPop').hidden) $('#projPop').hidden = true; else if (selI >= 0) closePanel(); else if (focusD) goHome(); return; }
   if (typing || !sEl.hidden) return;
   if (e.key === '/') { e.preventDefault(); openSearch(); return; }
   if (['1', '2', '3', '4'].includes(e.key)) { setMode(MODES[+e.key - 1].k); return; }
