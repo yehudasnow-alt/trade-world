@@ -90,6 +90,10 @@ def raw_metrics(x: Inputs) -> dict[str, Any]:
         m["rvol"] = T.rvol(x.volumes[-1], x.volumes[:-1]) if x.volumes else None
     m.update(T.drawdown(closes + ([price] if x.price else []), highs, lows))
     m["ma50"], m["ma200"] = T.sma(closes, 50), T.sma(closes, 200)
+    if len(closes) >= 252:  # the stock's own pace over the last year (half a year, annualised, for younger listings)
+        m["ret_1y"] = (price / closes[-252] - 1) * 100
+    elif len(closes) >= 126 and closes[0] > 0:
+        m["ret_1y"] = ((price / closes[0]) ** (252 / len(closes)) - 1) * 100
     m["dist_ma200"] = (price / m["ma200"] - 1) * 100 if m["ma200"] else None
     r_now, r_then = T.rsi(closes), T.rsi(closes[:-5])
     m["rsi"], m["rsi_slope"] = r_now, (r_now - r_then) if r_now is not None and r_then is not None else None

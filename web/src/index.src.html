@@ -451,6 +451,32 @@ ul.clean li{margin:2px 0}
 .tickers button.f{background:var(--accent-soft); color:var(--accent)}
 .status{position:fixed; z-index:30; top:calc(var(--gt) + 62px); right:var(--gx-r); width:min(400px, calc(100vw - 32px)); border-radius:20px; padding:14px 16px; background:var(--glass-strong)}
 .status h2{margin:0 0 8px; font-size:15px}
+.projpop{position:fixed; z-index:30; top:calc(var(--gt) + 62px); left:var(--gx-l, 16px); width:min(340px, calc(100vw - 32px)); border-radius:20px; padding:14px 16px; background:var(--glass-strong); font-size:13px}
+.projpop h2{margin:0 0 4px; font-size:15px; display:flex; justify-content:space-between; align-items:center; gap:8px}
+.projpop .lbl2{font-size:11.5px; color:var(--ink-3); margin:12px 0 6px}
+.projpop .opts{display:flex; flex-wrap:wrap; gap:6px}
+.projpop .opts button{padding:6px 10px; border-radius:10px; font-size:12.5px; background:color-mix(in srgb, var(--ink) 6%, transparent)}
+.projpop .opts button[aria-pressed="true"]{background:var(--accent); color:#fff}
+.projpop .pace{display:flex; flex-direction:column; gap:6px}
+.projpop .pace button{text-align:start; padding:8px 10px; border-radius:12px; background:color-mix(in srgb, var(--ink) 5%, transparent); line-height:1.45}
+.projpop .pace button small{display:block; color:var(--ink-3); font-size:11.5px}
+.projpop .pace button[aria-pressed="true"]{outline:2px solid var(--accent); background:color-mix(in srgb, var(--accent) 10%, transparent)}
+.projpop .sw{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; background:color-mix(in srgb, var(--accent) 9%, transparent); font-weight:600; width:100%; text-align:start}
+.projpop .sw i{width:34px; height:20px; border-radius:10px; background:var(--line-2); position:relative; flex:none; transition:background .2s}
+.projpop .sw i::after{content:""; position:absolute; top:2px; inset-inline-start:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:inset-inline-start .2s}
+.projpop .sw[aria-pressed="true"] i{background:var(--accent)} .projpop .sw[aria-pressed="true"] i::after{inset-inline-start:16px}
+.projpop p{margin:10px 0 0; font-size:11.5px; color:var(--ink-3); line-height:1.5}
+#projBtn[aria-pressed="true"]{background:color-mix(in srgb, var(--accent) 16%, var(--glass)); color:var(--accent)}
+.prefs{margin-top:10px; padding-top:10px; border-top:1px solid var(--line)}
+.prefs .row2{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px}
+.prefs .seg2{display:flex; gap:4px}
+.prefs .seg2 button{padding:4px 8px; border-radius:8px; font-size:11.5px; background:color-mix(in srgb, var(--ink) 6%, transparent)}
+.prefs .seg2 button[aria-pressed="true"]{background:var(--accent); color:#fff}
+.term{text-decoration:underline dotted color-mix(in srgb, var(--ink-3) 70%, transparent); text-underline-offset:3px; text-decoration-thickness:1px; cursor:help}
+.term:hover,.term.on{text-decoration-color:var(--accent); color:inherit}
+#gloss{position:fixed; z-index:60; max-width:300px; padding:10px 12px; border-radius:14px; background:var(--glass-strong); box-shadow:0 10px 30px rgba(0,0,0,.18); font-size:12.5px; line-height:1.55; color:var(--ink-2); pointer-events:auto}
+#gloss b{display:block; color:var(--ink); font-size:13px; margin-bottom:3px}
+#gloss em{display:block; font-style:normal; margin-top:5px; color:var(--ink-3); font-size:11.5px}
 .srow{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); font-size:13px}
 .srow:last-of-type{border-bottom:0}
 .srow small.bad{color:var(--down)}
@@ -516,6 +542,7 @@ ul.clean li{margin:2px 0}
       <div class="actions">
         <button class="modechip" type="button" id="modeChip"></button>
         <button class="btn glass only-phone" type="button" id="railBtn" aria-label="איים" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 2h6v6H2zM10 2h6v4h-6zM10 8h6v8h-6zM2 10h6v6H2z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+        <button class="btn glass" type="button" id="projBtn" aria-label="תחזית בקצב הנוכחי" aria-pressed="false" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 16V9h4v7z" fill="currentColor"/><path d="M10 16V3.5h4V16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 1.6"/><path d="M10 16V10h4v6z" fill="currentColor"/></svg><span class="lbl">תחזית</span></button>
         <button class="btn glass" type="button" id="tlBtn" aria-label="ציר זמן"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 9h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="5" cy="9" r="1.8" fill="currentColor"/><path d="M10.5 5.5l2 3.5-2 3.5-2-3.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M15 4v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/></svg><span class="lbl">ציר זמן</span></button>
         <button class="btn glass" type="button" id="briefBtn" aria-label="תדריך בוקר"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 2.5h7l3 3V15.5H4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.5 8h5M6.5 11h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span class="lbl">תדריך</span></button>
         <button class="btn glass" type="button" id="searchBtn" aria-label="חיפוש מניה"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 12l4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span class="lbl">חיפוש מניה</span><kbd>Ctrl K</kbd></button>
@@ -547,6 +574,10 @@ ul.clean li{margin:2px 0}
           <dt>שתי אצבעות למעלה-למטה</dt><dd>הטיה</dd>
         </dl></div>
         <p>המצפן מחזיר את הכיוון הרגיל, ⊙ מחזיר לכל העיר.</p>
+        <div class="prefs"><h3>העדפות</h3>
+          <div class="row2"><span>כרטיס קופץ על בניין</span><span class="seg2" id="prefHover"><button type="button" data-v="delay">כשהעכבר נעצר</button><button type="button" data-v="off">רק בלחיצה</button></span></div>
+          <div class="row2"><span>הסבר על מושגים</span><span class="seg2" id="prefGloss"><button type="button" data-v="on">מופעל</button><button type="button" data-v="off">כבוי</button></span></div>
+        </div>
       </div>
       <div class="cam glass" role="group" aria-label="מצלמה">
         <button type="button" id="compass" aria-label="כיוון רגיל" title="כיוון רגיל"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><g id="needle"><path d="M11 2.5 14 11h-6z" fill="var(--accent)"/><path d="M11 19.5 8 11h6z" fill="currentColor" opacity=".45"/></g><circle cx="11" cy="11" r="1.3" fill="var(--glass-strong)"/></svg></button>
@@ -581,6 +612,8 @@ ul.clean li{margin:2px 0}
   </div>
   <div id="drawer" class="drawer glass" hidden role="dialog" aria-label="התראות"></div>
   <div id="statusPop" class="status glass" hidden role="dialog" aria-label="מצב החיבורים"></div>
+  <div id="projPop" class="projpop glass" hidden role="dialog" aria-label="תחזית בקצב הנוכחי"></div>
+  <div id="gloss" hidden role="tooltip"></div>
   <div id="tline" class="overlay" hidden><div class="sheet wide glass" role="dialog" aria-modal="true" aria-label="ציר זמן" id="tlineBody"></div></div>
   <div id="brief" class="overlay" hidden><div class="sheet glass" role="dialog" aria-modal="true" aria-label="תדריך בוקר" id="briefBody"></div></div>
   <div id="toast" class="toast" hidden role="status"></div>
@@ -1528,9 +1561,12 @@ function buildScene(){
   // buildings: up to three stacked tiers, rooftop units, tanks and flues for industrial districts
   NB = C.length;
   for (let k = 0; k < 3; k++) { const m = new THREE.InstancedMesh(unitBox, buildingMaterial(), NB); m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); tier.push(m); scene.add(m); }
+  ghostMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.46, depthWrite: false, roughness: 0.15, metalness: 0.1 });
+  ghostMesh = new THREE.InstancedMesh(unitBox, ghostMat, NB); ghostMesh.frustumCulled = false; ghostMesh.renderOrder = 2; ghostMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); ghostMesh.visible = false; scene.add(ghostMesh);
   roofMesh = new THREE.InstancedMesh(unitBox, MAT.detail, NB * 2); tankMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, NB * 2); chimMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, NB);
   for (const m of [roofMesh, tankMesh, chimMesh]) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); }
   const white = new THREE.Color(1, 1, 1);
+  for (let i = 0; i < NB; i++) ghostMesh.setColorAt(i, white);
   for (let i = 0; i < NB; i++) { for (const m of tier) m.setColorAt(i, white); roofMesh.setColorAt(i * 2, white); roofMesh.setColorAt(i * 2 + 1, white); tankMesh.setColorAt(i * 2, white); tankMesh.setColorAt(i * 2 + 1, white); chimMesh.setColorAt(i, white); }
   // cars and buses on every road, more of them where there is more road
   const carGeo = new THREE.BoxGeometry(0.82, 0.4, 1.75); carGeo.translate(0, 0.32, 0);
@@ -1651,8 +1687,64 @@ function writeOne(i){
   roofMesh.setColorAt(i * 2, tmpC); roofMesh.setColorAt(i * 2 + 1, tmpC); tankMesh.setColorAt(i * 2, tmpC); tankMesh.setColorAt(i * 2 + 1, tmpC); chimMesh.setColorAt(i, tmpC);
   c.topY = BASE_Y + h; c.h = h;
 }
+/* "what if the current pace continues": a glass extension on top of each tower up to the value it would reach,
+   or a red sleeve over the part it would lose. In the opportunity hunt the glass is the fair value instead. */
+const PROJ = { on: store.get(LS_PREFIX + 'proj.on', false), h: store.get(LS_PREFIX + 'proj.h', 1), pace: store.get(LS_PREFIX + 'proj.pace', 'biz') };
+const HORIZONS = [[0.25, 'רבעון'], [0.5, 'חצי שנה'], [1, 'שנה'], [2, 'שנתיים'], [5, '5 שנים']];
+const PACE_CAP = [-50, 100];
+let ghostMesh = null, ghostMat = null;
+function paceOf(c){ if (PROJ.pace === 'px') return c.gr?.p; return isNum(c.gr?.r) ? c.gr.r : c.gr?.e; }
+function projCap(c){
+  if (!c.capv) return null;
+  if (mode === 'hunt') return isNum(c.fv) && c.fv > 0 && c.px ? c.capv * c.fv / c.px : null;
+  const g = paceOf(c); if (!isNum(g)) return null;
+  return c.capv * Math.pow(1 + clamp(g, ...PACE_CAP) / 100, PROJ.h);
+}
+const horizonHe = () => (HORIZONS.find(x => x[0] === PROJ.h) || [0, PROJ.h + ' שנים'])[1];
+function projRow(c){
+  if (!PROJ.on) return null; const pc = projCap(c); if (!isNum(pc)) return null;
+  const d = (pc / c.capv - 1) * 100;
+  return [mode === 'hunt' ? 'שווי הוגן' : `בעוד ${horizonHe()}`, `<b class="num ${sg(d)}">${N(fmtCapB(pc))} · ${fmtPct(d, 0)}</b>`];
+}
+function capH(capv){ const k = Math.max(0, capv / CAP_MAX); return H_SCALE === 'real' ? H_FLOOR + Math.min(k, 1.9) * (H_MAX - H_FLOOR) : H_FLOOR + 44 * Math.sqrt(Math.min(k, 3)); }
+function writeGhosts(){
+  if (!ghostMesh) return;
+  ghostMesh.visible = PROJ.on && HS.v > 0.5;
+  if (!ghostMesh.visible) return;
+  const upC = COL.up.clone().lerp(new THREE.Color(1, 1, 1), 0.15), dnC = COL.down.clone(), fvC = COL.beacon.clone().lerp(new THREE.Color(1, 1, 1), 0.1);
+  for (const c of C) {
+    const pc = PROJ.on ? projCap(c) : null; const h = c.h;
+    if (!isNum(pc) || !isNum(h)) { HIDE(ghostMesh, c.i); continue; }
+    const hp = capH(pc) * HS.v;
+    if (Math.abs(hp - h) < 0.25) { HIDE(ghostMesh, c.i); continue; }
+    if (hp > h) { setInst(ghostMesh, c.i, c.x, BASE_Y + h, c.z, c.fw * 0.86, hp - h, c.fd * 0.86); ghostMesh.setColorAt(c.i, mode === 'hunt' ? fvC : upC); }
+    else { setInst(ghostMesh, c.i, c.x, BASE_Y + hp, c.z, c.fw * 1.07, h - hp, c.fd * 1.07); ghostMesh.setColorAt(c.i, dnC); }
+  }
+  ghostMesh.instanceMatrix.needsUpdate = true; if (ghostMesh.instanceColor) ghostMesh.instanceColor.needsUpdate = true;
+}
+function renderProj(){
+  const el = $('#projPop'), hunt = mode === 'hunt';
+  $('#projBtn').setAttribute('aria-pressed', PROJ.on);
+  el.innerHTML = `<h2>מה אם הקצב יימשך</h2>
+    <button type="button" class="sw" id="pjOn" aria-pressed="${PROJ.on}"><i></i>${PROJ.on ? 'מוצג: בניין שקוף לכל חברה' : 'הצג בניין שקוף לכל חברה'}</button>
+    ${hunt ? `<p style="color:var(--ink-2)">במצב <b>ציד הזדמנויות</b> הבניין השקוף הוא <b>השווי ההוגן</b> של החברה (מחיר הבסיס בטווח ההוגן). בניין שנמוך מהשקוף נסחר מתחת לשווי ההוגן, וכמה שהפער גדול יותר, ההנחה גדולה יותר. בניין עטוף אדום נסחר מעל השווי ההוגן.</p>`
+    : `<div class="lbl2">בעוד</div><div class="opts">${HORIZONS.map(([v, t]) => `<button type="button" data-h="${v}" aria-pressed="${PROJ.h === v}">${t}</button>`).join('')}</div>
+    <div class="lbl2">לפי הקצב של</div><div class="pace">
+      <button type="button" data-p="biz" aria-pressed="${PROJ.pace === 'biz'}">העסק<small>צמיחת ההכנסות בשנה האחרונה, בהנחה שהשוק ימשיך לשלם עליהן את אותו מכפיל</small></button>
+      <button type="button" data-p="px" aria-pressed="${PROJ.pace === 'px'}">המניה<small>כמה המניה עלתה או ירדה בשנה האחרונה</small></button></div>`}
+    <p>${hunt ? 'השווי ההוגן מחושב מהרווח הצפוי לשנה הבאה כפול המכפיל החציוני של החברה בחמש השנים האחרונות.' : 'ירוק שקוף מעל הבניין: כמה הוא יגדל. אדום שקוף סביב הקצה: כמה יקטן. הקצב מוגבל בין −50% ל-+100% בשנה.'} זו המשכה של הקצב הנוכחי, לא תחזית: קצבים חריגים בדרך כלל לא נמשכים, במיוחד לאורך שנים.</p>`;
+  el.querySelector('#pjOn').onclick = () => { PROJ.on = !PROJ.on; saveProj(); };
+  el.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { PROJ.h = +b.dataset.h; PROJ.on = true; saveProj(); });
+  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { PROJ.pace = b.dataset.p; PROJ.on = true; saveProj(); });
+}
+function saveProj(){
+  for (const k of ['on', 'h', 'pace']) store.set(LS_PREFIX + 'proj.' + k, PROJ[k]);
+  renderProj(); renderLegend(); writeGhosts(); dirty = true;
+  if (hoverI >= 0) { const i = hoverI; hoverI = -2; setHover(i); }
+}
 function writeAll(){
   for (let i = 0; i < NB; i++) writeOne(i);
+  writeGhosts();
   for (const m of [...tier, roofMesh, tankMesh, chimMesh]) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
   placeBeams(); placeSelection(); dirty = true; boundsDirty = true;
 }
@@ -1933,6 +2025,10 @@ const hcard = $('#hcard'); let hcardHold = false, hideTimer = 0;
 hcard.addEventListener('pointerenter', () => { hcardHold = true; clearTimeout(hideTimer); });
 hcard.addEventListener('pointerleave', () => { hcardHold = false; setHover(-1); });
 function hoverRows(c){
+  const pr = projRow(c); if (pr) return [...hoverRowsBase(c).slice(0, 2), pr];
+  return hoverRowsBase(c);
+}
+function hoverRowsBase(c){
   const g = c.rep?.guide ? GUIDE[c.rep.guide] : null;
   if (mode === 'market') return [['שינוי', `<b class="num ${sg(c.chg)}">${fmtPct(c.chg)}</b>`], ['מול התנודתיות', `<b class="num">${fmtNum(c.sig, 1)}σ</b>`], ['נפח יחסי', `<b class="num">${isNum(c.rvol) ? c.rvol.toFixed(1) + '×' : '–'}</b>`]];
   if (mode === 'hunt') return [['ציון', `<b class="num">${c.sc ? Math.round(c.sc.tot) : '–'}</b>`], ['מהשיא', `<b class="num down">${fmtPct(c.dd, 1)}</b>`], ['אחוזון מכפיל', `<b class="num">${isNum(c.val) ? Math.round(c.val) : '–'}</b>`]];
@@ -1941,16 +2037,31 @@ function hoverRows(c){
   return c.hold ? [['משקל', `<b class="num">${c.hold.w}%</b>`], ['רווח/הפסד', `<b class="num ${sg(c.hold.pnl)}">${fmtPct(c.hold.pnl, 1)}</b>`], ['תזה', `<b class="${THESIS[c.hold.th]?.[1] || ''}">${THESIS[c.hold.th]?.[0] || 'אין'}</b>`]]
     : [['שינוי', `<b class="num ${sg(c.chg)}">${fmtPct(c.chg)}</b>`], ['בתיק', '<b>לא</b>'], ['ציון', `<b class="num">${c.sc ? Math.round(c.sc.tot) : '–'}</b>`]];
 }
+/* The quick card waits until the pointer rests on a building (the usual "hover intent" pattern: ~half a second, and
+   the pointer must stop moving), so sweeping the mouse across the city does not flash a card at every tower.
+   Once a card is up, moving to the next building follows at once. The outline still marks the building immediately. */
+const HOVER_DELAY = 550, HOVER_SLOP = 8;
+let HOVER_MODE = store.get(LS_PREFIX + 'hovercard', 'delay'), hcShowTimer = null, hcAnchor = null, hcWarm = 0;
+function armHoverCard(){
+  clearTimeout(hcShowTimer); hcAnchor = pointer ? { ...pointer } : null;
+  const i = hoverI;
+  hcShowTimer = setTimeout(() => { if (hoverI === i && i >= 0 && !dragging && !fly && !downAt) { hcard.hidden = false; dirty = true; } }, HOVER_DELAY);
+}
+function hoverMoved(){ if (hcShowTimer && hcard.hidden && hoverI >= 0 && hcAnchor && pointer && Math.hypot(pointer.x - hcAnchor.x, pointer.y - hcAnchor.y) > HOVER_SLOP) armHoverCard(); }
 function setHover(i){
   if (i === hoverI) return; hoverI = i;
-  if (i < 0) { hoverEdges.visible = false; renderer.domElement.style.cursor = ''; hideTimer = setTimeout(() => { if (!hcardHold && hoverI < 0) hcard.hidden = true; }, 160); return; }
+  clearTimeout(hcShowTimer); hcShowTimer = null;
+  if (i < 0) { hoverEdges.visible = false; renderer.domElement.style.cursor = ''; if (!hcard.hidden) hcWarm = performance.now() + 350; hideTimer = setTimeout(() => { if (!hcardHold && hoverI < 0) hcard.hidden = true; }, 160); return; }
   clearTimeout(hideTimer); renderer.domElement.style.cursor = 'pointer';
   const c = C[i];
   hcard.innerHTML = `<div class="h1"><span class="tkr">${esc(c.t)}</span><span class="num ${sg(c.chg)}">${fmtUsd(c.px)}</span></div>
     <div class="nm">${esc(c.n)} · שווי ${N(fmtCapB(c.capv))}</div><div class="kv3">${hoverRows(c).map(([k, v]) => `<div><span>${k}</span>${v}</div>`).join('')}</div>
     <button class="cta" type="button">פתח כרטיס חברה</button>`;
   hcard.querySelector('.cta').onclick = () => select(i); hcard._i = i;
-  hcard.hidden = isPhone(); dirty = true;
+  dirty = true;
+  if (isPhone() || HOVER_MODE === 'off') { hcard.hidden = true; return; }
+  if (!hcard.hidden || performance.now() < hcWarm) { hcard.hidden = false; return; }
+  hcard.hidden = true; armHoverCard();
 }
 function positionHover(){
   if (hoverI < 0) return; const c = C[hoverI];
@@ -2042,11 +2153,111 @@ function wireHead(c){
   };
   panel.querySelectorAll('.tab').forEach(b => b.onclick = () => { panelTab = b.dataset.tab; store.set(LS_PREFIX + 'tab', panelTab); if (CO) renderPanel(); });
 }
+/* ---------- terms: a dotted underline, the explanation on a resting pointer or a tap ---------- */
+const HP = '(?:[ובלמש]?ה?)';  // Hebrew prefixes: ו, ב, ל, מ, ש and the article ה
+const GLOSS = [
+  ['pe', 'P\\/E|מכפיל(?: ה)?רווח', 'מכפיל רווח (P/E)', 'מחיר המניה חלקי הרווח השנתי למניה: כמה שנות רווח אתה משלם. מניה ב-$100 שמרוויחה $4 בשנה נסחרת ב-P/E של 25.', 'נמוך מ-15 נחשב זול, מעל 30 יקר, אבל תמיד משווים לצמיחה, להיסטוריה של החברה ולשכנים.'],
+  ['ps', 'P\\/S|מכפיל(?: ה)?מכירות', 'מכפיל מכירות (P/S)', 'שווי השוק חלקי ההכנסות השנתיות. שימושי לחברות שעוד לא מרוויחות.', 'משווים רק בין חברות דומות: לחברת תוכנה מכפיל מכירות גבוה בהרבה מלקמעונאי.'],
+  ['pfcf', 'P\\/FCF', 'מחיר לתזרים חופשי (P/FCF)', 'שווי השוק חלקי התזרים החופשי השנתי: כמה שנות מזומן חופשי אתה משלם.', '20 שקול לתשואת תזרים של 5% בשנה.'],
+  ['ev', 'EV\\/Sales|EV(?![A-Za-z])|שווי פירמה', 'שווי פירמה (EV)', 'שווי השוק, ועוד החוב, פחות המזומן: מה שבאמת עולה לקנות את כל העסק.', 'חברה עם הרבה חוב יקרה יותר ממה ששווי השוק מראה.'],
+  ['eps', 'EPS|רווח למניה', 'רווח למניה (EPS)', 'הרווח הנקי חלקי מספר המניות. זה ה-E במכפיל P/E.', ''],
+  ['fcf', 'FCF|' + HP + 'תזרים(?: ה)?חופשי|' + HP + 'מזומן(?: ה)?חופשי', 'תזרים חופשי (FCF)', 'הכסף שנכנס מהפעילות פחות ההשקעה בציוד ומבנים. זה המזומן שההנהלה יכולה באמת לחלק, להשקיע או לחסוך.', 'המספר הכי חשוב לבעלים: רווח הוא חשבונאות, מזומן הוא מציאות.'],
+  ['fcfy', 'תשואת(?: ה)?תזרים', 'תשואת תזרים', 'התזרים החופשי חלקי שווי השוק. כמו "ריבית" שהעסק מייצר על המחיר שאתה משלם.', '5% בעסק שגם צומח טוב יותר מ-4% בפיקדון.'],
+  ['cfo', 'תזרים מפעילות|נכנס מהפעילות', 'תזרים מפעילות', 'המזומן שהעסק באמת גבה מלקוחות, אחרי תשלום לספקים ולעובדים.', ''],
+  ['capex', 'CapEx|' + HP + 'השקעה בציוד(?: ומבנים)?', 'השקעה ברכוש (CapEx)', 'כסף שהוצא על מפעלים, שרתים, חנויות וציוד, כדי לשמור על העסק ולהגדיל אותו.', ''],
+  ['roic', 'ROIC', 'תשואה על ההון המושקע (ROIC)', 'כמה רווח העסק מייצר בשנה על כל 100 דולר שהושקעו בו, מבעלי המניות וממלווים.', 'מעל 15%: עסק עם יתרון. מתחת ל-8%: כמעט לא מייצר ערך. המדד האהוב על באפט.'],
+  ['roe', 'ROE|' + HP + 'תשואה להון', 'תשואה להון העצמי (ROE)', 'הרווח הנקי חלקי ההון של בעלי המניות.', 'חוב יכול לנפח אותו, ולכן ROIC אמין יותר.'],
+  ['gm', HP + 'רווח(?: ה)?גולמי|' + HP + 'שיעור(?: ה)?גולמי', 'רווח גולמי', 'ההכנסות פחות עלות הייצור של מה שנמכר. השיעור הגולמי הוא האחוז מההכנסות.', 'שיעור גבוה, 60% ומעלה, הוא סימן לכוח תמחור.'],
+  ['om', HP + 'רווח(?: ה)?תפעולי|' + HP + 'שיעור(?: ה)?תפעולי', 'רווח תפעולי', 'מה שהעסק עצמו מרוויח אחרי כל הוצאות התפעול, לפני ריבית ומס.', ''],
+  ['ni', HP + 'רווח(?: ה)?נקי|' + HP + 'הפסד(?: ה)?נקי', 'רווח נקי', 'מה שנשאר לבעלי המניות אחרי כל ההוצאות, הריבית והמס.', ''],
+  ['sbc', 'SBC|' + HP + 'תגמול במניות', 'תגמול במניות (SBC)', 'משכורת לעובדים במניות במקום במזומן. לא יוצא מהקופה, אבל מודפסות מניות חדשות והחלק שלך קטן.', 'עלות אמיתית, גם אם היא לא מופיעה בתזרים.'],
+  ['dil', HP + 'דילול|מתדלל|התדלל', 'דילול', 'גידול במספר המניות, מהנפקות או מתגמול לעובדים. כל מניה שלך שווה חלק קטן יותר מהעסק.', 'דילול של 3% בשנה הוא קיצוץ שקט של 3% בחלק שלך.'],
+  ['bb', HP + 'רכישה עצמית', 'רכישה עצמית (Buyback)', 'החברה קונה מניות שלה מהשוק ומבטלת אותן. נשארות פחות מניות, ולכל מניה שלך חלק גדול יותר ברווח.', ''],
+  ['div', HP + 'דיבידנד(?:ים)?', 'דיבידנד', 'מזומן שהחברה מחלקת ישירות לבעלי המניות, בדרך כלל כל רבעון.', ''],
+  ['cap', HP + 'שווי(?: ה)?שוק', 'שווי שוק', 'מחיר המניה כפול מספר המניות: המחיר של כל החברה. זה גובה הבניין בעיר.', ''],
+  ['netdebt', HP + 'חוב נטו', 'חוב נטו', 'החוב פחות המזומן. חוב נטו חלקי הרווח התפעולי אומר כמה שנים של רווח צריך כדי להחזיר אותו.', 'מעל 3 שנים זה כבר משמעותי.'],
+  ['cagr', 'CAGR|צמיחה שנתית ממוצעת|בממוצע [0-9.]+% בשנה', 'צמיחה שנתית ממוצעת (CAGR)', 'בכמה אחוז גדל משהו בממוצע בכל שנה, כולל ריבית דריבית.', '10% בשנה במשך 10 שנים זה פי 2.6.'],
+  ['pct', HP + 'אחוזון', 'אחוזון', 'איפה הערך של היום ביחס לעבר. אחוזון 10 במכפיל אומר שרק ב-10% מהזמן בחמש השנים האחרונות המניה הייתה זולה יותר.', ''],
+  ['ma', 'ממוצע(?: נע)? (?:50|200)(?: יום)?|MA ?200', 'ממוצע נע', 'המחיר הממוצע ב-50 או ב-200 ימי המסחר האחרונים.', 'מחיר מעל ממוצע 200: המגמה הארוכה עולה. מתחת: יורדת.'],
+  ['rsi', 'RSI', 'RSI', 'מדד מ-0 עד 100 שמראה כמה המניה "נמתחה" לאחרונה.', 'מתחת ל-30: נמכרה יותר מדי. מעל 70: חמה.'],
+  ['dd', 'ירידה מהשיא|מהשיא', 'ירידה מהשיא', 'כמה המניה ירדה מהמחיר הכי גבוה שלה בשנה האחרונה.', ''],
+  ['beta', HP + 'בטא', 'בטא', 'כמה המניה זזה ביחס לשוק. בטא 1.5: כשהשוק עולה או יורד 1%, המניה זזה בממוצע 1.5%.', ''],
+  ['sigma', 'σ|סטיית תקן|מול התנודתיות', 'תנועה מול התנודתיות (σ)', 'התנועה של היום ביחס לתנועה הרגילה של המניה.', 'מעל 2σ: יום חריג, ששווה לבדוק מה קרה.'],
+  ['rvol', 'נפח יחסי|נפח ×', 'נפח יחסי', 'כמה מניות נסחרו היום, ביחס לממוצע. 2× אומר פי שניים מהרגיל.', 'תנועה עם נפח גבוה רצינית יותר מתנועה בנפח נמוך.'],
+  ['score', HP + 'ציון(?: ה)?התכנסות', 'ציון התכנסות', 'ציון 0–100 מארבעה חלקים שווים: איכות העסק, הכיוון (משתפר או נחלש), התמחור, והתזמון.', 'הציון אומר איפה להסתכל, לא מה לקנות.'],
+  ['veto', 'דגל(?:י)? וטו', 'דגל וטו', 'בעיה שמאפסת את הציון בלי קשר לשאר, למשל דילול חריג, ספק לגבי המשך הפעילות, או הורדת תחזית חדה.', ''],
+  ['stop', HP + 'סטופ', 'סטופ (Stop Loss)', 'המחיר שבו יוצאים מהעסקה כי התברר שטעית. קובעים אותו לפני הכניסה.', ''],
+  ['rr', 'R:R|סיכון[ /]סיכוי|סיכון לסיכוי', 'יחס סיכון לסיכוי', 'המרחק ליעד חלקי המרחק לסטופ. 1:3 אומר שעל כל דולר בסיכון יש 3 דולר אפשריים.', 'עם יחס טוב אפשר לטעות ברוב העסקאות ועדיין להרוויח.'],
+  ['moat', HP + 'חפיר', 'חפיר (Moat)', 'מה שמגן על הרווחים מפני מתחרים: אפקט רשת, עלות מעבר, יתרון עלות, מותג או פטנטים.', 'בלי חפיר, רווחים גבוהים מושכים מתחרים שמורידים אותם.'],
+  ['f4', 'Form 4', 'Form 4', 'דיווח חובה של בעל עניין (מנהל, דירקטור, מחזיק מעל 10%) על כל קנייה או מכירה, תוך יומיים.', 'קנייה של מנהלים בכסף שלהם היא אחד הסימנים החזקים שיש.'],
+  ['g13', '13G', 'דיווח 13G', 'דיווח של מי שמחזיק מעל 5% באופן פסיבי, בדרך כלל קרן מדד.', ''],
+  ['d13', '13D', 'דיווח 13D', 'דיווח של מי שמחזיק מעל 5% ועשוי לדרוש שינויים בחברה (אקטיביסט).', 'אירוע ששווה לבדוק: לפעמים מקדים שינוי גדול.'],
+  ['k10', '10-K', 'דוח שנתי (10-K)', 'הדוח השנתי המלא לרשות ני"ע האמריקאית: העסק, הסיכונים, הדוחות הכספיים.', ''],
+  ['q10', '10-Q', 'דוח רבעוני (10-Q)', 'הדוח הרבעוני לרשות ני"ע האמריקאית.', ''],
+  ['k8', '8-K', 'דיווח מיידי (8-K)', 'דיווח על אירוע מהותי: תוצאות, רכישה, החלפת מנכ"ל.', ''],
+  ['guid', 'Guidance|תחזית ההנהלה|' + HP + 'תחזית(?= (?:הועלתה|הורדה|נשמרה))', 'תחזית ההנהלה (Guidance)', 'מה ההנהלה מצפה לרבעון או לשנה הבאים.', 'הורדת תחזית לרוב מזיזה את המניה יותר מהתוצאות עצמן.'],
+  ['surp', HP + 'הפתעה(?: בדוח)?', 'הפתעה בדוח', 'כמה התוצאות היו מעל או מתחת לציפיות האנליסטים.', ''],
+  ['seg', HP + 'מגזר(?:ים)?', 'מגזר', 'תחום פעילות נפרד בתוך החברה, עם הכנסות משלו.', 'חברה שכל הכסף שלה בא ממגזר אחד חשופה יותר.'],
+  ['conc', 'תלות בלקוח(?: גדול)?', 'תלות בלקוח', 'חברות חייבות לדווח על כל לקוח שמביא יותר מ-10% מההכנסות. לקוח כזה שעוזב הוא מכה.', ''],
+  ['implied', HP + 'צמיחה מגולמת|מגלם|מגולמת', 'צמיחה מגולמת', 'כמה צמיחה המחיר הנוכחי מניח. אם החברה צומחת מהר יותר ממה שהמחיר מניח, יש מרווח ביטחון.', ''],
+  ['fair', HP + 'שווי(?: ה)?הוגן|' + HP + 'מחיר(?: ה)?הוגן', 'שווי הוגן', 'הרווח הצפוי לשנה הבאה כפול המכפיל שהשוק שילם בדרך כלל על החברה בחמש השנים האחרונות. דובי, בסיס ושורי לפי מכפיל נמוך, חציוני וגבוה.', 'הערכה, לא מחיר יעד.'],
+  ['ins', HP + 'בעלי עניין', 'בעלי עניין', 'מנהלים, דירקטורים ומי שמחזיק מעל 10%. הם חייבים לדווח על כל עסקה במניה.', ''],
+  ['atr', 'ATR', 'ATR', 'הטווח היומי הממוצע של המניה באחוזים: כמה היא זזה ביום רגיל.', 'משמש לקביעת סטופ שלא ייפגע מרעש רגיל.'],
+  ['rs', 'חוזק יחסי|מול הסקטור', 'חוזק יחסי', 'האם המניה עשתה טוב יותר או פחות טוב מהסקטור שלה בתקופה האחרונה.', ''],
+];
+const GLOSS_BY = Object.fromEntries(GLOSS.map(g => [g[0], g]));
+const GLOSS_RE = new RegExp(`(?<![\\u0590-\\u05FFA-Za-z0-9])(?:${GLOSS.map(g => `(${g[1]})`).join('|')})(?![\\u0590-\\u05FFA-Za-z0-9])`, 'g');
+let GLOSS_ON = store.get(LS_PREFIX + 'gloss', 'on') !== 'off';
+function glossify(root){
+  if (!GLOSS_ON || !root) return;
+  for (const sec of root.querySelectorAll('.sec, .p-head')) {
+    const seen = new Set();
+    const tw = document.createTreeWalker(sec, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest('a, button, input, select, textarea, label, svg, .term, .verif, h4 small') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    const nodes = []; while (tw.nextNode()) nodes.push(tw.currentNode);
+    for (const node of nodes) {
+      const text = node.nodeValue; GLOSS_RE.lastIndex = 0; let m, last = 0, frag = null;
+      while ((m = GLOSS_RE.exec(text))) {
+        const gi = m.slice(1).findIndex(x => x !== undefined); const key = GLOSS[gi][0];
+        if (seen.has(key)) continue; seen.add(key);
+        frag ||= document.createDocumentFragment();
+        frag.append(text.slice(last, m.index));
+        const sp = document.createElement('span'); sp.className = 'term'; sp.dataset.g = key; sp.tabIndex = 0; sp.textContent = m[0]; frag.append(sp);
+        last = m.index + m[0].length;
+      }
+      if (frag) { frag.append(text.slice(last)); node.replaceWith(frag); }
+    }
+  }
+}
+const GL = { timer: null, el: null, hideT: null };
+function showGloss(el){
+  const g = GLOSS_BY[el.dataset.g]; if (!g) return; const box = $('#gloss');
+  box.innerHTML = `<b>${esc(g[2])}</b>${esc(g[3])}${g[4] ? `<em>${esc(g[4])}</em>` : ''}`; box.hidden = false;
+  GL.el?.classList.remove('on'); GL.el = el; el.classList.add('on');
+  const r = el.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+  const x = clamp(r.left + r.width / 2 - w / 2, 8, innerWidth - w - 8), y = r.top - h - 8 > 8 ? r.top - h - 8 : r.bottom + 8;
+  box.style.left = x + 'px'; box.style.top = y + 'px';
+}
+function hideGloss(){ $('#gloss').hidden = true; GL.el?.classList.remove('on'); GL.el = null; }
+document.addEventListener('pointerover', e => {
+  const t = e.target.closest?.('.term'); if (e.pointerType !== 'mouse') return;
+  if (t) { clearTimeout(GL.hideT); clearTimeout(GL.timer); if (GL.el !== t) GL.timer = setTimeout(() => showGloss(t), 380); }
+  else if (!e.target.closest?.('#gloss')) { clearTimeout(GL.timer); if (GL.el) GL.hideT = setTimeout(hideGloss, 180); }
+});
+document.addEventListener('click', e => { const t = e.target.closest?.('.term'); if (t) { e.stopPropagation(); clearTimeout(GL.timer); if (GL.el === t) hideGloss(); else showGloss(t); } else if (!e.target.closest?.('#gloss')) hideGloss(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && GL.el) { hideGloss(); e.stopPropagation(); } else if ((e.key === 'Enter' || e.key === ' ') && e.target.classList?.contains('term')) { e.preventDefault(); showGloss(e.target); } }, true);
+addEventListener('scroll', () => { if (GL.el) hideGloss(); }, true);
+function wirePrefs(){
+  const paint = () => { $('#prefHover').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === HOVER_MODE)); $('#prefGloss').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', (b.dataset.v === 'on') === GLOSS_ON)); };
+  $('#prefHover').querySelectorAll('button').forEach(b => b.onclick = () => { HOVER_MODE = b.dataset.v; store.set(LS_PREFIX + 'hovercard', HOVER_MODE); if (HOVER_MODE === 'off') hcard.hidden = true; paint(); });
+  $('#prefGloss').querySelectorAll('button').forEach(b => b.onclick = () => { GLOSS_ON = b.dataset.v === 'on'; store.set(LS_PREFIX + 'gloss', GLOSS_ON ? 'on' : 'off'); hideGloss(); if (CO) renderPanel(); paint(); });
+  paint();
+}
+
 function renderPanel(){
   const c = byT[CO.company.t]; if (!c) return;
   const scroll = panel.querySelector('.p-body')?.scrollTop || 0; const sameTab = renderPanel.last === CO.company.t + panelTab;
   panel.innerHTML = `<div class="p-head">${headHTML(CO, c)}</div><div class="p-body">${({ overview: tabOverview, business: tabBusiness, report: tabReport, numbers: tabNumbers, thesis: tabThesis })[panelTab](CO, c)}</div>`;
-  wireHead(c); wireBody(CO, c);
+  wireHead(c); wireBody(CO, c); glossify(panel);
   panel.querySelector('.p-body').scrollTop = sameTab ? scroll : 0; renderPanel.last = CO.company.t + panelTab;
 }
 
@@ -2504,11 +2715,13 @@ function legendHTML(){
   return `<h3>התיק שלי</h3>${hl}<div class="lrow"><span class="ico">■</span>רק הפוזיציות צבועות; שאר העיר דהויה</div><div class="lrow"><span class="ico">■</span>צבע = רווח או הפסד על הפוזיציה</div>${div(N(MINUS + '25%'), N('+25%'))}${cb}`;
 }
 function setHScale(v){ if (v === H_SCALE) return; H_SCALE = v; store.set(LS_PREFIX + 'hscale', v); HOME_DIST = HOME().dist; renderLegend(); retarget(); dirty = true; }
-function renderLegend(){ $('#legend').innerHTML = legendHTML(); $('#legend').querySelectorAll('.hsc button').forEach(b => b.onclick = () => setHScale(b.dataset.h)); const t = $('#cbToggle'); if (t) t.onchange = () => { document.documentElement.classList.toggle('cb', t.checked); store.set(LS_PREFIX + 'cb', t.checked); readTheme(); renderRail(); }; }
+function projLegend(){ if (!PROJ.on) return ''; return `<div class="row" style="margin-top:8px;font-size:12px;color:var(--ink-2)"><span style="display:inline-block;width:10px;height:14px;border-radius:2px;margin-inline-end:6px;vertical-align:-2px;background:color-mix(in srgb, var(--${mode === 'hunt' ? 'beacon' : 'up'}) 45%, transparent);outline:1px solid color-mix(in srgb, var(--${mode === 'hunt' ? 'beacon' : 'up'}) 70%, transparent)"></span>${mode === 'hunt' ? 'שקוף: השווי ההוגן. אדום: מעל השווי ההוגן' : `שקוף: השווי בעוד ${horizonHe()} בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'}. אדום: ירידה`}</div>`; }
+function renderLegend(){ $('#legend').innerHTML = legendHTML() + projLegend(); $('#legend').querySelectorAll('.hsc button').forEach(b => b.onclick = () => setHScale(b.dataset.h)); const t = $('#cbToggle'); if (t) t.onchange = () => { document.documentElement.classList.toggle('cb', t.checked); store.set(LS_PREFIX + 'cb', t.checked); readTheme(); renderRail(); }; }
 function setMode(m){
   if (m === mode) return; mode = m; store.set(LS_PREFIX + 'mode', m);
   $('#modes').querySelectorAll('.mode').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === m));
   renderLegend(); retarget(); placeBeams(); renderRail(); if (hoverI >= 0) { const i = hoverI; hoverI = -1; setHover(i); }
+  if (!$('#projPop').hidden) renderProj(); writeGhosts();
   dirty = true;
 }
 const PORT = { data: null };
@@ -2644,6 +2857,7 @@ function renderStatus(){
       return `<div class="srow"><i class="dot ${!s.configured ? '' : s.state}"></i><span>${he}${s.bad_value ? `<br><small class="bad">${esc(s.bad_value)}</small>` : !s.configured && env ? `<br><small>הגדר ${env} ${STATUS.cloud ? 'במשתני השירות' : 'בקובץ ‎.env'}</small>` : ''}${k === 'ai' && s.configured ? `<br><small>${s.queued} בתור · ${N('$' + s.spend_month_usd)} החודש מתוך ${N('$' + s.budget_usd)}</small>` : ''}</span><small>${st}</small></div>`; }).join('')}`;
 }
 $('#modeChip').onclick = () => $('#statusBtn').onclick();
+$('#projBtn').onclick = () => { const d = $('#projPop'); d.hidden = !d.hidden; $('#projBtn').setAttribute('aria-expanded', !d.hidden); $('#statusPop').hidden = true; $('#drawer').hidden = true; if (!d.hidden) renderProj(); };
 $('#statusBtn').onclick = () => { const d = $('#statusPop'); d.hidden = !d.hidden; $('#drawer').hidden = true; if (!d.hidden) { renderStatus(); loadStatus().then(renderStatus); } };
 
 /* brief */
@@ -2757,7 +2971,7 @@ $('#searchBtn').onclick = openSearch;
 addEventListener('keydown', e => {
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); sEl.hidden ? openSearch() : closeSearch(); return; }
-  if (e.key === 'Escape') { if (!sEl.hidden) closeSearch(); else if (!$('#brief').hidden) $('#brief').hidden = true; else if (!$('#tline').hidden) $('#tline').hidden = true; else if (!$('#drawer').hidden) $('#drawer').hidden = true; else if (!$('#statusPop').hidden) $('#statusPop').hidden = true; else if (selI >= 0) closePanel(); else if (focusD) goHome(); return; }
+  if (e.key === 'Escape') { if (!sEl.hidden) closeSearch(); else if (!$('#brief').hidden) $('#brief').hidden = true; else if (!$('#tline').hidden) $('#tline').hidden = true; else if (!$('#drawer').hidden) $('#drawer').hidden = true; else if (!$('#statusPop').hidden) $('#statusPop').hidden = true; else if (!$('#projPop').hidden) $('#projPop').hidden = true; else if (selI >= 0) closePanel(); else if (focusD) goHome(); return; }
   if (typing || !sEl.hidden) return;
   if (e.key === '/') { e.preventDefault(); openSearch(); return; }
   if (['1', '2', '3', '4'].includes(e.key)) { setMode(MODES[+e.key - 1].k); return; }
@@ -2843,7 +3057,7 @@ function wirePointer(){
   let downs = 0, multi = false, downAct = null;
   const press = (e, act) => {
     downs++; if (downs > 1) multi = true; else { downAt = { x: e.clientX, y: e.clientY, t: performance.now() }; dragging = false; multi = false; downAct = act; }
-    fly = null; hideHint(); $('#drawer').hidden = true; $('#statusPop').hidden = true; $('#camHelp').hidden = true; $('#helpBtn').setAttribute('aria-expanded', false);
+    fly = null; hideHint(); $('#drawer').hidden = true; $('#statusPop').hidden = true; $('#projPop').hidden = true; $('#camHelp').hidden = true; $('#helpBtn').setAttribute('aria-expanded', false);
     const a = document.activeElement; if (a && a !== document.body && a !== cv && !$('#search').contains(a)) a.blur();
   };
   cv.addEventListener('pointerdown', e => press(e, null));
@@ -2851,7 +3065,7 @@ function wirePointer(){
   labelsEl.addEventListener('pointerdown', e => { const el = e.target.closest('.isl, .co'); if (el && el._act) forward(e, el._act); });
   hcard.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; const i = hcard._i; forward(e, i >= 0 ? () => select(i) : null); });
   cv.addEventListener('pointermove', e => {
-    pointer = { x: e.clientX, y: e.clientY }; needPick = true;
+    pointer = { x: e.clientX, y: e.clientY }; needPick = true; hoverMoved();
     if (downAt && !dragging && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) { dragging = true; cv.classList.add('grabbing'); setHover(-1); }
   });
   const lift = e => {
@@ -2864,7 +3078,7 @@ function wirePointer(){
   cv.addEventListener('pointerup', lift); cv.addEventListener('pointercancel', lift);
   cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !downs) { pointer = null; setHover(-1); } });
   controls.addEventListener('change', () => { dirty = true; });
-  controls.addEventListener('start', () => { fly = null; hideHint(); });
+  controls.addEventListener('start', () => { fly = null; hideHint(); clearTimeout(hcShowTimer); });
   // pinching the page anywhere would zoom the whole browser page instead of the map
   addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
   for (const t of ['gesturestart', 'gesturechange']) addEventListener(t, e => e.preventDefault(), { passive: false });
@@ -2898,7 +3112,7 @@ async function boot(){
   buildData(city); fitSun();
   cur = C.map(() => ({ h: 0, col: new THREE.Color() })); from = C.map(() => ({ h: 0, col: new THREE.Color() })); tgt = C.map(() => ({ h: 1, col: new THREE.Color() }));
   buildScene(); for (const a of ANIM) a.f(0); buildLabels(); wirePointer();
-  buildModes(); renderLegend(); renderStrip(); renderRail(); loadStatus();
+  buildModes(); renderLegend(); renderStrip(); renderRail(); loadStatus(); wirePrefs(); $('#projBtn').setAttribute('aria-pressed', PROJ.on);
   resize();
   { const H = HOME(); if (reduceMotion) setCam(H.t, H.dist, H.polar, H.az); else { setCam(H.t, H.dist * 1.3, 0.55, H.az + 0.5); flyTo(H.t, H.dist, { polar: H.polar, az: H.az, dur: 2100 }); } }
   readTheme(); introT0 = performance.now(); if (!reduceMotion) for (const c of C) cur[c.i].h = 0; writeAll();
@@ -2908,7 +3122,7 @@ async function boot(){
   if (!DEMO) { setInterval(pollQuotes, 20000); setInterval(refreshCity, 120000); setInterval(loadStatus, 60000); }
   setInterval(() => { if (!DEMO) return; renderStrip(); }, 30000);
   const hashT = decodeURIComponent(location.hash.slice(1)).toUpperCase(); if (hashT && byT[hashT]) setTimeout(() => select(byT[hashT].i), 2300);
-  window.__metro = { get C(){ return C; }, setHScale, controls, refresh: () => refreshCity(), heightOf: t => tgt[byT[t].i].h, pick: (x, y) => { const h = pick(x, y); return { b: h.b, d: h.d?.s.en }; }, stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, trees: treeMesh.count, zebras: zebraMesh.count, dashes: laneMesh.count, cars: CARS.length }), where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); } };
+  window.__metro = { get C(){ return C; }, setHScale, controls, refresh: () => refreshCity(), heightOf: t => tgt[byT[t].i].h, pick: (x, y) => { const h = pick(x, y); return { b: h.b, d: h.d?.s.en }; }, stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, trees: treeMesh.count, zebras: zebraMesh.count, dashes: laneMesh.count, cars: CARS.length }), where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); }, ghosts: () => !!ghostMesh?.visible };
 }
 boot();
 </script>
