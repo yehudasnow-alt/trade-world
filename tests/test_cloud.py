@@ -142,3 +142,20 @@ def test_prune_keeps_the_disk_small(isolated_env):
     assert not old.exists() and not old.parent.exists() and new.exists() and out["freed_mb"] >= 0
     with session() as s:
         kv_set(s, "x", json.dumps(out))
+
+
+def test_the_scheduler_starts_with_every_source(isolated_env, monkeypatch):
+    """The cloud start runs Runner.start() before the web server: an error there fails the health check."""
+    from metro.jobs import Runner
+    for k, v in {"SEC_USER_AGENT": "Test Runner test@example.org", "ALPACA_KEY_ID": "k", "ALPACA_SECRET_KEY": "s", "FINNHUB_API_KEY": "f",
+                 "IBKR_FLEX_TOKEN": "t", "IBKR_FLEX_QUERY_ID": "q", "ANTHROPIC_API_KEY": "a", "TELEGRAM_BOT_TOKEN": "b", "TELEGRAM_CHAT_ID": "1"}.items():
+        monkeypatch.setenv(k, v)
+    config.get_settings.cache_clear()
+    r = Runner()
+    try:
+        on = r.start()
+        assert {"SEC", "Alpaca", "Finnhub", "IBKR Flex"} <= set(on)
+        ids = {j.name for j in r.sched.get_jobs()}
+        assert {"macro_boot", "upgrade", "paper", "ownership"} <= ids
+    finally:
+        r.stop()

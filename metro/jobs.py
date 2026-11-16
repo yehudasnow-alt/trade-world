@@ -218,8 +218,7 @@ class Runner:
             add(safe("sec", self.sec_tick), "cron", day_of_week="mon-fri", hour="6-21", minute="*/2")
             add(safe("sec_nightly", self.sec_nightly), "cron", hour=2, minute=30)
             add(safe("ownership", self.ownership_tick), "cron", hour=1, minute=5)
-            from datetime import timedelta as _td
-            add(safe("upgrade", self.upgrade_tick), "date", run_date=datetime.now(clock.NY) + _td(minutes=3))
+            add(safe("upgrade", self.upgrade_tick), "date", run_date=datetime.now(clock.NY) + timedelta(minutes=3))
             on.append("SEC")
         if st.alpaca_ready:
             from .sources.alpaca import AlpacaClient
@@ -264,7 +263,6 @@ class Runner:
                 kv_set(s, "bootstrap", {**bs, "state": "idle"})
         if self.needs_first_fill():
             # a fresh installation (in the cloud nobody is there to type `metro backfill`): fill it now, in the background
-            from datetime import timedelta
             add(safe("bootstrap", self.bootstrap_tick), "date", run_date=datetime.now(clock.NY) + timedelta(seconds=20))
         self.sched.start()
         return on
