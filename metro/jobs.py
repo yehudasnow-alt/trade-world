@@ -130,6 +130,7 @@ class Runner:
                 log.warning("facts %s: %s", t, e)
         with session() as s:
             kv_set(s, "facts.version", pipeline.FACTS_VERSION)
+        pipeline.compute_scores()  # ten years of sales feed the expected growth
         return f"companies={n}"
 
     def alerts_tick(self) -> str:
@@ -227,6 +228,8 @@ class Runner:
             add(safe("after_close", self.after_close), "cron", day_of_week="mon-fri", hour=16, minute=25)
             on.append("Alpaca")
         add(safe("scores", self.score_tick), "cron", day_of_week="mon-fri", hour="9-15", minute="*/15")
+        # after an update the new fields (value by analysis, expected growth) should not wait for the next session
+        add(safe("scores_boot", lambda: f"scores={len(pipeline.compute_scores())}"), "date", run_date=datetime.now(clock.NY) + timedelta(minutes=4))
         if st.finnhub_api_key:
             from .sources.finnhub import FinnhubClient
             self.finnhub = FinnhubClient()

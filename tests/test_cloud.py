@@ -156,6 +156,6 @@ def test_the_scheduler_starts_with_every_source(isolated_env, monkeypatch):
         on = r.start()
         assert {"SEC", "Alpaca", "Finnhub", "IBKR Flex"} <= set(on)
         ids = {j.func.__name__ for j in r.sched.get_jobs()}
-        assert {"macro_boot", "upgrade", "paper", "ownership"} <= ids
+        assert {"macro_boot", "upgrade", "paper", "ownership", "scores_boot"} <= ids
     finally:
         r.stop()
