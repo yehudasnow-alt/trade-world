@@ -81,7 +81,11 @@ button{cursor:pointer; background:none; border:0; padding:0}
 .dlab.on{outline:2px solid var(--accent)}
 .tk{z-index:1; direction:ltr; font-family:var(--font-data); font-size:11.5px; font-weight:600; color:var(--ink); padding:1px 6px; border-radius:6px; background:var(--glass-strong); border:1px solid var(--line); line-height:16px}
 .tk i{font-style:normal; font-weight:500; margin-left:5px; color:var(--ink-2)}
-.tk i.up{color:var(--up)} .tk i.down{color:var(--down)}
+.tk i.up{color:var(--up)} .tk i.down{color:var(--down)} .tk i.vio{color:#6A4CF0}
+#gtag{position:absolute; z-index:6; left:0; top:0; pointer-events:none; direction:rtl; white-space:nowrap; display:flex; flex-direction:column; gap:2px; padding:6px 9px; border-radius:11px; background:var(--glass-strong); border:1px solid var(--line); box-shadow:var(--shadow); font-size:12px; line-height:1.35}
+#gtag[hidden]{display:none}
+#gtag b{font-family:var(--font-data); font-weight:700} #gtag .h{font-weight:700; font-size:12.5px}
+#gtag .up{color:var(--up)} #gtag .down{color:var(--down)} #gtag .vio{color:#6A4CF0}
 .st{z-index:1; font-size:10.5px; font-weight:600; color:var(--ink-2); letter-spacing:.02em; direction:ltr; padding:1px 7px; border-radius:6px; background:color-mix(in srgb, var(--glass-strong) 82%, transparent); border:1px solid var(--line)}
 .pin{z-index:2; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-data); font-weight:700; font-size:11.5px; color:var(--accent-ink); background:var(--accent); border:2px solid var(--glass-strong); box-shadow:0 4px 10px -3px rgba(0,0,0,.35)}
 .pin.hold{background:var(--beacon); color:#2A1C00}
@@ -548,7 +552,7 @@ ul.clean li{margin:2px 0}
   <div id="boot"><span><i></i>בונה את העיר</span></div>
   <canvas id="scene" tabindex="0" aria-label="מפת העיר התלת-ממדית של מניות S&amp;P 500"></canvas>
   <svg id="leaders" aria-hidden="true"></svg>
-  <div id="labels" aria-hidden="true"></div>
+  <div id="labels" aria-hidden="true"><div id="gtag" hidden></div></div>
   <div id="hcard" class="hcard glass" hidden></div>
 
   <div id="ui">
@@ -1752,7 +1756,8 @@ function writeGhostSet(set, on, valueOf, colorOf, k, minDiff){
   for (const c of C) {
     const v = valueOf(c);
     if (!isNum(v) || !isNum(c.h) || Math.abs(v / c.capv - 1) < minDiff) { for (const m of set) HIDE(m, c.i); continue; }  // small differences would only tint the whole city
-    const boxes = towerBoxes(c, capH(v) * HS.v, k), col = colorOf(c, v);
+    const gh = capH(v) * HS.v; c.gTop = Math.max(c.gTop || 0, BASE_Y + gh);
+    const boxes = towerBoxes(c, gh, k), col = colorOf(c, v);
     for (let t = 0; t < 3; t++) {
       const bx = boxes[t];
       if (!bx) { HIDE(set[t], c.i); continue; }
@@ -1765,6 +1770,7 @@ function writeGhosts(){
   if (!ghostP.length) return;
   const show = PROJ.on && HS.v > 0.5, hunt = mode === 'hunt';
   const up = COL.up.clone().lerp(new THREE.Color(1, 1, 1), 0.1), dn = COL.down.clone(), vio = new THREE.Color(0x6A4CF0);
+  for (const c of C) c.gTop = 0;
   // green when the copy is taller (it grows), red when shorter (it shrinks); the analysis copy is violet
   writeGhostSet(ghostP, show && (hunt || PROJ.show !== 'an'), projCap, (c, v) => v >= c.capv ? up : dn, 1.05, 0.05);
   writeGhostSet(ghostA, show && !hunt && PROJ.show !== 'pace', c => anCap(c), () => vio, 1.1, 0.1);
@@ -1916,7 +1922,17 @@ function districtMetric(d){
   if (mode === 'earnings') return `${cs.filter(c => c.rep?.st === 'done').length}/${cs.length} דיווחו`;
   const w = cs.reduce((a, c) => a + (c.hold ? c.hold.w || 0 : 0), 0); return w ? `${w.toFixed(0)}% מהתיק` : '—';
 }
+function projPct(c){
+  const out = [];
+  if (!PROJ.on) return out;
+  if (mode === 'hunt') { const v = projCap(c); if (isNum(v)) out.push({ k: 'fv', d: (v / c.capv - 1) * 100 }); return out; }
+  if (PROJ.show !== 'an') { const v = projCap(c); if (isNum(v)) out.push({ k: 'pace', d: (v / c.capv - 1) * 100 }); }
+  if (PROJ.show !== 'pace') { const v = anCap(c); if (isNum(v)) out.push({ k: 'an', d: (v / c.capv - 1) * 100 }); }
+  return out;
+}
 function tkValue(c){
+  const pp = projPct(c);
+  if (pp.length) return pp.map(x => `<i class="${x.k === 'an' ? 'vio' : sg(x.d)}">${fmtPct(x.d, 0)}</i>`).join('');
   if (mode === 'market') return `<i class="${sg(c.chg)}">${fmtPct(c.chg, 1)}</i>`;
   if (mode === 'hunt') return c.sc ? `<i>${Math.round(c.sc.tot)}</i>` : '';
   if (mode === 'earnings') return c.rep?.st === 'done' ? `<i class="${sg(c.rep.react)}">${fmtPct(c.rep.react, 1)}</i>` : '';
@@ -1965,8 +1981,19 @@ function chromeBoxes(){
   }
   return out;
 }
+function placeGhostTag(){
+  const el = $('#gtag'); const c = hoverI >= 0 && hcard.hidden ? C[hoverI] : null; const pp = c ? projPct(c) : [];  // once the full card is up it carries the same numbers
+  if (!pp.length) { el.hidden = true; return; }
+  const name = { pace: `בעוד ${horizonHe()}, בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'}`, an: `בעוד ${horizonHe()}, לפי הניתוח`, fv: 'עד השווי ההוגן' };
+  const html = `<span class="h">${esc(c.t)}</span>${pp.map(x => `<span>${name[x.k]}: <b class="${x.k === 'an' ? 'vio' : sg(x.d)}">${fmtPct(x.d, 0)}</b></span>`).join('')}`;
+  if (el._h !== html) { el.innerHTML = html; el._h = html; }
+  const p = proj(c.x, Math.max(c.topY, c.gTop || 0) + 0.4, c.z);
+  if (!p.ok) { el.hidden = true; return; }
+  el.hidden = false; setT(el, p.x, p.y - 26);
+}
 function updateLabels(){
   camera.updateMatrixWorld();  // a flight may have moved the camera since the last render
+  placeGhostTag();
   const camDist = camera.position.distanceTo(controls.target); const flat2D = HS.v < 0.5;
   const boxes = chromeBoxes();
   const hit = box => boxes.some(b => b.x < box.x + box.w && box.x < b.x + b.w && b.y < box.y + box.h && box.y < b.y + b.h);
@@ -2022,7 +2049,7 @@ function updateLabels(){
   const cand = [];
   for (const c of C) {
     const size = Math.max(Math.min(c.fw, c.fd), flat2D ? 0 : c.h * 0.32) * pxPerUnit(c.x, c.topY, c.z); if (size < (flat2D ? 30 : 40)) continue;
-    const p = proj(c.x, c.topY + 0.2, c.z); if (!p.ok || p.y < 70 || p.y > VIEW.h - 20) continue;
+    const p = proj(c.x, Math.max(c.topY, PROJ.on ? (c.gTop || 0) : 0) + 0.2, c.z); if (!p.ok || p.y < 70 || p.y > VIEW.h - 20) continue;
     if (mode === 'portfolio' && !c.hold && size < 70) continue;
     cand.push({ c, p, size });
   }
@@ -2068,7 +2095,8 @@ function pick(cx, cy){
   // three.js keeps a hit-sphere per instanced mesh from the first raycast; buildings grow and change, so refresh it
   if (boundsDirty) { for (const m of [...tier, roofMesh, tankMesh]) m.computeBoundingSphere(); boundsDirty = false; }
   const r = renderer.domElement.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera);
-  const hits = ray.intersectObjects([...tier, roofMesh, tankMesh, ...plateMeshes], false);
+  if (PROJ.on) for (const m of [...ghostP, ...ghostA]) if (m.visible) m.computeBoundingSphere();  // the copies count as their tower
+  const hits = ray.intersectObjects([...tier, roofMesh, tankMesh, ...ghostP.filter(m => m.visible), ...ghostA.filter(m => m.visible), ...plateMeshes], false);
   for (const h of hits) { if (h.object.isInstancedMesh) { const id = h.object === roofMesh || h.object === tankMesh ? Math.floor(h.instanceId / 2) : h.instanceId; return { b: id }; } if (h.object.userData.d) return { d: h.object.userData.d }; }
   return {};
 }
