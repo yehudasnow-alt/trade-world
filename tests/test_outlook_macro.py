@@ -49,3 +49,17 @@ def test_api_macro_peers_and_analysis(isolated_env):
     assert b["dcf"]["shares"] and b["dcf"]["price"]
     row = next(x for x in c.get("/api/city").json()["companies"] if x["t"] == "MSFT")
     assert row["an"] and set(row["an"]["p"]) == {"0.25", "0.5", "1.0", "2.0", "5.0"} and "p" in row["gr"]
+
+
+def test_value_by_analysis_is_conservative_and_says_how_sure():
+    # a fast grower whose own history is full of very high multiples
+    m = {"eps_ttm": 3.0, "growth_exp": 45.0, "pe_hist": [90.0, 60.0, 40.0, 35.0] * 15, "fcf_ttm": 60e9, "shares": 24e9, "net_debt": -40e9}
+    o = V.outlook_v2(m, sector_pe=30.0, market_pe=20.0)
+    assert o["g"] == 25.0 and o["pe"] == (sorted(m["pe_hist"])[30] + 30.0) / 2
+    assert o["conf"] == "low" and any("25%" in w for w in o["why"])
+    # the multiple fades toward the market's as growth fades: five years out it is paid like the market
+    assert abs(o["path"]["5.0"] / o["now"] - V.eps_after(3.0, 25.0, 6.0) * 20.0 / o["by_pe"]) < 1e-9
+    # a steady company with consistent numbers: high confidence
+    s = {"eps_ttm": 5.0, "growth_exp": 7.0, "pe_hist": [20.0, 21.0, 19.0, 22.0] * 15, "fcf_ttm": 5.0 * 1e9 * 1.0, "shares": 1e9, "net_debt": 0}
+    o2 = V.outlook_v2(s, sector_pe=21.0, market_pe=20.0)
+    assert o2["conf"] in ("high", "medium") and 0.6 < o2["by_pe"] / o2["by_cash"] < 1.6

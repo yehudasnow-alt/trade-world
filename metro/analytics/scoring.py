@@ -143,7 +143,6 @@ def raw_metrics(x: Inputs) -> dict[str, Any]:
         g0 = V.expected_growth(m.get("rev_yoy"), m["rev_cagr5"], m.get("eps_yoy"), x.guidance)
         m["growth_exp"] = g0
         m["fair"] = V.fair_range(m["eps_ttm"], pe_h[-60:], g0 if g0 is not None else m.get("rev_yoy"))
-        m["outlook"] = V.outlook(m["eps_ttm"], pe_h[-60:], g0)
 
     today = x.today or (x.days[-1] if x.days else date.today())
     veto, flags = [], []
@@ -253,6 +252,15 @@ def score_universe(raws: dict[str, dict]) -> dict[str, dict]:
         out[t] = {"quality": round(quality, 1), "direction": round(direction, 1), "valuation": round(valuation, 1),
                   "timing": round(timing, 1), "total": round(total, 1), "veto": m.get("veto") or [],
                   "flags": m.get("flags") or []}
+    # value by analysis needs the whole universe: the sector's median P/E and the market's
+    sec_pe: dict[str, list[float]] = {}
+    for t, m in raws.items():
+        if m.get("pe_ttm") and 0 < m["pe_ttm"] < 300:
+            sec_pe.setdefault(m["sector"], []).append(m["pe_ttm"])
+    all_pe = [x for v in sec_pe.values() for x in v]
+    mkt_pe = median(all_pe) if all_pe else None
+    for t, m in raws.items():
+        m["outlook"] = V.outlook_v2(m, median(sec_pe[m["sector"]]) if sec_pe.get(m["sector"]) else None, mkt_pe)
     # beacons: strict rule, then keep only the strongest few so the signal stays a signal
     cands = [t for t, s in out.items() if not s["veto"] and s["total"] >= 66 and s["quality"] >= 15
              and s["valuation"] >= 13.5 and (raws[t].get("dd_pct") or 0) <= -7 and (raws[t].get("sigma") or 0) > -3]

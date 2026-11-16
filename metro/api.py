@@ -146,9 +146,9 @@ def city() -> dict:
                 "veto": (sc.veto if sc else []), "beacon": bool(sc and sc.beacon), "val": _r(m.get("pe_pct_5y"), 0),
                 "pe": _r(m.get("pe_ttm"), 1), "rep": rep,
                 "gr": {"r": _r(m.get("rev_yoy"), 1), "e": _r(m.get("eps_yoy"), 1), "p": _r(m.get("ret_1y"), 1)},
-                "fv": _r((m.get("fair") or {}).get("base")),
-                "an": {"g": _r(m["outlook"]["g0"], 1), "pe": _r(m["outlook"]["pe"], 1),
-                       "p": {k: _r(v) for k, v in m["outlook"]["path"].items()}} if m.get("outlook") else None, "watch": c.ticker in watch, "th": c.themes,
+                "fv": _r((m.get("outlook") or {}).get("now") or (m.get("fair") or {}).get("base")),
+                "an": {"g": _r(m["outlook"]["g0"], 1), "pe": _r(m["outlook"]["pe"], 1), "c": m["outlook"].get("conf"),
+                       "p": {k: _r(v) for k, v in m["outlook"]["path"].items()}} if (m.get("outlook") or {}).get("path") else None, "watch": c.ticker in watch, "th": c.themes,
                 "hold": {"w": _r(h.weight_pct, 1), "pnl": _r(h.pnl_pct, 1), "th": th.status if th else None, "q": _r(h.quantity, 4),
                          "cost": _r(h.avg_cost), "v": _r(h.market_value, 0)} if h else None,
                 "paper": paper_rows.get(c.ticker),
@@ -317,7 +317,9 @@ def _business(s, t: str, qrows: list, m: dict) -> dict:
               "updated": (own_info or {}).get("at"), "loading": loading}
     pr = s.scalars(select(CompanyProfile).where(CompanyProfile.ticker == t).order_by(CompanyProfile.created.desc())).first()
     money = B.money_flow(quarters, m.get("market_cap"))
-    dcf = {"fcf": m.get("fcf_ttm"), "shares": m.get("shares"), "net_debt": m.get("net_debt"), "price": m.get("price"),
+    o = m.get("outlook") or {}
+    dcf = {"outlook": {k: o.get(k) for k in ("g0", "g", "pe", "pe_mkt", "by_pe", "by_cash", "now", "conf", "why")} if o.get("now") else None,
+           "fcf": m.get("fcf_ttm"), "shares": m.get("shares"), "net_debt": m.get("net_debt"), "price": m.get("price"),
            "g0": m.get("growth_exp"), "rev_cagr5": m.get("rev_cagr5"), "rev_yoy": m.get("rev_yoy"), "sbc": money.get("sbc"),
            "fcf_margin": m.get("fcf_margin")}
     return {

@@ -1738,7 +1738,7 @@ function projRow(c){
   if (mode === 'hunt') { const pc = projCap(c); return isNum(pc) ? [['שווי הוגן', fmt(pc)]] : null; }
   const rows = [], pc = projCap(c), ac = anCap(c);
   if (PROJ.show !== 'an' && isNum(pc)) rows.push([`בקצב · ${horizonHe()}`, fmt(pc)]);
-  if (PROJ.show !== 'pace' && isNum(ac)) rows.push([`לפי הניתוח`, fmt(ac)]);
+  if (PROJ.show !== 'pace' && isNum(ac)) rows.push([`שווי לפי הניתוח${c.an?.c === 'low' ? ' (ביטחון נמוך)' : ''}`, fmt(ac)]);
   return rows.length ? rows : null;
 }
 function capH(capv){ const k = Math.max(0, capv / CAP_MAX); return H_SCALE === 'real' ? H_FLOOR + Math.min(k, 1.9) * (H_MAX - H_FLOOR) : H_FLOOR + 44 * Math.sqrt(Math.min(k, 3)); }
@@ -1784,7 +1784,7 @@ function renderProj(){
     : `<div class="lbl2">בעוד</div><div class="opts">${HORIZONS.map(([v, t]) => `<button type="button" data-h="${v}" aria-pressed="${PROJ.h === v}">${t}</button>`).join('')}</div>
     <div class="lbl2">מה להציג</div><div class="opts">${[['both', 'שניהם'], ['pace', 'הקצב הנוכחי'], ['an', 'לפי הניתוח']].map(([v, t]) => `<button type="button" data-s="${v}" aria-pressed="${PROJ.show === v}">${t}</button>`).join('')}</div>
     ${PROJ.show !== 'pace' && C.filter(c => c.an).length < C.length * 0.5 ? `<p style="color:var(--warn)">יש כרגע ניתוח ל-${N(String(C.filter(c => c.an).length))} מתוך ${N(String(C.length))} חברות. הניתוח צריך חמש שנים של מכפילים ודוחות מה-SEC, ומתעדכן עם חישוב הציונים (כל 15 דקות בזמן המסחר, ופעם אחת כמה דקות אחרי כל עדכון של המערכת). חברה בהפסד לא מקבלת ניתוח.</p>` : ''}
-    ${PROJ.show !== 'pace' ? `<p style="color:var(--ink-2)"><b style="color:#6A4CF0">עותק סגול: לפי הניתוח.</b> צמיחה צפויה מתוך הנתונים של החברה (מכירות בשנה האחרונה, ממוצע 5 שנים, רווח, ותחזית ההנהלה כשיש), שדועכת בהדרגה ל-4% בשנה תוך 5 שנים, כפול המכפיל שהשוק שילם בדרך כלל על החברה. זה מה שהחברה "אמורה" להיות שווה אם הניתוח נכון.</p>` : ''}
+    ${PROJ.show !== 'pace' ? `<p style="color:var(--ink-2)"><b style="color:#6A4CF0">עותק סגול: שווי לפי הניתוח.</b> לא צפי למחיר המניה, אלא הערכה כמה העסק שווה: ממוצע של שתי שיטות, רווח עתידי כפול מכפיל הוגן (חצי ההיסטוריה של החברה, חצי הסקטור) ותזרים מהוון (DCF). צמיחה מעל 25% בשנה נספרת כ-25%, והיא דועכת ל-4% תוך 5 שנים; מכפיל גבוה מהשוק יורד אליו ככל שהצמיחה דועכת. מחיר יכול להישאר רחוק מהשווי שנים, ולכן על טווח של רבעון המספר בעיקר אומר "זול" או "יקר", לא לאן תזוז המניה. ~ לפני האחוז: ביטחון נמוך.</p>` : ''}
     ${PROJ.show !== 'an' ? `<div class="lbl2">עותק ירוק או אדום: הקצב הנוכחי, לפי הקצב של</div><div class="pace">` : '<div hidden>'}
       <button type="button" data-p="biz" aria-pressed="${PROJ.pace === 'biz'}">העסק<small>צמיחת ההכנסות בשנה האחרונה, בהנחה שהשוק ימשיך לשלם עליהן את אותו מכפיל</small></button>
       <button type="button" data-p="px" aria-pressed="${PROJ.pace === 'px'}">המניה<small>כמה המניה עלתה או ירדה בשנה האחרונה</small></button></div>`}
@@ -1932,7 +1932,7 @@ function projPct(c){
 }
 function tkValue(c){
   const pp = projPct(c);
-  if (pp.length) return pp.map(x => `<i class="${x.k === 'an' ? 'vio' : sg(x.d)}">${fmtPct(x.d, 0)}</i>`).join('');
+  if (pp.length) return pp.map(x => `<i class="${x.k === 'an' ? 'vio' : sg(x.d)}">${x.k !== 'pace' && c.an?.c === 'low' ? '~' : ''}${fmtPct(x.d, 0)}</i>`).join('');
   if (mode === 'market') return `<i class="${sg(c.chg)}">${fmtPct(c.chg, 1)}</i>`;
   if (mode === 'hunt') return c.sc ? `<i>${Math.round(c.sc.tot)}</i>` : '';
   if (mode === 'earnings') return c.rep?.st === 'done' ? `<i class="${sg(c.rep.react)}">${fmtPct(c.rep.react, 1)}</i>` : '';
@@ -1981,10 +1981,11 @@ function chromeBoxes(){
   }
   return out;
 }
+const CONF_HE = { high: ['ביטחון גבוה', 'up'], medium: ['ביטחון בינוני', 'wr'], low: ['ביטחון נמוך', 'down'] };
 function placeGhostTag(){
   const el = $('#gtag'); const c = hoverI >= 0 && hcard.hidden ? C[hoverI] : null; const pp = c ? projPct(c) : [];  // once the full card is up it carries the same numbers
   if (!pp.length) { el.hidden = true; return; }
-  const name = { pace: `בעוד ${horizonHe()}, בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'}`, an: `בעוד ${horizonHe()}, לפי הניתוח`, fv: 'עד השווי ההוגן' };
+  const name = { pace: `בעוד ${horizonHe()}, בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'}`, an: `שווי לפי הניתוח (${horizonHe()})${c.an?.c ? ' · ' + CONF_HE[c.an.c][0] : ''}`, fv: 'עד השווי לפי הניתוח' };
   const html = `<span class="h">${esc(c.t)}</span>${pp.map(x => `<span>${name[x.k]}: <b class="${x.k === 'an' ? 'vio' : sg(x.d)}">${fmtPct(x.d, 0)}</b></span>`).join('')}`;
   if (el._h !== html) { el.innerHTML = html; el._h = html; }
   const p = proj(c.x, Math.max(c.topY, c.gTop || 0) + 0.4, c.z);
@@ -2618,6 +2619,13 @@ function lastingHTML(b){
       ${(P.what_to_watch_he || []).length ? `<div><b>מה לבדוק כל רבעון</b><ul class="clean">${P.what_to_watch_he.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}</div>
     <p class="note">החפיר, השפעת ה-AI והעמידות הם הערכה של Claude מתוך הדוח השנתי ועשר שנות המספרים, לא עובדה. הציטוטים מאומתים מול הדוח.</p></div>`;
 }
+function anNote(o, c){
+  if (!o) return `<p class="note">לחברה בהפסד, או בלי מספיק היסטוריה של מכפילים, אין שווי לפי הניתוח.</p>`;
+  const cf = CONF_HE[o.conf] || ['', ''];
+  return `<div class="verdict" style="margin-top:8px"><span class="chip ${cf[1]}">${cf[0]}</span>${isNum(o.by_pe) ? `<span class="chip">לפי רווח: ${fmtUsd(o.by_pe)}</span>` : ''}${isNum(o.by_cash) ? `<span class="chip">לפי תזרים: ${fmtUsd(o.by_cash)}</span>` : ''}</div>
+    ${(o.why || []).length ? `<p class="note warn">למה לא בטוח: ${o.why.map(esc).join(' · ')}.</p>` : ''}
+    <p class="note">שווי לפי הניתוח הוא <b>הערכת שווי, לא צפי למחיר</b>. הוא ממוצע של שתי שיטות: רווח שנה קדימה כפול מכפיל הוגן (${isNum(o.pe) ? N(o.pe.toFixed(1)) : '–'}: חצי מההיסטוריה של החברה, חצי מהסקטור), ותזרים מהוון ב-9% (DCF). צמיחה של ${isNum(o.g0) ? N(o.g0.toFixed(0) + '%') : '–'} ${o.g0 > o.g ? `נספרה כ-${N(o.g.toFixed(0) + '%')}, ` : ''}דועכת ל-4% תוך 5 שנים, ומכפיל גבוה מהשוק (${isNum(o.pe_mkt) ? N(o.pe_mkt.toFixed(0)) : '–'}) יורד אליו עם הדעיכה. מחיר יכול להישאר רחוק מהשווי שנים: על טווח קצר הפער אומר בעיקר אם המניה זולה או יקרה.</p>`;
+}
 function worthHTML(b, c){
   const d = b.dcf || {}, an = c.an;
   const rows = HORIZONS.map(([h, t]) => {
@@ -2626,8 +2634,8 @@ function worthHTML(b, c){
     return `<tr><td>${t}</td>${cell(p)}${cell(a)}</tr>`;
   }).join('');
   const table = `<div class="tlh">איפה המניה יכולה להיות <small class="muted">(מחיר למניה, היום ${fmtUsd(c.px)})</small></div>
-    <table class="mtab"><thead><tr><th>בעוד</th><th>בקצב הנוכחי של המכירות${isNum(c.gr?.r) ? ` (${N(c.gr.r.toFixed(0) + '%')} בשנה)` : ''}</th><th>לפי הניתוח${isNum(an?.g) ? ` (מתחיל ב-${N(an.g.toFixed(0) + '%')}, דועך ל-4%)` : ''}</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="note">"לפי הניתוח": הרווח הצפוי שנה קדימה מכל תאריך, כפול המכפיל שהשוק שילם בדרך כלל על החברה${isNum(an?.pe) ? ` (${N(an.pe.toFixed(1))})` : ''}. הצמיחה מתחילה מהנתונים של החברה ודועכת בהדרגה, כי צמיחה מהירה כמעט אף פעם לא נמשכת לנצח. ${an ? '' : 'לחברה בהפסד, או עם פחות משנה של היסטוריית מכפילים, אין תחזית לפי הניתוח.'}</p>`;
+    <table class="mtab"><thead><tr><th>בעוד</th><th>בקצב הנוכחי של המכירות${isNum(c.gr?.r) ? ` (${N(c.gr.r.toFixed(0) + '%')} בשנה)` : ''}</th><th>שווי לפי הניתוח</th></tr></thead><tbody>${rows}</tbody></table>
+    ${anNote(d.outlook, c)}`;
   const can = isNum(d.fcf) && d.fcf > 0 && isNum(d.shares);
   const g1 = clamp(Math.round(d.g0 ?? d.rev_yoy ?? 6), -10, 35);
   return `<div class="sec"><h4>כמה העסק שווה</h4>${table}
