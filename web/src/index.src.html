@@ -1584,13 +1584,14 @@ function buildScene(){
   // buildings: up to three stacked tiers, rooftop units, tanks and flues for industrial districts
   NB = C.length;
   for (let k = 0; k < 3; k++) { const m = new THREE.InstancedMesh(unitBox, buildingMaterial(), NB); m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); tier.push(m); scene.add(m); }
-  ghostMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.46, depthWrite: false, roughness: 0.15, metalness: 0.1 });
-  lidMesh = new THREE.InstancedMesh(unitBox, new THREE.MeshStandardMaterial({ color: 0x5B4BE0, roughness: 0.4, emissive: 0x2A1E8A, emissiveIntensity: 0.35 }), NB); lidMesh.frustumCulled = false; lidMesh.visible = false; lidMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(lidMesh);
-  ghostMesh = new THREE.InstancedMesh(unitBox, ghostMat, NB); ghostMesh.frustumCulled = false; ghostMesh.renderOrder = 2; ghostMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); ghostMesh.visible = false; scene.add(ghostMesh);
+  // ghost copies of every tower: the same shape at another height, as tinted glass (one set for the pace, one for the analysis)
+  ghostMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.32, depthWrite: false, roughness: 0.1, metalness: 0.05 });
+  const ghostMatA = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, depthWrite: false, roughness: 0.1, metalness: 0.05 });
+  for (const set of [ghostP, ghostA]) for (let k = 0; k < 3; k++) { const m = new THREE.InstancedMesh(unitBox, set === ghostA ? ghostMatA : ghostMat, NB); m.frustumCulled = false; m.renderOrder = 2; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.visible = false; set.push(m); scene.add(m); }
   roofMesh = new THREE.InstancedMesh(unitBox, MAT.detail, NB * 2); tankMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, NB * 2); chimMesh = new THREE.InstancedMesh(unitCyl, MAT.detail, NB);
   for (const m of [roofMesh, tankMesh, chimMesh]) { m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); }
   const white = new THREE.Color(1, 1, 1);
-  for (let i = 0; i < NB; i++) ghostMesh.setColorAt(i, white);
+  for (const m of [...ghostP, ...ghostA]) for (let i = 0; i < NB; i++) m.setColorAt(i, white);
   for (let i = 0; i < NB; i++) { for (const m of tier) m.setColorAt(i, white); roofMesh.setColorAt(i * 2, white); roofMesh.setColorAt(i * 2 + 1, white); tankMesh.setColorAt(i * 2, white); tankMesh.setColorAt(i * 2 + 1, white); chimMesh.setColorAt(i, white); }
   // cars and buses on every road, more of them where there is more road
   const carGeo = new THREE.BoxGeometry(0.82, 0.4, 1.75); carGeo.translate(0, 0.32, 0);
@@ -1714,12 +1715,11 @@ function writeOne(i){
 /* "what if the current pace continues": a glass extension on top of each tower up to the value it would reach,
    or a red sleeve over the part it would lose. In the opportunity hunt the glass is the fair value instead. */
 const PROJ = { on: store.get(LS_PREFIX + 'proj.on', false), h: store.get(LS_PREFIX + 'proj.h', 1), pace: store.get(LS_PREFIX + 'proj.pace', 'biz'), show: store.get(LS_PREFIX + 'proj.show', 'both') };
-let lidMesh = null;
 const hKey = h => Number.isInteger(h) ? h.toFixed(1) : String(h);
 function anCap(c, h = PROJ.h){ const v = c.an?.p?.[hKey(h)]; return isNum(v) && c.px && c.capv ? c.capv * v / c.px : null; }
 const HORIZONS = [[0.25, 'רבעון'], [0.5, 'חצי שנה'], [1, 'שנה'], [2, 'שנתיים'], [5, '5 שנים']];
 const PACE_CAP = [-50, 100];
-let ghostMesh = null, ghostMat = null;
+const ghostP = [], ghostA = []; let ghostMat = null;
 function paceOf(c){ if (PROJ.pace === 'px') return c.gr?.p; return isNum(c.gr?.r) ? c.gr.r : c.gr?.e; }
 function projCap(c){
   if (!c.capv) return null;
@@ -1738,46 +1738,51 @@ function projRow(c){
   return rows.length ? rows : null;
 }
 function capH(capv){ const k = Math.max(0, capv / CAP_MAX); return H_SCALE === 'real' ? H_FLOOR + Math.min(k, 1.9) * (H_MAX - H_FLOOR) : H_FLOOR + 44 * Math.sqrt(Math.min(k, 3)); }
-function writeGhosts(){
-  if (!ghostMesh) return;
-  ghostMesh.visible = PROJ.on && HS.v > 0.5 && (mode === 'hunt' || PROJ.show !== 'an');
-  lidMesh.visible = PROJ.on && HS.v > 0.5 && mode !== 'hunt' && PROJ.show !== 'pace';
-  if (lidMesh.visible) {
-    for (const c of C) {
-      const ac = anCap(c);
-      if (!isNum(ac)) { HIDE(lidMesh, c.i); continue; }
-      const ha = capH(ac) * HS.v;
-      if (Math.abs(ac / c.capv - 1) < 0.05 || !isNum(c.h)) { HIDE(lidMesh, c.i); continue; }  // within 5% of today: nothing to mark
-      setInst(lidMesh, c.i, c.x, BASE_Y + ha - 0.12, c.z, c.fw * 1.08, 0.24, c.fd * 1.08);
-    }
-    lidMesh.instanceMatrix.needsUpdate = true;
-  }
-  if (!ghostMesh.visible) return;
-  const upC = COL.up.clone().lerp(new THREE.Color(1, 1, 1), 0.15), dnC = COL.down.clone(), fvC = COL.beacon.clone().lerp(new THREE.Color(1, 1, 1), 0.1);
+/* the same tower shape as writeOne (setbacks and offsets), at height h, footprint scaled by k */
+function towerBoxes(c, h, k){
+  const fw = c.fw * k, fd = c.fd * k, small = Math.min(c.fw, c.fd), v = c.hv;
+  const sx = ((v & 3) - 1.5) / 1.5 * c.fw * 0.07, sz = (((v >> 2) & 3) - 1.5) / 1.5 * c.fd * 0.07;
+  if (h > 9 && small > 1.6) { const a = h * 0.58, b = h * 0.84; return [[c.x, 0, c.z, fw, a, fd], [c.x + sx, a, c.z + sz, fw * 0.8, b - a, fd * 0.8], [c.x + sx * 1.4, b, c.z + sz * 1.4, fw * 0.58, h - b, fd * 0.58]]; }
+  if (h > 4.5 && small > 1.2) { const a = h * 0.86; return [[c.x, 0, c.z, fw, a, fd], [c.x + sx, a, c.z + sz, fw * 0.7, h - a, fd * 0.7]]; }
+  return [[c.x, 0, c.z, fw, h, fd]];
+}
+function writeGhostSet(set, on, valueOf, colorOf, k, minDiff){
+  for (const m of set) m.visible = on;
+  if (!on) return;
   for (const c of C) {
-    const pc = PROJ.on ? projCap(c) : null; const h = c.h;
-    if (!isNum(pc) || !isNum(h)) { HIDE(ghostMesh, c.i); continue; }
-    const hp = capH(pc) * HS.v;
-    if (Math.abs(hp - h) < 0.25) { HIDE(ghostMesh, c.i); continue; }
-    if (hp > h) { setInst(ghostMesh, c.i, c.x, BASE_Y + h, c.z, c.fw * 0.86, hp - h, c.fd * 0.86); ghostMesh.setColorAt(c.i, mode === 'hunt' ? fvC : upC); }
-    else { setInst(ghostMesh, c.i, c.x, BASE_Y + hp, c.z, c.fw * 1.07, h - hp, c.fd * 1.07); ghostMesh.setColorAt(c.i, dnC); }
+    const v = valueOf(c);
+    if (!isNum(v) || !isNum(c.h) || Math.abs(v / c.capv - 1) < minDiff) { for (const m of set) HIDE(m, c.i); continue; }  // small differences would only tint the whole city
+    const boxes = towerBoxes(c, capH(v) * HS.v, k), col = colorOf(c, v);
+    for (let t = 0; t < 3; t++) {
+      const bx = boxes[t];
+      if (!bx) { HIDE(set[t], c.i); continue; }
+      setInst(set[t], c.i, bx[0], BASE_Y + bx[1], bx[2], bx[3], bx[4], bx[5]); set[t].setColorAt(c.i, col);
+    }
   }
-  ghostMesh.instanceMatrix.needsUpdate = true; if (ghostMesh.instanceColor) ghostMesh.instanceColor.needsUpdate = true;
+  for (const m of set) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
+}
+function writeGhosts(){
+  if (!ghostP.length) return;
+  const show = PROJ.on && HS.v > 0.5, hunt = mode === 'hunt';
+  const up = COL.up.clone().lerp(new THREE.Color(1, 1, 1), 0.1), dn = COL.down.clone(), vio = new THREE.Color(0x6A4CF0);
+  // green when the copy is taller (it grows), red when shorter (it shrinks); the analysis copy is violet
+  writeGhostSet(ghostP, show && (hunt || PROJ.show !== 'an'), projCap, (c, v) => v >= c.capv ? up : dn, 1.05, 0.05);
+  writeGhostSet(ghostA, show && !hunt && PROJ.show !== 'pace', c => anCap(c), () => vio, 1.1, 0.1);
 }
 function renderProj(){
   const el = $('#projPop'), hunt = mode === 'hunt';
   $('#projBtn').setAttribute('aria-pressed', PROJ.on);
   el.innerHTML = `<h2>מה אם הקצב יימשך</h2>
-    <button type="button" class="sw" id="pjOn" aria-pressed="${PROJ.on}"><i></i>${PROJ.on ? 'מוצג: בניין שקוף לכל חברה' : 'הצג בניין שקוף לכל חברה'}</button>
-    ${hunt ? `<p style="color:var(--ink-2)">במצב <b>ציד הזדמנויות</b> הבניין השקוף הוא <b>השווי ההוגן</b> של החברה (מחיר הבסיס בטווח ההוגן). בניין שנמוך מהשקוף נסחר מתחת לשווי ההוגן, וכמה שהפער גדול יותר, ההנחה גדולה יותר. בניין עטוף אדום נסחר מעל השווי ההוגן.</p>`
+    <button type="button" class="sw" id="pjOn" aria-pressed="${PROJ.on}"><i></i>${PROJ.on ? 'מוצג: עותק שקוף של כל בניין' : 'הצג עותק שקוף של כל בניין'}</button>
+    ${hunt ? `<p style="color:var(--ink-2)">במצב <b>ציד הזדמנויות</b> העותק השקוף הוא הבניין <b>בשווי ההוגן</b> של החברה. <b style="color:var(--up)">ירוק וגבוה מהבניין:</b> המניה נסחרת מתחת לשווי ההוגן. <b style="color:var(--down)">אדום ונמוך מהבניין:</b> מעל השווי ההוגן.</p>`
     : `<div class="lbl2">בעוד</div><div class="opts">${HORIZONS.map(([v, t]) => `<button type="button" data-h="${v}" aria-pressed="${PROJ.h === v}">${t}</button>`).join('')}</div>
     <div class="lbl2">מה להציג</div><div class="opts">${[['both', 'שניהם'], ['pace', 'הקצב הנוכחי'], ['an', 'לפי הניתוח']].map(([v, t]) => `<button type="button" data-s="${v}" aria-pressed="${PROJ.show === v}">${t}</button>`).join('')}</div>
     ${PROJ.show !== 'pace' && C.filter(c => c.an).length < C.length * 0.5 ? `<p style="color:var(--warn)">יש כרגע ניתוח ל-${N(String(C.filter(c => c.an).length))} מתוך ${N(String(C.length))} חברות. הניתוח צריך חמש שנים של מכפילים ודוחות מה-SEC, ומתעדכן עם חישוב הציונים (כל 15 דקות בזמן המסחר, ופעם אחת כמה דקות אחרי כל עדכון של המערכת). חברה בהפסד לא מקבלת ניתוח.</p>` : ''}
-    ${PROJ.show !== 'pace' ? `<p style="color:var(--ink-2)"><b style="color:#5B4BE0">▬ מכסה סגול: לפי הניתוח.</b> צמיחה צפויה מתוך הנתונים של החברה (מכירות בשנה האחרונה, ממוצע 5 שנים, רווח, ותחזית ההנהלה כשיש), שדועכת בהדרגה ל-4% בשנה תוך 5 שנים, כפול המכפיל שהשוק שילם בדרך כלל על החברה. זה מה שהחברה "אמורה" להיות שווה אם הניתוח נכון.</p>` : ''}
-    ${PROJ.show !== 'an' ? `<div class="lbl2">הקצב הנוכחי: הבניין השקוף, לפי הקצב של</div><div class="pace">` : '<div hidden>'}
+    ${PROJ.show !== 'pace' ? `<p style="color:var(--ink-2)"><b style="color:#6A4CF0">עותק סגול: לפי הניתוח.</b> צמיחה צפויה מתוך הנתונים של החברה (מכירות בשנה האחרונה, ממוצע 5 שנים, רווח, ותחזית ההנהלה כשיש), שדועכת בהדרגה ל-4% בשנה תוך 5 שנים, כפול המכפיל שהשוק שילם בדרך כלל על החברה. זה מה שהחברה "אמורה" להיות שווה אם הניתוח נכון.</p>` : ''}
+    ${PROJ.show !== 'an' ? `<div class="lbl2">עותק ירוק או אדום: הקצב הנוכחי, לפי הקצב של</div><div class="pace">` : '<div hidden>'}
       <button type="button" data-p="biz" aria-pressed="${PROJ.pace === 'biz'}">העסק<small>צמיחת ההכנסות בשנה האחרונה, בהנחה שהשוק ימשיך לשלם עליהן את אותו מכפיל</small></button>
       <button type="button" data-p="px" aria-pressed="${PROJ.pace === 'px'}">המניה<small>כמה המניה עלתה או ירדה בשנה האחרונה</small></button></div>`}
-    <p>${hunt ? 'השווי ההוגן מחושב מהרווח הצפוי לשנה הבאה כפול המכפיל החציוני של החברה בחמש השנים האחרונות.' : 'ירוק שקוף מעל הבניין: כמה הוא יגדל. אדום שקוף סביב הקצה: כמה יקטן. הקצב מוגבל בין −50% ל-+100% בשנה.'} זו המשכה של הקצב הנוכחי, לא תחזית: קצבים חריגים בדרך כלל לא נמשכים, במיוחד לאורך שנים.</p>`;
+    <p>${hunt ? 'השווי ההוגן מחושב מהרווח הצפוי לשנה הבאה כפול המכפיל החציוני של החברה בחמש השנים האחרונות.' : 'כל בניין מקבל עותק שקוף באותה צורה, בגובה של השווי הצפוי. ירוק: העותק גבוה מהבניין, כלומר החברה גדלה. אדום: העותק נמוך מהבניין והבניין בולט ממנו, כלומר החברה קטנה. סגול: לפי הניתוח. הקצב מוגבל בין −50% ל-+100% בשנה.'} זו המשכה של הקצב הנוכחי, לא תחזית: קצבים חריגים בדרך כלל לא נמשכים, במיוחד לאורך שנים.</p>`;
   el.querySelector('#pjOn').onclick = () => { PROJ.on = !PROJ.on; saveProj(); };
   el.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { PROJ.h = +b.dataset.h; PROJ.on = true; saveProj(); });
   el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { PROJ.pace = b.dataset.p; PROJ.on = true; saveProj(); });
@@ -2832,7 +2837,8 @@ function legendHTML(){
   return `<h3>התיק שלי</h3>${hl}<div class="lrow"><span class="ico">■</span>רק הפוזיציות צבועות; שאר העיר דהויה</div><div class="lrow"><span class="ico">■</span>צבע = רווח או הפסד על הפוזיציה</div>${div(N(MINUS + '25%'), N('+25%'))}${cb}`;
 }
 function setHScale(v){ if (v === H_SCALE) return; H_SCALE = v; store.set(LS_PREFIX + 'hscale', v); HOME_DIST = HOME().dist; renderLegend(); retarget(); dirty = true; }
-function projLegend(){ if (!PROJ.on) return ''; return `<div class="row" style="margin-top:8px;font-size:12px;color:var(--ink-2)"><span style="display:inline-block;width:10px;height:14px;border-radius:2px;margin-inline-end:6px;vertical-align:-2px;background:color-mix(in srgb, var(--${mode === 'hunt' ? 'beacon' : 'up'}) 45%, transparent);outline:1px solid color-mix(in srgb, var(--${mode === 'hunt' ? 'beacon' : 'up'}) 70%, transparent)"></span>${mode === 'hunt' ? 'שקוף: השווי ההוגן. אדום: מעל השווי ההוגן' : [PROJ.show !== 'an' ? `שקוף: בעוד ${horizonHe()} בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'} (אדום: ירידה)` : '', PROJ.show !== 'pace' ? `<b style="color:#5B4BE0">▬</b> מכסה סגול: לפי הניתוח` : ''].filter(Boolean).join(' · ')}</div>`; }
+function projLegend(){ if (!PROJ.on) return ''; const sw = c => `<span style="display:inline-block;width:9px;height:13px;border-radius:2px;margin-inline:2px 5px;vertical-align:-2px;background:${c};opacity:.6"></span>`;
+  return `<div class="row" style="margin-top:8px;font-size:12px;color:var(--ink-2);flex-wrap:wrap;gap:2px 8px">${mode === 'hunt' ? `עותק בשווי ההוגן: ${sw('var(--up)')}זול ${sw('var(--down)')}יקר` : `בעוד ${horizonHe()}: ${PROJ.show !== 'an' ? `${sw('var(--up)')}גדל ${sw('var(--down)')}קטן (בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'}) ` : ''}${PROJ.show !== 'pace' ? `${sw('#6A4CF0')}לפי הניתוח` : ''}`}</div>`; }
 function renderLegend(){ $('#legend').innerHTML = legendHTML() + projLegend(); $('#legend').querySelectorAll('.hsc button').forEach(b => b.onclick = () => setHScale(b.dataset.h)); const t = $('#cbToggle'); if (t) t.onchange = () => { document.documentElement.classList.toggle('cb', t.checked); store.set(LS_PREFIX + 'cb', t.checked); readTheme(); renderRail(); }; }
 function setMode(m){
   if (m === mode) return; mode = m; store.set(LS_PREFIX + 'mode', m);
@@ -3278,7 +3284,7 @@ async function boot(){
   if (!DEMO) { setInterval(pollQuotes, 20000); setInterval(refreshCity, 120000); setInterval(loadStatus, 60000); }
   setInterval(() => { if (!DEMO) return; renderStrip(); }, 30000);
   const hashT = decodeURIComponent(location.hash.slice(1)).toUpperCase(); if (hashT && byT[hashT]) setTimeout(() => select(byT[hashT].i), 2300);
-  window.__metro = { get C(){ return C; }, setHScale, controls, refresh: () => refreshCity(), heightOf: t => tgt[byT[t].i].h, pick: (x, y) => { const h = pick(x, y); return { b: h.b, d: h.d?.s.en }; }, stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, trees: treeMesh.count, zebras: zebraMesh.count, dashes: laneMesh.count, cars: CARS.length }), where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); }, ghosts: () => !!ghostMesh?.visible };
+  window.__metro = { get C(){ return C; }, setHScale, controls, refresh: () => refreshCity(), heightOf: t => tgt[byT[t].i].h, pick: (x, y) => { const h = pick(x, y); return { b: h.b, d: h.d?.s.en }; }, stats: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, trees: treeMesh.count, zebras: zebraMesh.count, dashes: laneMesh.count, cars: CARS.length }), where: t => { const c = byT[t]; return { p: proj(c.x, c.topY, c.z), view: { ...camera.view }, aspect: camera.aspect, dist: camera.position.distanceTo(controls.target), tgt: controls.target.toArray(), VO: { ...VO } }; }, select, setMode, focusDistrict, closePanel, goHome, openSearch, openBrief, get mode(){ return mode; }, setTab: t => { panelTab = t; if (CO) renderPanel(); }, ghosts: () => ghostP.some(m => m.visible) || ghostA.some(m => m.visible) };
 }
 boot();
 </script>
