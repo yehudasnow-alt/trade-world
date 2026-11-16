@@ -63,3 +63,25 @@ def test_value_by_analysis_is_conservative_and_says_how_sure():
     s = {"eps_ttm": 5.0, "growth_exp": 7.0, "pe_hist": [20.0, 21.0, 19.0, 22.0] * 15, "fcf_ttm": 5.0 * 1e9 * 1.0, "shares": 1e9, "net_debt": 0}
     o2 = V.outlook_v2(s, sector_pe=21.0, market_pe=20.0)
     assert o2["conf"] in ("high", "medium") and 0.6 < o2["by_pe"] / o2["by_cash"] < 1.6
+
+
+def test_my_assumptions_drive_the_whole_valuation(isolated_env):
+    from fastapi.testclient import TestClient
+
+    from metro import demo, pipeline
+    from metro.api import app
+    demo.generate(years=1.2)
+    c = TestClient(app)
+    row = lambda: next(x for x in c.get("/api/city").json()["companies"] if x["t"] == "MSFT")  # noqa: E731
+    before = row()
+    co = c.get("/api/company/MSFT").json()
+    o = co["biz"]["dcf"]["outlook"]
+    assert co["metrics"]["fair"]["base"] == o["now"] and before["fv"] == round(o["now"], 2)  # one number everywhere
+    r = c.post("/api/company/MSFT/assumptions", json={"g": 2, "r": 12, "t": 2}).json()
+    assert r["outlook"]["mine"] and r["outlook"]["g"] == 2 and r["outlook"]["now"] < o["now"]
+    after = row()
+    assert after["an"]["u"] and after["fv"] < before["fv"]
+    pipeline.compute_scores()  # the next scheduled run keeps them, on fresh numbers
+    assert row()["an"]["u"]
+    back = c.delete("/api/company/MSFT/assumptions").json()
+    assert not back["outlook"]["mine"] and abs(back["outlook"]["now"] - o["now"]) / o["now"] < 0.02

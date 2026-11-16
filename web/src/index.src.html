@@ -1738,7 +1738,7 @@ function projRow(c){
   if (mode === 'hunt') { const pc = projCap(c); return isNum(pc) ? [['שווי הוגן', fmt(pc)]] : null; }
   const rows = [], pc = projCap(c), ac = anCap(c);
   if (PROJ.show !== 'an' && isNum(pc)) rows.push([`בקצב · ${horizonHe()}`, fmt(pc)]);
-  if (PROJ.show !== 'pace' && isNum(ac)) rows.push([`שווי לפי הניתוח${c.an?.c === 'low' ? ' (ביטחון נמוך)' : ''}`, fmt(ac)]);
+  if (PROJ.show !== 'pace' && isNum(ac)) rows.push([`שווי לפי ${c.an?.u ? 'ההנחות שלך' : 'הניתוח'}${c.an?.c === 'low' && !c.an?.u ? ' (ביטחון נמוך)' : ''}`, fmt(ac)]);
   return rows.length ? rows : null;
 }
 function capH(capv){ const k = Math.max(0, capv / CAP_MAX); return H_SCALE === 'real' ? H_FLOOR + Math.min(k, 1.9) * (H_MAX - H_FLOOR) : H_FLOOR + 44 * Math.sqrt(Math.min(k, 3)); }
@@ -1985,7 +1985,7 @@ const CONF_HE = { high: ['ביטחון גבוה', 'up'], medium: ['ביטחון 
 function placeGhostTag(){
   const el = $('#gtag'); const c = hoverI >= 0 && hcard.hidden ? C[hoverI] : null; const pp = c ? projPct(c) : [];  // once the full card is up it carries the same numbers
   if (!pp.length) { el.hidden = true; return; }
-  const name = { pace: `בעוד ${horizonHe()}, בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'}`, an: `שווי לפי הניתוח (${horizonHe()})${c.an?.c ? ' · ' + CONF_HE[c.an.c][0] : ''}`, fv: 'עד השווי לפי הניתוח' };
+  const name = { pace: `בעוד ${horizonHe()}, בקצב ${PROJ.pace === 'px' ? 'המניה' : 'העסק'}`, an: `שווי לפי ${c.an?.u ? 'ההנחות שלך' : 'הניתוח'} (${horizonHe()})${c.an?.c && !c.an?.u ? ' · ' + CONF_HE[c.an.c][0] : ''}`, fv: 'עד השווי לפי הניתוח' };
   const html = `<span class="h">${esc(c.t)}</span>${pp.map(x => `<span>${name[x.k]}: <b class="${x.k === 'an' ? 'vio' : sg(x.d)}">${fmtPct(x.d, 0)}</b></span>`).join('')}`;
   if (el._h !== html) { el.innerHTML = html; el._h = html; }
   const p = proj(c.x, Math.max(c.topY, c.gTop || 0) + 0.4, c.z);
@@ -2461,7 +2461,7 @@ function tabOverview(js, c){
     <div class="kvg"><div><span>P/E</span><b class="num">${isNum(pe) ? pe.toFixed(1) : '–'}</b></div><div><span>אחוזון מול 5 שנים</span><b class="num">${isNum(m.pe_pct_5y) ? Math.round(m.pe_pct_5y) : '–'}</b></div><div><span>חציון הרחוב</span><b class="num">${isNum(med) ? med.toFixed(1) : '–'}</b><small>${st.n || 0} חברות</small></div></div>
     ${band ? `<div class="range"><div class="track"><span class="zone" style="left:${pos(band.p20)}%;width:${(pos(band.p80) - pos(band.p20)).toFixed(1)}%"></span>${isNum(med) ? `<s style="left:${pos(med)}%"></s>` : ''}<i style="left:${pos(pe) ?? 50}%"></i></div><div class="trl"><span>${N(pmin.toFixed(0))}</span><span>רצועת המכפיל של החברה (אחוזון 20-80) · קו: חציון הרחוב</span><span>${N(pmax.toFixed(0))}</span></div></div>` : ''}
     ${fr ? `<div class="fair"><div><span>דובי</span><b class="num">${fmtUsd(fr.bear, 0)}</b></div><div><span>בסיס</span><b class="num">${fmtUsd(fr.base, 0)}</b></div><div><span>שורי</span><b class="num">${fmtUsd(fr.bull, 0)}</b></div></div>
-      <p class="note">טווח מרצועת המכפיל של החברה על רווח שנה קדימה (צמיחה ${N(fmtPct(fr.growth_used_pct, 0))}).${isNum(m.implied_growth) ? ` המחיר מגלם צמיחת תזרים של ${N(fmtPct(m.implied_growth, 0))} בשנה לעשור, מול צמיחת הכנסות של ${N(fmtPct(m.rev_yoy, 0))}.` : ''}</p>` : ''}</div>
+      <p class="note">שווי לפי הניתוח${fr.mine ? ' <b>לפי ההנחות שלך</b>' : ''}: אותו מספר שמופיע במפה ובלשונית "העסק". בסיס: ממוצע של רווח כפול מכפיל הוגן ותזרים מהוון, בצמיחה של ${N(fmtPct(fr.growth_used_pct, 0))}${isNum(fr.required) ? ` ותשואה נדרשת של ${N(fr.required + '%')}` : ''}. דובי: צמיחה נמוכה ב-5, תשואה נדרשת גבוהה ב-1 ומכפיל נמוך ב-15%; שורי: ההפך.${isNum(m.implied_growth) ? ` המחיר מגלם צמיחת תזרים של ${N(fmtPct(m.implied_growth, 0))} בשנה לעשור, מול צמיחת הכנסות של ${N(fmtPct(m.rev_yoy, 0))}.` : ''}</p>` : ''}</div>
   <div class="sec"><h4>מחשבון עסקה <small>גודל פוזיציה לפי הסטופ</small></h4>
     <div class="calc">
       <div class="fld"><label for="cPort">גודל תיק ($)</label><input id="cPort" inputmode="decimal" value="${store.get(LS_PREFIX + 'port', js.defaults?.portfolio || 100000)}"></div>
@@ -2622,7 +2622,7 @@ function lastingHTML(b){
 function anNote(o, c){
   if (!o) return `<p class="note">לחברה בהפסד, או בלי מספיק היסטוריה של מכפילים, אין שווי לפי הניתוח.</p>`;
   const cf = CONF_HE[o.conf] || ['', ''];
-  return `<div class="verdict" style="margin-top:8px"><span class="chip ${cf[1]}">${cf[0]}</span>${isNum(o.by_pe) ? `<span class="chip">לפי רווח: ${fmtUsd(o.by_pe)}</span>` : ''}${isNum(o.by_cash) ? `<span class="chip">לפי תזרים: ${fmtUsd(o.by_cash)}</span>` : ''}</div>
+  return `<div class="verdict" style="margin-top:8px">${o.mine ? '<span class="chip ac">לפי ההנחות שלך</span>' : ''}<span class="chip ${cf[1]}">${cf[0]}</span>${isNum(o.bear) ? `<span class="chip">דובי ${fmtUsd(o.bear)} · שורי ${fmtUsd(o.bull)}</span>` : ''}${isNum(o.by_pe) ? `<span class="chip">לפי רווח: ${fmtUsd(o.by_pe)}</span>` : ''}${isNum(o.by_cash) ? `<span class="chip">לפי תזרים: ${fmtUsd(o.by_cash)}</span>` : ''}</div>
     ${(o.why || []).length ? `<p class="note warn">למה לא בטוח: ${o.why.map(esc).join(' · ')}.</p>` : ''}
     <p class="note">שווי לפי הניתוח הוא <b>הערכת שווי, לא צפי למחיר</b>. הוא ממוצע של שתי שיטות: רווח שנה קדימה כפול מכפיל הוגן (${isNum(o.pe) ? N(o.pe.toFixed(1)) : '–'}: חצי מההיסטוריה של החברה, חצי מהסקטור), ותזרים מהוון ב-9% (DCF). צמיחה של ${isNum(o.g0) ? N(o.g0.toFixed(0) + '%') : '–'} ${o.g0 > o.g ? `נספרה כ-${N(o.g.toFixed(0) + '%')}, ` : ''}דועכת ל-4% תוך 5 שנים, ומכפיל גבוה מהשוק (${isNum(o.pe_mkt) ? N(o.pe_mkt.toFixed(0)) : '–'}) יורד אליו עם הדעיכה. מחיר יכול להישאר רחוק מהשווי שנים: על טווח קצר הפער אומר בעיקר אם המניה זולה או יקרה.</p>`;
 }
@@ -2637,20 +2637,23 @@ function worthHTML(b, c){
     <table class="mtab"><thead><tr><th>בעוד</th><th>בקצב הנוכחי של המכירות${isNum(c.gr?.r) ? ` (${N(c.gr.r.toFixed(0) + '%')} בשנה)` : ''}</th><th>שווי לפי הניתוח</th></tr></thead><tbody>${rows}</tbody></table>
     ${anNote(d.outlook, c)}`;
   const can = isNum(d.fcf) && d.fcf > 0 && isNum(d.shares);
-  const g1 = clamp(Math.round(d.g0 ?? d.rev_yoy ?? 6), -10, 35);
+  const O = d.outlook || {};
+  const g1 = isNum(O.g) ? +O.g.toFixed(1) : clamp(Math.round(d.g0 ?? d.rev_yoy ?? 6), -10, 25), rq = isNum(O.r) ? O.r : 9, tg = isNum(O.t) ? O.t : 3;
   return `<div class="sec"><h4>כמה העסק שווה</h4>${table}
     <div class="tlh" style="margin-top:14px">מחשבון ערך פנימי (DCF)</div>
     ${can ? `<p class="note" style="margin-top:2px">כמה שווה היום כל המזומן שהעסק ייצר בעתיד. משנים את ההנחות ורואים מה קורה: זו בדיוק השאלה ששואל באפט.</p>
     <div class="calc dcfg ptk" id="dcf">
       <div class="fld"><label for="dF">תזרים חופשי בסיס ($B)</label><input id="dF" inputmode="decimal" value="${(d.fcf / 1e9).toFixed(2)}"></div>
       <div class="fld"><label for="dG1">צמיחה שנים 1–5 (%)</label><input id="dG1" inputmode="decimal" value="${g1}"></div>
-      <div class="fld"><label for="dG2">צמיחה שנים 6–10 (%)</label><input id="dG2" inputmode="decimal" value="${Math.max(3, Math.round(g1 / 2))}"></div>
-      <div class="fld"><label for="dT">צמיחה לטווח ארוך (%)</label><input id="dT" inputmode="decimal" value="3"></div>
-      <div class="fld"><label for="dR">תשואה נדרשת (%)</label><input id="dR" inputmode="decimal" value="9"></div>
+      <div class="fld"><label for="dG2">צמיחה שנים 6–10 (%)</label><input id="dG2" inputmode="decimal" value="${+Math.max(tg, g1 / 2).toFixed(1)}"></div>
+      <div class="fld"><label for="dT">צמיחה לטווח ארוך (%)</label><input id="dT" inputmode="decimal" value="${tg}"></div>
+      <div class="fld"><label for="dR">תשואה נדרשת (%)</label><input id="dR" inputmode="decimal" value="${rq}"></div>
       <div class="fld"><label for="dM">מרווח ביטחון רצוי (%)</label><input id="dM" inputmode="decimal" value="25"></div>
     </div>
     ${isNum(d.sbc) && d.sbc > 0 ? `<label class="chkl" style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin-top:8px"><input type="checkbox" id="dS" checked style="accent-color:var(--accent)"> הפחת תגמול במניות לעובדים (${fmtBig(d.sbc)} בשנה) מהתזרים, כמו שמרני</label>` : ''}
     <div id="dcfOut"></div>
+    <div class="row" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn2" id="dUse">השתמש בהנחות האלה בתחזית</button>${O.mine ? '<button type="button" class="btn2 ghost" id="dAuto">חזרה לניתוח האוטומטי</button>' : ''}</div>
+    <p class="note">${O.mine ? '<b>התחזית של החברה הזאת מבוססת עכשיו על ההנחות שלך</b>: העותק הסגול במפה, הדובי/בסיס/שורי בסקירה וציד ההזדמנויות. ' : ''}"השתמש בהנחות" שומר את הצמיחה, התשואה הנדרשת והצמיחה לטווח ארוך, וכל המערכת עוברת אליהן: המפה, הסקירה והציד. הנתונים הכספיים ממשיכים להתעדכן מהדוחות, רק ההנחות שלך נשמרות.</p>
     <p class="note">תשואה נדרשת: כמה אחוז בשנה אתה רוצה להרוויח על הסיכון. מקובל 8–10% (אג"ח ממשלתי ועוד 4–5%). מרווח ביטחון: כמה מתחת לשווי הפנימי אתה רוצה לקנות, כדי שטעות בהנחות לא תעלה ביוקר. באפט ידוע ב"קנה בדולר מה ששווה שניים".</p>`
     : '<div class="empty">אין תזרים חופשי חיובי בשנה האחרונה, אז מחשבון DCF לא ייתן תוצאה משמעותית. לחברות כאלה עדיף להסתכל על הכנסות, רווחיות עתידית ומכפיל מכירות.</div>'}</div>`;
 }
@@ -2679,6 +2682,18 @@ function wireDcf(c){
       <table class="sens"><thead><tr><th></th>${[g1 - 5, g1, g1 + 5].map(gg => `<th>${N(gg + '%')}</th>`).join('')}</tr></thead><tbody>${sens}</tbody></table>`;
   };
   box.querySelectorAll('input').forEach(i => i.addEventListener('input', run)); $('#dS')?.addEventListener('change', run); run();
+  const apply = r => {
+    if (r.an !== undefined) c.an = r.an; if (r.fv !== undefined) c.fv = r.fv;
+    if (CO?.metrics) CO.metrics.fair = r.fair; if (CO?.biz?.dcf) CO.biz.dcf.outlook = r.outlook;
+    writeGhosts(); dirty = true; renderPanel();
+  };
+  const use = $('#dUse'); if (use) use.onclick = async () => {
+    const body = { g: parseFloat($('#dG1').value), r: parseFloat($('#dR').value), t: parseFloat($('#dT').value) };
+    use.disabled = true;
+    try { apply(await api(`/api/company/${c.t}/assumptions`, { method: 'POST', body: JSON.stringify(body) })); toast('נשמר. התחזית של ' + c.t + ' מבוססת עכשיו על ההנחות שלך.'); }
+    catch (e) { toast(e.message); use.disabled = false; }
+  };
+  const auto = $('#dAuto'); if (auto) auto.onclick = async () => { try { apply(await api(`/api/company/${c.t}/assumptions`, { method: 'DELETE' })); toast('חזרה לניתוח האוטומטי.'); } catch (e) { toast(e.message); } };
 }
 function peersHTML(b){
   const P = b.peers || []; if (P.length < 2) return '';

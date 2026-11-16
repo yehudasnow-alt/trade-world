@@ -260,7 +260,9 @@ def score_universe(raws: dict[str, dict]) -> dict[str, dict]:
     all_pe = [x for v in sec_pe.values() for x in v]
     mkt_pe = median(all_pe) if all_pe else None
     for t, m in raws.items():
-        m["outlook"] = V.outlook_v2(m, median(sec_pe[m["sector"]]) if sec_pe.get(m["sector"]) else None, mkt_pe)
+        m["outlook"] = V.outlook_v2(m, median(sec_pe[m["sector"]]) if sec_pe.get(m["sector"]) else None, mkt_pe, m.get("assume"))
+        if m["outlook"]:
+            m["fair"] = V.fair_from_outlook(m["outlook"], m.get("fair"))
     # beacons: strict rule, then keep only the strongest few so the signal stays a signal
     cands = [t for t, s in out.items() if not s["veto"] and s["total"] >= 66 and s["quality"] >= 15
              and s["valuation"] >= 13.5 and (raws[t].get("dd_pct") or 0) <= -7 and (raws[t].get("sigma") or 0) > -3]

@@ -149,32 +149,41 @@ def dcf_per_share(fcf: float, g1: float, shares: float, net_debt: float = 0.0, r
     return (v - (net_debt or 0.0)) / shares
 
 
-def outlook_v2(m: dict, sector_pe: float | None, market_pe: float | None) -> dict | None:
-    """Value per share by two independent methods, and how much to trust it.
+def outlook_v2(m: dict, sector_pe: float | None, market_pe: float | None, assume: dict | None = None) -> dict | None:
+    """The one valuation of the system: the map's violet copies, the hunt, the card's bear/base/bull and the DCF defaults.
 
+    Value per share by two independent methods, and how much to trust it:
     1. Earnings: profit a year ahead (growth fading to 4% over five years) times a fair P/E (own history + sector);
        a multiple above the market's fades toward it as the growth fades, because a slower company is not paid like a fast one.
-    2. Cash: a ten-year DCF of free cash flow at a 9% required return.
+    2. Cash: a ten-year DCF of free cash flow at the required return.
     Together: the geometric mean. The value path over time follows the earnings path. This is a value, not a price forecast.
+    `assume` holds the investor's own assumptions from the card (growth, required return, terminal growth, fair P/E).
     """
     eps, g0 = m.get("eps_ttm"), m.get("growth_exp")
-    if not eps or eps <= 0 or g0 is None:
+    a = assume or {}
+    if not eps or eps <= 0 or (g0 is None and a.get("g") is None):
         return None
-    pe = fair_multiple(m.get("pe_hist") or [], sector_pe)
-    if pe is None:
+    pe0 = a.get("pe") or fair_multiple(m.get("pe_hist") or [], sector_pe)
+    if pe0 is None:
         return None
-    g = min(g0, GROWTH_CAP_VALUE)
+    g_auto = min(g0, GROWTH_CAP_VALUE) if g0 is not None else None
+    base = {"g": a.get("g", g_auto), "r": a.get("r", REQUIRED_RETURN), "t": a.get("t", TERMINAL), "pe": pe0}
     mk = market_pe or 18.0
 
-    def pe_at(t: float) -> float:
-        return pe if pe <= mk else mk + (pe - mk) * max(0.0, 1 - t / FADE_YEARS)
+    def value(g: float, r: float, t: float, pe: float) -> tuple[float, float | None, callable]:
+        pe_at = lambda tt: pe if pe <= mk else mk + (pe - mk) * max(0.0, 1 - tt / FADE_YEARS)  # noqa: E731
+        v_pe = lambda h: eps_after(eps, g, h + 1.0) * pe_at(h + 1.0)  # noqa: E731
+        by_cash = dcf_per_share(m.get("fcf_ttm") or 0, g, m.get("shares") or 0, m.get("net_debt") or 0, r, t)
+        by_pe = v_pe(0.0)
+        now = (by_pe * by_cash) ** 0.5 if by_cash and by_cash > 0 else by_pe
+        return now, by_cash, v_pe
 
-    v_pe = lambda h: eps_after(eps, g, h + 1.0) * pe_at(h + 1.0)  # noqa: E731
+    now, by_cash, v_pe = value(**base)
     by_pe = v_pe(0.0)
-    by_cash = dcf_per_share(m.get("fcf_ttm") or 0, g, m.get("shares") or 0, m.get("net_debt") or 0)
-    now = (by_pe * by_cash) ** 0.5 if by_cash and by_cash > 0 else by_pe
+    bear = value(max(-10.0, base["g"] - 5), base["r"] + 1, base["t"], base["pe"] * 0.85)[0]
+    bull = value(min(GROWTH_CAP_VALUE + 5, base["g"] + 5), max(base["t"] + 1, base["r"] - 1), base["t"], base["pe"] * 1.15)[0]
     why = []
-    if g0 > GROWTH_CAP_VALUE:
+    if not a and g0 is not None and g0 > GROWTH_CAP_VALUE:
         why.append(f"צמיחה של {g0:.0f}% בשנה נספרה כ-{GROWTH_CAP_VALUE:.0f}%")
     if by_cash and by_cash > 0 and abs(math.log(by_pe / by_cash)) > math.log(1.6):
         why.append("שתי שיטות ההערכה (רווח ותזרים) רחוקות זו מזו")
@@ -184,5 +193,12 @@ def outlook_v2(m: dict, sector_pe: float | None, market_pe: float | None) -> dic
     if not by_cash or by_cash <= 0:
         why.append("אין תזרים חופשי חיובי לבדיקה שנייה")
     conf = "high" if not why else "medium" if len(why) == 1 and not why[0].startswith("שתי") else "low"
-    return {"g0": g0, "g": g, "pe": pe, "pe_mkt": mk, "by_pe": by_pe, "by_cash": by_cash, "now": now, "conf": conf, "why": why,
-            "path": {str(y): now * v_pe(y) / by_pe for y in HORIZONS}}
+    return {"g0": g0, "g": base["g"], "r": base["r"], "t": base["t"], "pe": base["pe"], "pe_mkt": mk, "sector_pe": sector_pe,
+            "by_pe": by_pe, "by_cash": by_cash, "now": now, "bear": min(bear, now), "bull": max(bull, now), "conf": conf, "why": why,
+            "mine": bool(a), "assume": a, "path": {str(y): now * v_pe(y) / by_pe for y in HORIZONS}}
+
+
+def fair_from_outlook(o: dict, band: dict | None) -> dict:
+    """The card's bear / base / bull, from the same valuation as the map."""
+    return {"bear": o["bear"], "base": o["now"], "bull": o["bull"], "growth_used_pct": o["g"], "pe": (band or {}).get("pe"),
+            "required": o["r"], "mine": o["mine"]}

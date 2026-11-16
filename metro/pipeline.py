@@ -20,7 +20,7 @@ from .analytics import events as EV
 from .analytics import scoring, thesis
 from .config import get_settings
 from .db import (AiJob, Annual, Company, Earnings, Event, Fact, Filing, Holding, PriceBar, Quarter, Quote, ReportCard, Score,
-                 Thesis, Watch, kv_age_seconds, kv_get, kv_set, session, utcnow)
+                 Thesis, Watch, KV, kv_age_seconds, kv_get, kv_set, session, utcnow)
 from .sources import sections as SX
 from .sources import xbrl
 from .universe import MARKET_ETF, SECTORS
@@ -485,11 +485,16 @@ def compute_scores(as_of: date | None = None, persist: bool = True) -> dict[str,
                     raws[c.ticker] = scoring.raw_metrics(x)
             except Exception as e:  # noqa: BLE001
                 log.warning("score %s: %s", c.ticker, e)
+    if as_of is None:  # the investor's own valuation assumptions, saved from the company card
+        with session() as s:
+            for k in s.scalars(select(KV).where(KV.key.like("assume.%"))):
+                if k.key[7:] in raws and k.value:
+                    raws[k.key[7:]]["assume"] = k.value
     scores = scoring.score_universe(raws)
     if persist and as_of is None:
         with session() as s:
             for t, sc in scores.items():
-                m = {k: v for k, v in raws[t].items() if k not in ("pe_hist",)}
+                m = dict(raws[t])  # pe_hist stays: the card can re-value one company with new assumptions
                 row = s.get(Score, t) or Score(ticker=t)
                 row.computed, row.quality, row.direction, row.valuation = utcnow(), sc["quality"], sc["direction"], sc["valuation"]
                 row.timing, row.total, row.veto, row.beacon = sc["timing"], sc["total"], sc["veto"] + sc["flags"], sc["beacon"]

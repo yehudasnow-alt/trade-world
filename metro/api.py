@@ -20,7 +20,7 @@ from . import paper
 from .analytics.thesis import KILLS_HE, METRICS_HE
 from .config import ROOT, get_settings
 from .db import (AiJob, Alert, Company, Earnings, Event, Holding, JournalEntry, PriceBar, Promise, Quarter, Quote,
-                 ReportCard, Score, Thesis, Watch, init_db, kv_age_seconds, kv_get, session, utcnow)
+                 ReportCard, Score, Thesis, Watch, init_db, kv_age_seconds, kv_get, kv_set, session, utcnow)
 from .universe import MARKET_ETF, SECTORS
 
 log = logging.getLogger(__name__)
@@ -147,7 +147,7 @@ def city() -> dict:
                 "pe": _r(m.get("pe_ttm"), 1), "rep": rep,
                 "gr": {"r": _r(m.get("rev_yoy"), 1), "e": _r(m.get("eps_yoy"), 1), "p": _r(m.get("ret_1y"), 1)},
                 "fv": _r((m.get("outlook") or {}).get("now") or (m.get("fair") or {}).get("base")),
-                "an": {"g": _r(m["outlook"]["g0"], 1), "pe": _r(m["outlook"]["pe"], 1), "c": m["outlook"].get("conf"),
+                "an": {"g": _r(m["outlook"]["g0"], 1), "pe": _r(m["outlook"]["pe"], 1), "c": m["outlook"].get("conf"), "u": m["outlook"].get("mine"),
                        "p": {k: _r(v) for k, v in m["outlook"]["path"].items()}} if (m.get("outlook") or {}).get("path") else None, "watch": c.ticker in watch, "th": c.themes,
                 "hold": {"w": _r(h.weight_pct, 1), "pnl": _r(h.pnl_pct, 1), "th": th.status if th else None, "q": _r(h.quantity, 4),
                          "cost": _r(h.avg_cost), "v": _r(h.market_value, 0)} if h else None,
@@ -318,7 +318,7 @@ def _business(s, t: str, qrows: list, m: dict) -> dict:
     pr = s.scalars(select(CompanyProfile).where(CompanyProfile.ticker == t).order_by(CompanyProfile.created.desc())).first()
     money = B.money_flow(quarters, m.get("market_cap"))
     o = m.get("outlook") or {}
-    dcf = {"outlook": {k: o.get(k) for k in ("g0", "g", "pe", "pe_mkt", "by_pe", "by_cash", "now", "conf", "why")} if o.get("now") else None,
+    dcf = {"outlook": {k: o.get(k) for k in ("g0", "g", "r", "t", "pe", "pe_mkt", "by_pe", "by_cash", "now", "bear", "bull", "conf", "why", "mine")} if o.get("now") else None,
            "fcf": m.get("fcf_ttm"), "shares": m.get("shares"), "net_debt": m.get("net_debt"), "price": m.get("price"),
            "g0": m.get("growth_exp"), "rev_cagr5": m.get("rev_cagr5"), "rev_yoy": m.get("rev_yoy"), "sbc": money.get("sbc"),
            "fcf_margin": m.get("fcf_margin")}
@@ -381,6 +381,54 @@ def macro_view() -> dict:
         out["fetched"] = kv_get(s, "macro.at")
         out["demo"] = kv_get(s, "mode", "live") == "demo"
     return out
+
+
+class AssumeIn(BaseModel):
+    g: Optional[float] = Field(default=None, ge=-30, le=60)
+    r: Optional[float] = Field(default=None, ge=4, le=20)
+    t: Optional[float] = Field(default=None, ge=0, le=5)
+    pe: Optional[float] = Field(default=None, gt=1, le=150)
+
+
+def _revalue(s, t: str, assume: Optional[dict]) -> dict:
+    """Re-run the one valuation for one company now, so the map and the card follow the new assumptions at once."""
+    from .analytics import valuation as V
+    sc = s.get(Score, t)
+    if sc is None or not sc.metrics:
+        raise HTTPException(404, "אין עדיין ציון לחברה")
+    m = dict(sc.metrics)
+    o_prev = m.get("outlook") or {}
+    m["outlook"] = V.outlook_v2(m, o_prev.get("sector_pe"), o_prev.get("pe_mkt"), assume)
+    if m["outlook"]:
+        m["fair"] = V.fair_from_outlook(m["outlook"], m.get("fair"))
+    m["assume"] = assume
+    sc.metrics = pipeline_jsonable(m)
+    o = m["outlook"] or {}
+    return {"outlook": {k: o.get(k) for k in ("g0", "g", "r", "t", "pe", "pe_mkt", "by_pe", "by_cash", "now", "bear", "bull", "conf", "why", "mine")} if o else None,
+            "an": {"g": _r(o["g0"], 1), "pe": _r(o["pe"], 1), "c": o.get("conf"), "u": o.get("mine"), "p": {k: _r(v) for k, v in o["path"].items()}} if o.get("path") else None,
+            "fv": _r(o.get("now")), "fair": m.get("fair")}
+
+
+def pipeline_jsonable(m: dict) -> dict:
+    from .pipeline import _jsonable
+    return _jsonable(m)
+
+
+@app.post("/api/company/{ticker}/assumptions", dependencies=[Depends(guard)])
+def save_assumptions(ticker: str, body: AssumeIn) -> dict:
+    t = ticker.upper()
+    a = {k: v for k, v in body.model_dump().items() if v is not None}
+    with session() as s:
+        kv_set(s, f"assume.{t}", a or None)
+        return _revalue(s, t, a or None)
+
+
+@app.delete("/api/company/{ticker}/assumptions", dependencies=[Depends(guard)])
+def clear_assumptions(ticker: str) -> dict:
+    t = ticker.upper()
+    with session() as s:
+        kv_set(s, f"assume.{t}", None)
+        return _revalue(s, t, None)
 
 
 @app.post("/api/company/{ticker}/profile", dependencies=[Depends(guard)])

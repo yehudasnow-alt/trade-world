@@ -228,6 +228,9 @@ class Runner:
             add(safe("after_close", self.after_close), "cron", day_of_week="mon-fri", hour=16, minute=25)
             on.append("Alpaca")
         add(safe("scores", self.score_tick), "cron", day_of_week="mon-fri", hour="9-15", minute="*/15")
+        # reports land after the close and on weekends: the valuation follows them the same evening, not the next session
+        add(safe("scores_evening", lambda: f"scores={len(pipeline.compute_scores())}"), "cron", day_of_week="mon-fri", hour=17, minute=40)
+        add(safe("scores_weekend", lambda: f"scores={len(pipeline.compute_scores())}"), "cron", day_of_week="sat", hour=10, minute=10)
         # after an update the new fields (value by analysis, expected growth) should not wait for the next session
         add(safe("scores_boot", lambda: f"scores={len(pipeline.compute_scores())}"), "date", run_date=datetime.now(clock.NY) + timedelta(minutes=4))
         if st.finnhub_api_key:
