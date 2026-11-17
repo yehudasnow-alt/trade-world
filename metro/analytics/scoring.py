@@ -46,6 +46,8 @@ class Inputs:
     events: list[dict] = field(default_factory=list)  # [{day, code, severity}]
     guidance: str | None = None  # raised | maintained | lowered | withdrawn
     annual_revenue: list[float] = field(default_factory=list)  # fiscal years from the 10-K, oldest first
+    annual: list[dict] = field(default_factory=list)  # the same years, all their values
+    moat_ai: str | None = None  # wide | narrow | none, when Claude has read the annual report
     guidance_change_pct: float | None = None
     surprise_pct: float | None = None
     going_concern: bool = False
@@ -113,6 +115,8 @@ def raw_metrics(x: Inputs) -> dict[str, Any]:
             m[k] = last.get(k)
         rev_t, fcf_t, oi_t, ni_t = (_ttm(q, k) for k in ("revenue", "fcf", "operating_income", "net_income"))
         m["rev_ttm"], m["fcf_ttm"], m["oi_ttm"], m["ni_ttm"] = rev_t, fcf_t, oi_t, ni_t
+        m["sbc_ttm"], m["dividends_ttm"] = _ttm(q, "sbc"), _ttm(q, "dividends_paid")
+        m["_annual"], m["_guidance"], m["_moat_ai"] = x.annual, x.guidance, x.moat_ai
         m["fcf_margin"] = fcf_t / rev_t * 100 if fcf_t is not None and rev_t else last.get("fcf_margin")
         m["rev_yoy"], m["rev_yoy_prev"] = _yoy(q, "revenue"), _yoy(q, "revenue", -2)
         m["eps_yoy"] = _yoy(q, "eps_diluted")
@@ -259,10 +263,14 @@ def score_universe(raws: dict[str, dict]) -> dict[str, dict]:
             sec_pe.setdefault(m["sector"], []).append(m["pe_ttm"])
     all_pe = [x for v in sec_pe.values() for x in v]
     mkt_pe = median(all_pe) if all_pe else None
+    from . import buffett as BF
     for t, m in raws.items():
-        m["outlook"] = V.outlook_v2(m, median(sec_pe[m["sector"]]) if sec_pe.get(m["sector"]) else None, mkt_pe, m.get("assume"))
+        o = BF.analyze(m, m.pop("_annual", []) or [], m.pop("_guidance", None), m.pop("_moat_ai", None), m.get("assume"))
+        m["outlook"] = o if o and o.get("ok") else None
+        m["buffett_note"] = o.get("reason") if o and not o.get("ok") else None
         if m["outlook"]:
-            m["fair"] = V.fair_from_outlook(m["outlook"], m.get("fair"))
+            m["fair"] = {"bear": o["bear"], "base": o["now"], "bull": o["bull"], "growth_used_pct": o["g"], "pe": (m.get("fair") or {}).get("pe"),
+                         "required": o["r"], "mine": o["mine"], "buy": o["buy"]}
     # beacons: strict rule, then keep only the strongest few so the signal stays a signal
     cands = [t for t, s in out.items() if not s["veto"] and s["total"] >= 66 and s["quality"] >= 15
              and s["valuation"] >= 13.5 and (raws[t].get("dd_pct") or 0) <= -7 and (raws[t].get("sigma") or 0) > -3]

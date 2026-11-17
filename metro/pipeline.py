@@ -140,6 +140,15 @@ def refresh_facts(client, ticker: str) -> int:
     return len(quarters)
 
 
+def _annual_inputs(s, ticker: str, as_of) -> dict:
+    from .db import CompanyProfile
+    rows = [a.values for a in s.scalars(select(Annual).where(
+        Annual.ticker == ticker, Annual.period_end <= (as_of or date.today()) - timedelta(days=60)).order_by(Annual.period_end))]
+    pr = s.scalars(select(CompanyProfile).where(CompanyProfile.ticker == ticker).order_by(CompanyProfile.created.desc())).first()
+    moat = (pr.profile or {}).get("moat_strength") if pr and not (pr.profile or {}).get("demo") else None
+    return {"annual_revenue": [r.get("revenue") for r in rows], "annual": rows, "moat_ai": moat}
+
+
 FACTS_VERSION = "2026-11-annual"  # bump when refresh_facts starts reading new fields, so existing installs re-read once
 
 
@@ -468,8 +477,7 @@ def build_inputs(s, c: Company, since: date, as_of: date | None = None, live: bo
                           events=ev, guidance=(cd or {}).get("guidance_direction") if cd else None,
                           guidance_change_pct=guidance_change(cd), surprise_pct=surprise,
                           going_concern=any(e["code"] == "going-concern" for e in ev), today=today,
-                          annual_revenue=[a.values.get("revenue") for a in s.scalars(select(Annual).where(
-                              Annual.ticker == c.ticker, Annual.period_end <= (as_of or date.today()) - timedelta(days=60)).order_by(Annual.period_end))])
+                          **_annual_inputs(s, c.ticker, as_of))
 
 
 def compute_scores(as_of: date | None = None, persist: bool = True) -> dict[str, dict]:
