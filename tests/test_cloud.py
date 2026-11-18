@@ -159,3 +159,15 @@ def test_the_scheduler_starts_with_every_source(isolated_env, monkeypatch):
         assert {"macro_boot", "upgrade", "paper", "ownership", "scores_boot"} <= ids
     finally:
         r.stop()
+
+
+def test_an_old_database_gets_new_columns(isolated_env):
+    from sqlalchemy import inspect, text
+
+    from metro import db
+    eng = db.engine()
+    with eng.begin() as con:
+        con.execute(text('ALTER TABLE quotes DROP COLUMN ext_price'))
+    assert "ext_price" not in {c["name"] for c in inspect(eng).get_columns("quotes")}
+    db.init_db()
+    assert "ext_price" in {c["name"] for c in inspect(db.engine()).get_columns("quotes")}

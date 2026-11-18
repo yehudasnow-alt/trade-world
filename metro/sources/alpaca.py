@@ -103,7 +103,9 @@ def parse_snapshot(snap: dict[str, Any]) -> dict[str, Any] | None:
         return None
     return {"price": float(price), "prev_close": float(prev["c"]) if prev.get("c") else None,
             "volume": float(daily.get("v") or 0), "ts": parse_ts(trade.get("t") or daily.get("t")),
-            "day": (daily.get("t") or "")[:10]}
+            "day": (daily.get("t") or "")[:10], "prev_day": (prev.get("t") or "")[:10],
+            "last": float(trade["p"]) if trade.get("p") else None, "last_ts": parse_ts(trade.get("t")),
+            "close": float(daily["c"]) if daily.get("c") else None}
 
 
 def parse_ts(s: str | None) -> datetime | None:

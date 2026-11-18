@@ -89,6 +89,8 @@ class Quote(Base):
     volume: Mapped[float | None] = mapped_column(Float)
     ts: Mapped[datetime] = mapped_column(DateTime)
     source: Mapped[str] = mapped_column(String(16))
+    ext_price: Mapped[float | None] = mapped_column(Float)  # the last trade before the open or after the close
+    ext_ts: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class Filing(Base):
@@ -382,6 +384,22 @@ def reset_engine() -> None:
 
 def init_db() -> None:
     Base.metadata.create_all(engine())
+    _add_missing_columns()
+
+
+def _add_missing_columns() -> None:
+    """New nullable columns on existing tables (create_all only makes new tables): enough for an SQLite file that lives for years."""
+    from sqlalchemy import inspect, text
+    eng = engine()
+    insp = inspect(eng)
+    with eng.begin() as con:
+        for table in Base.metadata.sorted_tables:
+            if not insp.has_table(table.name):
+                continue
+            have = {c["name"] for c in insp.get_columns(table.name)}
+            for col in table.columns:
+                if col.name not in have and col.nullable and not col.primary_key:
+                    con.execute(text(f'ALTER TABLE "{table.name}" ADD COLUMN "{col.name}" {col.type.compile(eng.dialect)}'))
 
 
 @contextmanager

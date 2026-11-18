@@ -264,3 +264,17 @@ def test_live_portfolio_from_ib_gateway():
                                         "pnl_pct": 0, "currency": "USD"}], "nav": 1}, source="flex")
     with session() as s:
         assert {h.ticker for h in s.query(Holding)} == {"BRK.B", "MSFT"}
+
+
+def test_after_the_close_the_price_is_the_close_and_late_trades_stand_apart():
+    from datetime import datetime
+
+    from metro import clock, pipeline
+    snap = {"latestTrade": {"p": 162.95, "t": "2026-11-18T00:55:00Z"}, "dailyBar": {"c": 155.46, "t": "2026-11-17T05:00:00Z", "v": 1e6},
+            "prevDailyBar": {"c": 156.14, "t": "2026-11-16T05:00:00Z"}}
+    q = alpaca.parse_snapshot(snap)
+    evening = datetime(2026, 11, 17, 19, 0, tzinfo=clock.NY)
+    out = pipeline.session_quotes({"NVDA": q}, evening)["NVDA"]
+    assert out["price"] == 155.46 and out["prev_close"] == 156.14 and out["ext_price"] == 162.95  # -0.44% today, +4.8% after hours
+    midday = datetime(2026, 11, 17, 12, 0, tzinfo=clock.NY)
+    assert pipeline.session_quotes({"NVDA": q}, midday)["NVDA"]["price"] == 162.95

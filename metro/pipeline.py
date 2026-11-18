@@ -290,9 +290,11 @@ def update_quotes(rows: dict[str, dict[str, Any]], source: str) -> int:
             row = s.get(Quote, t)
             ts = q.get("ts") or utcnow()
             if row is None:
-                s.add(Quote(ticker=t, price=q["price"], prev_close=q.get("prev_close"), volume=q.get("volume"), ts=ts, source=source))
+                s.add(Quote(ticker=t, price=q["price"], prev_close=q.get("prev_close"), volume=q.get("volume"), ts=ts, source=source,
+                            ext_price=q.get("ext_price"), ext_ts=q.get("ext_ts")))
             elif source == "ibkr" or row.source != "ibkr" or (utcnow() - row.ts).total_seconds() > 120:
                 row.price, row.ts, row.source = q["price"], ts, source
+                row.ext_price, row.ext_ts = q.get("ext_price"), q.get("ext_ts")
                 if q.get("prev_close"):
                     row.prev_close = q["prev_close"]
                 if q.get("volume"):
@@ -307,8 +309,30 @@ def all_symbols() -> list[str]:
         return tickers(s) + [MARKET_ETF] + [v[1] for v in SECTORS.values()]
 
 
+def session_quotes(rows: dict[str, dict], now=None) -> dict[str, dict]:
+    """Outside the regular session the price shown is the session's close, and its change is against the close before;
+    a trade after the close (or before the open) is kept apart as the extended-hours price, like every quote screen.
+    Otherwise an after-hours trade would be compared with yesterday's close and look like a big move today."""
+    state = clock.session_state(now)
+    if state == "open":
+        return rows
+    day = clock.last_session(now).isoformat()
+    out = {}
+    for t, q in rows.items():
+        q = dict(q)
+        if q.get("day") == day and q.get("close"):
+            q["price"] = q["close"]
+        elif q.get("prev_day") == day and q.get("prev_close"):  # today's bar started before the open
+            q["price"], q["prev_close"] = q["prev_close"], None
+        if q.get("last") and q.get("last_ts") and abs(q["last"] / q["price"] - 1) > 1e-6:
+            q["ext_price"], q["ext_ts"] = q["last"], q["last_ts"]
+        q["ts"] = q.get("last_ts") or q.get("ts")
+        out[t] = q
+    return out
+
+
 def refresh_snapshots(alpaca) -> int:
-    return update_quotes(alpaca.snapshots(all_symbols()), "alpaca")
+    return update_quotes(session_quotes(alpaca.snapshots(all_symbols())), "alpaca")
 
 
 def store_bars(bars: dict[str, list[dict]]) -> int:
